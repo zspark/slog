@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<%- include("component/head") %>
+
+<body>
+  <div class="wrapper">
+
+    <%- include("component/header",{param:{}}) %>
+
+    <ul class="articles">
+      <% obj.forEach(function(item){ %>
+      <li>
+        <!-- p class="description"><%= item.description %></p-->
+        <!--p class="description"><%= item.author %></p-->
+        <span><a href="/article?fileName=<%= item.fileName %>"><%= item.displayName %></a></span> 
+        <span class="date"><%= item.displayTime %></span>
+      </li>
+      <% }); %>
+    </ul>
+
+    <%- include("component/footer") %>
+  </div>
+</body>
+
+</html>

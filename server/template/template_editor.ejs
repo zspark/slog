@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+
+<%- include("component/head") %>
+
+<!-- Create a simple CodeMirror instance -->
+<link rel="stylesheet" href="/css/codemirror.css">
+<style>
+  .CodeMirror {
+    border: 1px solid #eee;
+    height: auto;
+  }
+</style>
+
+<body id="body_editor" onLoad="OnBodyLoad()">
+
+  <form id="myform_cancel" method="POST" onsubmit="return submitFun_cancel(this);"
+    action="/editor?fileName=<%- obj.fileName %>">
+  </form>
+
+  <form id="myform" method="POST" onsubmit="return submitFun(this);" action="/editor?fileName=<%- obj.fileName %>">
+    <input type="submit" value="Submit" />
+    <input type="submit" value="Cancel" form="myform_cancel" />
+
+    <!-- input type="text" name="fileName" id="inputFileName" placeholder="<%- obj.fileName %>"/-->
+    <input type="text" name="title" id="inputTitle" placeholder="<title>" value="<%- obj.displayName %>" />
+    <input type="text" name="author" id="inputAuthor" placeholder="<author>" value="<%- obj.author %>" />
+    <input type="text" name="category" id="inputCategory" placeholder="<category>" value="<%- obj.category %>" />
+  </form>
+
+  <div id="editor" style="display:block;">
+    <div class="containers">
+      <div class="container">
+        <textarea id="markdown" class="inputPane" form="myform" name="content"><%- obj.content %></textarea>
+      </div>
+      <div class="container">
+        <div id="preview"> </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/marked.min.js" defer></script>
+  <script src="/js/codemirror/codemirror.js"></script>
+  <script src="/js/codemirror/mode/markdown/markdown.js"></script>
+  <script src="/js/codemirror/addon/edit/matchbrackets.js"></script>
+  <!-- script src="/js/codemirror/keymap/vim.js"></script-->
+  <script src="/js/editor.js" defer></script>
+
+</body>
+
+</html>

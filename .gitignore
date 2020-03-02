@@ -1,0 +1,13 @@
+/node_modules/
+/.vscode/
+/client/dynamic/
+/backup/
+
+*.swp
+*.un~
+*.*~
+
+package-lock.json
+
+
+

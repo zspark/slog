@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+
+<%- include("component/head") %>
+
+<body id="body_editor">
+
+  <form id="mydropzone" method="POST" action="/uploader/">
+    <div class="fallback">
+      <input name="file" type="file" multiple />
+    </div>
+  </form>
+
+  <script src="js/dropzone.min.js"></script>
+
+</body>
+
+</html>

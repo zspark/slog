@@ -1,0 +1,17 @@
+<header>
+  <nav>
+    <h1 id="logo"><a href="/"><span class="jc">Jerry</span>Chaos</a></h1>
+    <ul class="menu">
+      <li><a href="/">Home</a></li>
+      <li><a href="/article?category=CG">Graphics</a></li>
+      <li><a href="/article?category=language">Language</a></li>
+      <li><a href="/article?category=philosophy">Philosophy</a></li>
+      <li><a href="/article?category=math">Math</a></li>
+      <li><a href="/article?category=default">Default</a></li>
+      <li><a href="/gallery?category=default">Gallery</a></li>
+      <% if(param.fileName){ %>
+      <li><a href="/editor?fileName=<%= param.fileName %>">edit</a></li>
+      <% } %>
+    </ul>
+  </nav>
+</header>

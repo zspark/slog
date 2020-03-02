@@ -1,0 +1,33 @@
+{
+  "site_name": "Spark Nodes",
+  "description": "This is a developing blog site.",
+  "favicon": "/img/favicon.ico",
+  "custom_css": "/css/custom.css",
+  "editor_css": "/css/editor.css",
+  "style_css": "/css/style.css",
+  "bootstrap_css": "/css/bootstrap.css",
+  "bootstrap_js": "/js/bootstrap.js",
+  "jquery_js": "/js/jquery.slim.js",
+  "editor_js": "/js/editor.js",
+  "marked_js": "/js/marked.min.js",
+  "foo": "bar",
+  "module": [
+    {
+      "name": "cs",
+      "template": "template-article.ejs",
+      "config": {
+        "display_name": "JavaScript code",
+        "display_time": "2015-10-19",
+        "author": "jerrychaos",
+        "published": true,
+        "module_name": "cs",
+        "template": "template-article.ejs",
+        "description": "<no-description>"
+      }
+    },
+    {
+      "name": "essay",
+      "template": "template-article.ejs"
+    }
+  ]
+}
