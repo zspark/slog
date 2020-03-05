@@ -15,10 +15,10 @@
 <body id="body_editor" onLoad="OnBodyLoad()">
 
   <form id="myform_cancel" method="POST" onsubmit="return submitFun_cancel(this);"
-    action="/editor?fileName=<%- obj.fileName %>">
+    action="/edit?n=<%- obj.fileName %>">
   </form>
 
-  <form id="myform" method="POST" onsubmit="return submitFun(this);" action="/editor?fileName=<%- obj.fileName %>">
+  <form id="myform" method="POST" onsubmit="return submitFun(this);" action="/edit?n=<%- obj.fileName %>">
     <input type="submit" value="Submit" />
     <input type="submit" value="Cancel" form="myform_cancel" />
 

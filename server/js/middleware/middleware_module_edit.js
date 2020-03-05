@@ -1,17 +1,18 @@
-const pathes = require("../pathes");
+const common = require("../common");
+const pathes = common.pathes;
+var Base = require(pathes.pathMW + "middleware_module_base");
 const LOG = require(pathes.pathJS + 'debug_logger');
 const Utils = require(pathes.pathJS + "utils");
 const FileFolderHandler = require(pathes.pathJS + 'file_folder_handler');
 const aco = require(pathes.pathJS + "article_config_organizer");
-var Base = require(pathes.pathMW + "composer_base");
 
-class ComposerEditor extends Base {
+class ModuleEdit extends Base {
   constructor() {
     super();
   };
 
   GetHandler(req, res) {
-    const _fileName = Utils.GetQueryValue(req, "fileName");
+    const _fileName = Utils.GetQueryValueOfFileName(req);
     if (_fileName) {
       //Utils.SetCookie(req, "fileName",_fileName);
       let obj = {
@@ -27,12 +28,12 @@ class ComposerEditor extends Base {
         obj["category"] = _cfg["category"];
         obj["displayName"] = _cfg["displayName"];
       }
-      const fileURL = this.articleFolderPath + _fileName;
+      const fileURL = pathes.pathArticle + _fileName;
       let _content = FileFolderHandler.ReadFileUTF8(fileURL);
       if (_content != null) {
         obj["content"] = _content;
       }
-      this.RenderEjs(this.editorHtmlURL, { obj: obj }, res);
+      this.RenderEjs(req, res, this.editorHtmlURL, { obj: obj });
     } else {
       res.end("no assigned file name!");
     };
@@ -40,7 +41,7 @@ class ComposerEditor extends Base {
 
   PostHandler(req, res) {
     //console.log(req.body);
-    const _fileName = Utils.GetQueryValue(req,"fileName");
+    const _fileName = Utils.GetQueryValueOfFileName(req);
     const _content = req.body.content;
 
     // cancel modify
@@ -77,13 +78,13 @@ class ComposerEditor extends Base {
   };
 
   LoginFirst(req, res) {
-    this.RenderEjs(this.loginHtmlURL, {}, res);
+    this.RenderEjs(req, res, this.loginHtmlURL, {});
   };
 
 };
 
-function EditorHtmlComposer() {
-  let mw = new ComposerEditor();
+function Init() {
+  let mw = new ModuleEdit();
 
   let get = function (req, res) {
     if (Utils.CheckLogin(req)) {
@@ -102,4 +103,4 @@ function EditorHtmlComposer() {
   return { get: get, post: post };
 };
 
-module.exports.EditorHtmlComposer = EditorHtmlComposer;
+module.exports.Init = Init;

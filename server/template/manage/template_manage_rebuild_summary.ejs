@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<%- include("../component/head") %>
+
+<body>
+  <div class="wrapper">
+    <%- include("../component/header",{param:{}}) %>
+
+    <h1>before rebuild:</h1>
+    <span>articles:</span> <span> <%- obj.articleCountBefore %> </span>
+    <p>
+      <%- obj.contentBefore %>
+    </p>
+
+    <h1>after rebuild:</h1>
+    <span>articles:</span> <span> <%- obj.articleCountAfter %> </span>
+    <p>
+      <%- obj.contentAfter %>
+    </p>
+
+    <%- include("../component/footer") %>
+  </div>
+</body>
+
+</html>

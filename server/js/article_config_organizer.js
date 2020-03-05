@@ -1,10 +1,11 @@
-const pathes = require("./pathes");
+const common = require("./common");
+const pathes = common.pathes;
 const LOG = require(pathes.pathJS + 'debug_logger');
 const Utils = require(pathes.pathJS + "utils");
 const FileFolderHandler = require(pathes.pathJS + 'file_folder_handler');
 
-const M_CATEGORY = "category";
-const M_ARTICLE = "articles";
+const M_CATEGORY = common.constant.M_CATEGORY;
+const M_ARTICLE = common.constant.M_ARTICLE;
 
 class Organizer {
   constructor() {
@@ -38,7 +39,7 @@ class Organizer {
     _arr.push(fileName);
   }
 
-  DeleteArticleFromDisk(fileName) {
+  _DeleteArticleFromDisk(fileName) {
     let b = FileFolderHandler.DeleteFile(pathes.pathArticle + fileName);
     if (b) {
       LOG.Info("article deleted, file name:%s", fileName);
@@ -48,7 +49,7 @@ class Organizer {
   }
 
   _SaveArticleToDisk(fileName, content, cb) {
-    var b = FileFolderHandler.WriteFileUTF8(pathes.pathArticle + fileName, content);
+    var b = FileFolderHandler.WriteFileUTF8(pathes.pathArticle + fileName, content, ".md");
     if (b) {
       LOG.Info("article saved successfully. file name:%s", fileName);
     } else {
@@ -56,16 +57,6 @@ class Organizer {
     }
     if (cb) cb(b);
   }
-
-  _SaveConfigToDisk() {
-    let configStr = JSON.stringify(this.config);
-    var b = FileFolderHandler.WriteFileUTF8(pathes.urlArticleConfig, configStr);
-    if (b) {
-      LOG.Info("save article config content to disk successfully.");
-    } else {
-      LOG.Error("save article config content to disk failed!");
-    }
-  };
 
   _ModifyConfig(cfg, fileName, category, title, options) {
     if (fileName) cfg["fileName"] = fileName;
@@ -78,19 +69,31 @@ class Organizer {
     }
   }
 
-  Add(fileName, category, title, content) {
-    if (this.GetConfig(fileName)) return null;
+  SaveConfigToDisk() {
+    let configStr = JSON.stringify(this.config);
+    var b = FileFolderHandler.WriteFileUTF8(pathes.urlArticleConfig, configStr);
+    if (b) {
+      LOG.Info("save article config content to disk successfully.");
+    } else {
+      LOG.Error("save article config content to disk failed!");
+    }
+  };
+
+  Add(fileName, category, title, content, save = true) {
+    if (this.GetConfig(fileName)) return false;
 
     let _cfg = Object.create(null);
     _cfg["createTime"] = new Date().toISOString();
     this._ModifyConfig(_cfg, fileName, category, title,
-      { author: "Jerry Chaos", published: true, template: "template_article.ejs" }
+      { author: "Jerry Chaos", published: true, template: "template_view.ejs" }
     );
     this.configArticles[fileName] = _cfg;
     this._AppendToCategory(category, fileName);
 
-    this._SaveConfigToDisk();
-    this._SaveArticleToDisk(fileName, content);
+    if (save) {
+      this.SaveConfigToDisk();
+      this._SaveArticleToDisk(fileName, content);
+    }
     return true;
   };
 
@@ -100,8 +103,8 @@ class Organizer {
       const _category = config[M_CATEGORY];
       this._RemoveFromCategory(_category, fileName);
       delete this.configArticles[fileName];
-      this._SaveConfigToDisk();
-      this.DeleteArticleFromDisk(fileName);
+      this.SaveConfigToDisk();
+      this._DeleteArticleFromDisk(fileName);
       LOG.Info("article deleted. file name:%s", fileName);
       return true;
     } else {
@@ -118,8 +121,8 @@ class Organizer {
         this._RemoveFromCategory(lastCategory, fileName);
         this._AppendToCategory(category, fileName);
       }
-      this._ModifyConfig(_cfg, fileName, category, title, { author: "Jerry Chaos", published: true, template: "template_article.ejs" });
-      this._SaveConfigToDisk();
+      this._ModifyConfig(_cfg, fileName, category, title, { author: "Jerry Chaos", published: true, template: "template_view.ejs" });
+      this.SaveConfigToDisk();
       this._SaveArticleToDisk(fileName, content);
       LOG.Info("article modified. file name:%s", fileName);
       return true;
@@ -143,6 +146,19 @@ class Organizer {
    */
   GetCategory(category) {
     return this.configCategories[category];
+  }
+
+  GetCategories(){
+    let _c=JSON.parse(JSON.stringify(this.configCategories));
+    return _c;
+  }
+
+  GetArticleCount(){
+    let _n = 0;
+    for (let fileName in this.configArticles) {
+      ++_n;
+    }
+    return _n;
   }
 };
 

@@ -1,4 +1,5 @@
-const pathes = require("./pathes");
+const common = require("./common");
+const pathes = common.pathes;
 const LOG = require(pathes.pathJS+'debug_logger');
 const FileFolderHandler = require(pathes.pathJS+'file_folder_handler');
 

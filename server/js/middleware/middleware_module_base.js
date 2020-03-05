@@ -1,34 +1,23 @@
 const MARKED = require("marked");
 const EJS = require("ejs");
 
-const pathes = require("../pathes");
+const common = require("../common");
+const pathes = common.pathes;
 const LOG = require(pathes.pathJS + 'debug_logger');
 const Utils = require(pathes.pathJS + "utils");
 const aco = require(pathes.pathJS + "article_config_organizer");
 const FileFolderHandler = require(pathes.pathJS + 'file_folder_handler');
 
-class ComposerBase {
+class ModuleBase {
   constructor() {
-    //LOG.Info("%s,%s", tplFolderPath, articleFolderPath);
-    this.articleFolderPath = pathes.pathArticle;
     this.articleListURL = pathes.pathTemplate + "template_article_list.ejs";
     this.article404URL = pathes.pathTemplate + "template_article_404.ejs";
     this.editorHtmlURL = pathes.pathTemplate + "template_editor.ejs";
     this.loginHtmlURL = pathes.pathTemplate + "template_login.ejs";
-    this.indexURL = pathes.pathTemplate + "template_index.ejs";
-    this.projectHtmlURL = Object.create(null);
-    this.projectHtmlURL.webgl = pathes.pathTemplate + "project/template_webgl.ejs";
-    this.projectHtmlURL.duck = pathes.pathTemplate + "project/template_duck.ejs";
-    this.projectHtmlURL.blog = pathes.pathTemplate + "project/template_blog.ejs";
-    this.projectHtmlURL.lsx = pathes.pathTemplate + "project/template_lsx.ejs";
-    this.projectHtmlURL.coper = pathes.pathTemplate + "project/template_coper.ejs";
+    this.frontPageURL = pathes.pathTemplate + "template_view_without_title.ejs";
   };
 
-  ComposeIndexHtml(obj, req, res) {
-    this.RenderEjs(this.indexURL, obj, res);
-  };
-
-  ComposeArticleWithFileName(fileName, req, res) {
+  ComposeArticleWithFileName(req, res, fileName) {
     let _cfg = aco.GetConfig(fileName);
     if (!_cfg) {
       res.end("article config do NOT exist! file name:%s", fileName)
@@ -57,12 +46,12 @@ class ComposerBase {
           mdHtml: mdHtml
         };
         const tplFileURL = pathes.pathTemplate + _cfg.template;
-        this.RenderEjs(tplFileURL, { obj: obj }, res);
+        this.RenderEjs(req, res, tplFileURL, { obj: obj });
       }
     });
   };
 
-  RenderEjs(tplUrl, obj, res) {
+  RenderEjs(req, res, tplUrl, obj) {
     EJS.renderFile(tplUrl, obj, (err, html) => {
       if (err) {
         LOG.Error(err, html);
@@ -73,16 +62,23 @@ class ComposerBase {
     });
   }
 
+  ComposeFrontPageHtml(req, res, obj) {
+    this.RenderEjs(req, res, this.frontPageURL, obj);
+  };
 
-  ComposeArticle404(fileName, res) {
+  ComposeURLFormatError(req, res){
+    res.end("oops!, wrong URL format!");
+  };
+
+  ComposeArticle404(req, res, fileName) {
     const obj = { fileName: fileName };
-    this.RenderEjs(this.article404URL, { obj: obj }, res);
+    this.RenderEjs(req, res, this.article404URL, { obj: obj });
   };
 
   LoginFirst(req, res) {
-    this.RenderEjs(this.loginHtmlURL, {}, res);
+    this.RenderEjs(req, res, this.loginHtmlURL, {});
   };
 
 };
 
-module.exports = ComposerBase;
+module.exports = ModuleBase;

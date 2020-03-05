@@ -1,6 +1,7 @@
 const FS = require('fs');
 
-const pathes = require("./pathes");
+const common = require("./common");
+const pathes = common.pathes;
 const LOG = require(pathes.pathJS+'debug_logger');
 
 /**
@@ -72,8 +73,8 @@ var DeleteFile = function (fileURL) {
   } else return false;
 };
 
-var WriteFileUTF8 = function (fileURL, data) {
-  FS.writeFileSync(fileURL, data);
+var WriteFileUTF8 = function (fileURL, data, extension = "") {
+  FS.writeFileSync(fileURL + extension, data);
   return true;
 };
 
