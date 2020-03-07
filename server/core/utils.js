@@ -44,6 +44,11 @@ var GetQueryValueOfCategory = function (req) {
   return GetQueryValue(req,"c");
 }
 
+var MakeLoginURL = function () {
+  let _query = "/login";
+  return _query;
+};
+
 var MakeArticleURL = function (fileName) {
   let _obj = {
     "n": fileName,
@@ -58,11 +63,17 @@ var MakeHomeURL = function (obj) {
 };
 
 var CheckLogin = function (req) {
-  return (req.signedCookies.account) ? true : false;
+  if(req.signedCookies){
+    return (req.signedCookies.account) ? true : false;
+  }
+  return false;
 };
 
-var GetCookieUserName = function (req) {
-  return req.signedCookies.account;
+var GetUserAccount = function (req) {
+  if (req.signedCookies) {
+    return req.signedCookies.account;
+  }
+  return null;
 };
 
 var SetCookie = function (req, key, value) {
@@ -86,6 +97,7 @@ module.exports.GetCookie = GetCookie;
 module.exports.SetCookie = SetCookie;
 module.exports.EraseValueFromArray = EraseValueFromArray;
 module.exports.CheckLogin = CheckLogin;
+module.exports.GetUserAccount = GetUserAccount;
 module.exports.GetQueryValue = GetQueryValue;
 module.exports.GetQueryValueOfCMD = GetQueryValueOfCMD;
 module.exports.GetQueryValueOfFileName = GetQueryValueOfFileName;
@@ -96,4 +108,4 @@ module.exports.SetValueIfNull = SetValueIfNull;
 module.exports.DeleteFromArray = DeleteFromArray;
 module.exports.MakeArticleURL = MakeArticleURL;
 module.exports.MakeHomeURL = MakeHomeURL;
-module.exports.GetCookieUserName = GetCookieUserName;
+module.exports.MakeLoginURL = MakeLoginURL;

@@ -14,12 +14,19 @@ class ModuleEdit extends Base {
   };
 
   GetHandler(req, res) {
+    let _loggedIn = Utils.CheckLogin(req);
+    if (!_loggedIn) {
+      let _url = Utils.MakeLoginURL();
+      res.redirect()
+      return;
+    }
+
     const _fileName = Utils.GetQueryValueOfFileName(req);
     if (_fileName) {
       //Utils.SetCookie(req, "fileName",_fileName);
       let obj = Object.create(null);
       obj[constant.M_FILE_NAME] = _fileName;
-      obj[constant.M_AUTHOR] = Utils.GetCookieUserName();
+      obj[constant.M_AUTHOR] = UserManager.GetUserInfo(Utils.GetUserAccount(req)).displayName;
       obj[constant.M_CATEGORY] = "default";
       obj[constant.M_TITLE] = "";
       obj[constant.M_TEMPLATE] = "template_view.ejs";
