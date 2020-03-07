@@ -8,7 +8,17 @@ const UserManager = require(pathes.pathCore + "user_manager");
 class ModuleLogin extends Base {
   constructor() {
     super();
+    this.loginHtmlURL = pathes.pathTemplate + "template_login.ejs";
   };
+
+  GetHandler(req, res) {
+    const _fileName = Utils.GetQueryValueOfFileName(req);
+    if (_fileName) {
+      this.RenderEjs(req, res, this.loginHtmlURL, { obj: { fileName: _fileName } });
+    } else {
+      this.RenderEjs(req, res, this.loginHtmlURL, { obj: {} });
+    }
+  }
 
   PostHandler(req, res) {
     const postData = req.body;
@@ -17,8 +27,14 @@ class ModuleLogin extends Base {
     if (userInfo) {
       if (userInfo.password === postData["password"]) {
         res.cookie("account", userInfo.account, { signed: true });//read cookies:(req.signedCookies.bwf) 
-        let _url = Utils.MakeHomeURL({});
-        res.redirect(_url);
+        const _fileName = Utils.GetQueryValueOfFileName(req);
+        if(_fileName){
+          let _url = Utils.MakeEditURL(_fileName);
+          res.redirect(_url);
+        } else {
+          let _url = Utils.MakeHomeURL();
+          res.redirect(_url);
+        }
       } else {
         const _info = "Sorry wrong password! password:" + postData["password"];
         LOG.Error(_info);
@@ -36,7 +52,7 @@ function Init() {
   let mw = new ModuleLogin();
 
   let get = function (req, res) {
-    mw.LoginFirst(req, res);
+    mw.GetHandler(req, res);
   };
 
   let post = function (req, res) {

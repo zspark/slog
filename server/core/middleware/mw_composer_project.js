@@ -52,7 +52,7 @@ function ProjectHtmlComposer() {
     } else if (_projectName == "coper") {
       mw.ComposeProject_coper(req, res);
     } else {
-      let _url = Utils.MakeHomeURL(null);
+      let _url = Utils.MakeHomeURL();
       res.redirect(_url);
     }
   }

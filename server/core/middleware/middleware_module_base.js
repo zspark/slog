@@ -14,21 +14,22 @@ class ModuleBase {
     this.articleListURL = pathes.pathTemplate + "template_article_list.ejs";
     this.article404URL = pathes.pathTemplate + "template_article_404.ejs";
     this.editorHtmlURL = pathes.pathTemplate + "template_editor.ejs";
-    this.loginHtmlURL = pathes.pathTemplate + "template_login.ejs";
     this.frontPageURL = pathes.pathTemplate + "template_view_without_title.ejs";
   };
 
   ComposeArticleWithFileName(req, res, fileName) {
     let _cfg = CC.GetConfig(fileName);
     if (!_cfg) {
-      res.end("article config do NOT exist! file name:%s", fileName)
+      let _msg = "article config do NOT exist! file name:" + fileName;
+      res.end(_msg);
       return;
     }
 
     let _content = DV.ReadFileUTF8(pathes.pathArticle + fileName);
     if (_content == null) {
-      /// jerry: becarful of empty string; so wo just use ==null to judge;
-      res.end("article content do NOT exist! file name:%s", fileName)
+      /// jerry: be careful of empty string; so wo just use ==null to judge;
+      let _msg = "article content do NOT exist! file name:" + fileName;
+      res.end(_msg);
       return;
     }
 
@@ -76,11 +77,6 @@ class ModuleBase {
     const obj = { fileName: fileName };
     this.RenderEjs(req, res, this.article404URL, { obj: obj });
   };
-
-  LoginFirst(req, res) {
-    this.RenderEjs(req, res, this.loginHtmlURL, {});
-  };
-
 };
 
 module.exports = ModuleBase;

@@ -57,8 +57,24 @@ var MakeArticleURL = function (fileName) {
   return _query;
 };
 
-var MakeHomeURL = function (obj) {
+var MakeHomeURL = function () {
   let _query = "/";
+  return _query;
+};
+
+var MakeEditURL = function (fileName) {
+  let _obj = {
+    "n": fileName,
+  };
+  let _query = "/edit?" + QUERYSTRING.stringify(_obj);
+  return _query;
+};
+
+var MakeLoginWithViewURL = function (fileName) {
+  let _obj = {
+    "n": fileName,
+  };
+  let _query = "/login?" + QUERYSTRING.stringify(_obj);
   return _query;
 };
 
@@ -108,4 +124,6 @@ module.exports.SetValueIfNull = SetValueIfNull;
 module.exports.DeleteFromArray = DeleteFromArray;
 module.exports.MakeArticleURL = MakeArticleURL;
 module.exports.MakeHomeURL = MakeHomeURL;
+module.exports.MakeEditURL = MakeEditURL;
 module.exports.MakeLoginURL = MakeLoginURL;
+module.exports.MakeLoginWithViewURL = MakeLoginWithViewURL;

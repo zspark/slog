@@ -94,14 +94,15 @@ function Init() {
       } else {
         mw.ComposeArticle404(req, res, _fileName);
       }
+      return;
+    }
+
+    const _category = Utils.GetQueryValueOfCategory(req);
+    if (_category) {
+      mw.ComposeArticleList(req, res, _category);
     } else {
-      const _category = Utils.GetQueryValueOfCategory(req);
-      if(_category){
-        mw.ComposeArticleList(req, res, _category);
-      }else{
-        mw.ComposeURLFormatError(req, res);
-      }
-    };
+      mw.ComposeURLFormatError(req, res);
+    }
   };
 
   let getCode = function (req, res) {

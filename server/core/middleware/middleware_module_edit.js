@@ -4,7 +4,7 @@ const constant = common.constant;
 var Base = require(pathes.pathMW + "middleware_module_base");
 const LOG = require(pathes.pathCore + 'logger');
 const Utils = require(pathes.pathCore + "utils");
-const FileFolderHandler = require(pathes.pathCore + 'disk_visitor');
+const DV = require(pathes.pathCore + 'disk_visitor');
 const CC = require(pathes.pathCore + "content_controller");
 const UserManager = require(pathes.pathCore + "user_manager");
 
@@ -40,7 +40,7 @@ class ModuleEdit extends Base {
         obj[constant.M_TEMPLATE] = _cfg[constant.M_TEMPLATE];
       }
       const fileURL = pathes.pathArticle + _fileName;
-      let _content = FileFolderHandler.ReadFileUTF8(fileURL);
+      let _content = DV.ReadFileUTF8(fileURL);
       if (_content != null) {
         obj["content"] = _content;
       }
@@ -61,7 +61,7 @@ class ModuleEdit extends Base {
         let _url = Utils.MakeArticleURL(_fileName);
         res.redirect(_url);
       } else {
-        let _url = Utils.MakeHomeURL(null);
+        let _url = Utils.MakeHomeURL();
         res.redirect(_url);
       }
       return;
@@ -70,7 +70,7 @@ class ModuleEdit extends Base {
     // delete
     if (_content.trim() == "delete") {
       CC.Delete(_fileName);
-      let _url = Utils.MakeHomeURL(null);
+      let _url = Utils.MakeHomeURL();
       res.redirect(_url);
       return;
     }
@@ -90,7 +90,14 @@ class ModuleEdit extends Base {
   };
 
   LoginFirst(req, res) {
-    this.RenderEjs(req, res, this.loginHtmlURL, {});
+    const _fileName = Utils.GetQueryValueOfFileName(req);
+    if(_fileName){
+      let _url = Utils.MakeLoginWithViewURL(_fileName);
+      res.redirect(_url);
+    }else{
+      let _url = Utils.MakeLoginURL();
+      res.redirect(_url);
+    }
   };
 
 };
