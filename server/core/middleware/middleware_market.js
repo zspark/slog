@@ -3,7 +3,7 @@ const cookieParser = require('cookie-parser');
 
 const common = require("../common");
 const pathes = common.pathes;
-const LOG = require(pathes.pathJS + 'debug_logger');
+const LOG = require(pathes.pathCore + 'logger');
 const MWView = require(pathes.pathMW + "middleware_module_view");
 const MWLogin = require(pathes.pathMW + "middleware_module_login");
 const MWUpload = require(pathes.pathMW + "middleware_module_upload");

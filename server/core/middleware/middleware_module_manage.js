@@ -1,11 +1,11 @@
 const common = require("../common");
 const pathes = common.pathes;
 var Base = require(pathes.pathMW + "middleware_module_base");
-const LOG = require(pathes.pathJS+'debug_logger');
-const Utils = require(pathes.pathJS+"utils");
-const UserManager = require(pathes.pathJS+"user_manager");
-const FileFolderHandler = require(pathes.pathJS+'file_folder_handler');
-const aco = require(pathes.pathJS + "article_config_organizer");
+const LOG = require(pathes.pathCore+'logger');
+const Utils = require(pathes.pathCore+"utils");
+const UserManager = require(pathes.pathCore+"user_manager");
+const FileFolderHandler = require(pathes.pathCore+'disk_visitor');
+const CC = require(pathes.pathCore + "content_controller");
 
 class ModuleManage extends Base {
   constructor() {
@@ -16,23 +16,23 @@ class ModuleManage extends Base {
   RebuildSummary(req, res) {
     let _obj = Object.create(null);
     _obj.contentBefore = FileFolderHandler.ReadFileUTF8(pathes.urlArticleConfig);
-    _obj.articleCountBefore = aco.GetArticleCount();
+    _obj.articleCountBefore = CC.GetArticleCount();
 
     let _list = FileFolderHandler.ReadAllFileNamesInFolder(pathes.pathArticle);
     _list.map(_n => {
       if (_n != ".summary.json"){
-        aco.Add(_n, "default", "<no title assigned>", null, false);
+        CC.Add(_n, "default", "<no title assigned>", null, null, null, false);
       }
     });
-    aco.SaveConfigToDisk();
+    CC.SaveConfigToDisk();
 
     _obj.contentAfter = FileFolderHandler.ReadFileUTF8(pathes.urlArticleConfig);
-    _obj.articleCountAfter = aco.GetArticleCount();
+    _obj.articleCountAfter = CC.GetArticleCount();
     this.RenderEjs(req, res, pathes.templateManageRebuildSummary, { obj: _obj });
   };
 
   ListCategories(req, res) {
-    let _cfgC = aco.GetCategories();
+    let _cfgC = CC.GetCategories();
     let _obj = Object.create(null);
     _obj.arrCategoryName = [];
     for (let c in _cfgC){

@@ -1,10 +1,10 @@
 const common = require("../common");
 const pathes = common.pathes;
 var Base = require(pathes.pathMW + "middleware_module_base");
-const LOG = require(pathes.pathJS + 'debug_logger');
-const Utils = require(pathes.pathJS + "utils");
-const aco = require(pathes.pathJS + "article_config_organizer");
-const File = require(pathes.pathJS + "file_folder_handler");
+const LOG = require(pathes.pathCore + 'logger');
+const Utils = require(pathes.pathCore + "utils");
+const aco = require(pathes.pathCore + "content_controller");
+const File = require(pathes.pathCore + "disk_visitor");
 
 class ModuleView extends Base {
   constructor() {
@@ -51,7 +51,7 @@ class ModuleView extends Base {
         let _cfg = aco.GetConfig(_fileName);
         obj.push({
           "fileName": _fileName,
-          "displayName": _cfg["displayName"],
+          "title": _cfg["title"],
           "displayTime": new Date(_cfg["createTime"]).toDateString()
         });
       });

@@ -1,7 +1,7 @@
 const FS = require('fs');
 
 const pathes = require("../js/pathes");
-const FileFolderHandler = require(pathes.pathJS + 'file_folder_handler');
+const FileFolderHandler = require(pathes.pathCore + 'disk_visitor');
 var bQuote = false;
 var ConvertLine = function (line) {
   const L = line.length;

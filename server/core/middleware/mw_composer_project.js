@@ -1,8 +1,8 @@
 const common = require("../common");
 const pathes = common.pathes;
 var Base = require(pathes.pathMW + "composer_base");
-const LOG = require(pathes.pathJS + 'debug_logger');
-const Utils = require(pathes.pathJS + "utils");
+const LOG = require(pathes.pathCore + 'logger');
+const Utils = require(pathes.pathCore + "utils");
 
 class ComposerProject extends Base {
   constructor() {

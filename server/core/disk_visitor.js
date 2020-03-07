@@ -2,7 +2,7 @@ const FS = require('fs');
 
 const common = require("./common");
 const pathes = common.pathes;
-const LOG = require(pathes.pathJS+'debug_logger');
+const LOG = require(pathes.pathCore+'logger');
 
 /**
  * load a file from local disk

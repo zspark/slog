@@ -1,23 +1,29 @@
 const common = require("./common");
 const pathes = common.pathes;
-const LOG = require(pathes.pathJS + 'debug_logger');
-const Utils = require(pathes.pathJS + "utils");
-const FileFolderHandler = require(pathes.pathJS + 'file_folder_handler');
+const constant = common.constant;
+const LOG = require(pathes.pathCore + 'logger');
+const Utils = require(pathes.pathCore + "utils");
+const DV = require(pathes.pathCore + 'disk_visitor');
 
-const M_CATEGORY = common.constant.M_CATEGORY;
-const M_ARTICLE = common.constant.M_ARTICLE;
+let _ModifyConfig = function (cfg, fileName, category, title, author, template) {
+  if (fileName != null) cfg[constant.M_FILE_NAME] = fileName;
+  if (category != null) cfg[constant.M_CATEGORY] = category;
+  if (title != null) cfg[constant.M_TITLE] = title;
+  if (author != null) cfg[constant.M_AUTHOR] = author;
+  if (template != null) cfg[constant.M_TEMPLATE] = template;
+}
 
 class Organizer {
   constructor() {
     LOG.Info("[CONSTRUCT] article organizer...");
     this.configCategories = Object.create(null);
-    let configJson = FileFolderHandler.ReadFileUTF8(pathes.urlArticleConfig);
+    let configJson = DV.ReadFileUTF8(pathes.urlArticleConfig);
     LOG.Info("parse article config...");
     this.config = JSON.parse(configJson);
-    this.configArticles = this.config[M_ARTICLE];
+    this.configArticles = this.config[constant.M_ARTICLE];
 
     for (let fileName in this.configArticles) {
-      let category = this.configArticles[fileName][M_CATEGORY];
+      let category = this.configArticles[fileName][constant.M_CATEGORY];
       this._AppendToCategory(category, fileName);
     }
   };
@@ -40,7 +46,7 @@ class Organizer {
   }
 
   _DeleteArticleFromDisk(fileName) {
-    let b = FileFolderHandler.DeleteFile(pathes.pathArticle + fileName);
+    let b = DV.DeleteFile(pathes.pathArticle + fileName);
     if (b) {
       LOG.Info("article deleted, file name:%s", fileName);
     } else {
@@ -49,7 +55,7 @@ class Organizer {
   }
 
   _SaveArticleToDisk(fileName, content, cb) {
-    var b = FileFolderHandler.WriteFileUTF8(pathes.pathArticle + fileName, content, ".md");
+    var b = DV.WriteFileUTF8(pathes.pathArticle + fileName, content);
     if (b) {
       LOG.Info("article saved successfully. file name:%s", fileName);
     } else {
@@ -58,20 +64,9 @@ class Organizer {
     if (cb) cb(b);
   }
 
-  _ModifyConfig(cfg, fileName, category, title, options) {
-    if (fileName) cfg["fileName"] = fileName;
-    if (category) cfg[M_CATEGORY] = category;
-    if (title) cfg["displayName"] = title;
-    if (options) {
-      if (options.author) cfg["author"] = options.author;
-      if (options.published) cfg["published"] = options.published;
-      if (options.template) cfg["template"] = options.template;
-    }
-  }
-
   SaveConfigToDisk() {
     let configStr = JSON.stringify(this.config);
-    var b = FileFolderHandler.WriteFileUTF8(pathes.urlArticleConfig, configStr);
+    var b = DV.WriteFileUTF8(pathes.urlArticleConfig, configStr);
     if (b) {
       LOG.Info("save article config content to disk successfully.");
     } else {
@@ -79,14 +74,11 @@ class Organizer {
     }
   };
 
-  Add(fileName, category, title, content, save = true) {
+  Add(fileName, category, title, author, template, content, save = true) {
     if (this.GetConfig(fileName)) return false;
 
-    let _cfg = Object.create(null);
-    _cfg["createTime"] = new Date().toISOString();
-    this._ModifyConfig(_cfg, fileName, category, title,
-      { author: "Jerry Chaos", published: true, template: "template_view.ejs" }
-    );
+    let _cfg = this.CreateArticleConfig();
+    _ModifyConfig(_cfg, fileName, category, title, author, template);
     this.configArticles[fileName] = _cfg;
     this._AppendToCategory(category, fileName);
 
@@ -100,7 +92,7 @@ class Organizer {
   Delete(fileName) {
     let config = this.GetConfig(fileName);
     if (config) {
-      const _category = config[M_CATEGORY];
+      const _category = config[constant.M_CATEGORY];
       this._RemoveFromCategory(_category, fileName);
       delete this.configArticles[fileName];
       this.SaveConfigToDisk();
@@ -113,15 +105,15 @@ class Organizer {
     }
   };
 
-  Modify(fileName, category, title, content, options = null) {
+  Modify(fileName, category, title, author, template, content) {
     let _cfg = this.GetConfig(fileName);
     if (_cfg) {
-      let lastCategory = _cfg[M_CATEGORY];
+      let lastCategory = _cfg[constant.M_CATEGORY];
       if (lastCategory != category) {
         this._RemoveFromCategory(lastCategory, fileName);
         this._AppendToCategory(category, fileName);
       }
-      this._ModifyConfig(_cfg, fileName, category, title, { author: "Jerry Chaos", published: true, template: "template_view.ejs" });
+      _ModifyConfig(_cfg, fileName, category, title, author, template);
       this.SaveConfigToDisk();
       this._SaveArticleToDisk(fileName, content);
       LOG.Info("article modified. file name:%s", fileName);
@@ -148,17 +140,28 @@ class Organizer {
     return this.configCategories[category];
   }
 
-  GetCategories(){
-    let _c=JSON.parse(JSON.stringify(this.configCategories));
+  GetCategories() {
+    let _c = JSON.parse(JSON.stringify(this.configCategories));
     return _c;
   }
 
-  GetArticleCount(){
+  GetArticleCount() {
     let _n = 0;
     for (let fileName in this.configArticles) {
       ++_n;
     }
     return _n;
+  }
+
+  CreateArticleConfig() {
+    let _obj = Object.create(null);
+    _obj[constant.M_FILE_NAME] = "";
+    _obj[constant.M_TITLE] = "<no title>";
+    _obj[constant.M_CREATE_TIME] = new Date().toISOString();
+    _obj[constant.M_AUTHOR] = "anonymous";
+    _obj[constant.M_CATEGORY] = "default";
+    _obj[constant.M_TEMPLATE] = "template_view.ejs";
+    return _obj;
   }
 };
 

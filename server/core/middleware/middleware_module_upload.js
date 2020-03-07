@@ -3,10 +3,10 @@ const multer  = require('multer')
 const common = require("../common");
 const pathes = common.pathes;
 var Base = require(pathes.pathMW + "middleware_module_base");
-const LOG = require(pathes.pathJS+'debug_logger');
-const Utils = require(pathes.pathJS+"utils");
-const UserManager = require(pathes.pathJS+"user_manager");
-const FileFolderHandler = require(pathes.pathJS+'file_folder_handler');
+const LOG = require(pathes.pathCore+'logger');
+const Utils = require(pathes.pathCore+"utils");
+const UserManager = require(pathes.pathCore+"user_manager");
+const FileFolderHandler = require(pathes.pathCore+'disk_visitor');
 
 var upload = multer({ dest: './public/share/uploads/' })
 //var uploadImg = upload.single('avatar').array("photos", 12);

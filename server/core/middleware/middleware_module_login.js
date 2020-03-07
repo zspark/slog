@@ -1,9 +1,9 @@
 const common = require("../common");
 const pathes = common.pathes;
 var Base = require(pathes.pathMW + "middleware_module_base");
-const LOG = require(pathes.pathJS + 'debug_logger');
-const Utils = require(pathes.pathJS + "utils");
-const UserManager = require(pathes.pathJS + "user_manager");
+const LOG = require(pathes.pathCore + 'logger');
+const Utils = require(pathes.pathCore + "utils");
+const UserManager = require(pathes.pathCore + "user_manager");
 
 class ModuleLogin extends Base {
   constructor() {

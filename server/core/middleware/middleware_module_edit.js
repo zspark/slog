@@ -1,10 +1,10 @@
 const common = require("../common");
 const pathes = common.pathes;
 var Base = require(pathes.pathMW + "middleware_module_base");
-const LOG = require(pathes.pathJS + 'debug_logger');
-const Utils = require(pathes.pathJS + "utils");
-const FileFolderHandler = require(pathes.pathJS + 'file_folder_handler');
-const aco = require(pathes.pathJS + "article_config_organizer");
+const LOG = require(pathes.pathCore + 'logger');
+const Utils = require(pathes.pathCore + "utils");
+const FileFolderHandler = require(pathes.pathCore + 'disk_visitor');
+const CC = require(pathes.pathCore + "content_controller");
 
 class ModuleEdit extends Base {
   constructor() {
@@ -19,14 +19,16 @@ class ModuleEdit extends Base {
         "fileName": _fileName,
         "author": "Jerry Chaos",
         "category": "default",
-        "displayName": "",
+        "title": "",
+        "template": "template_view.ejs",
         "content": "",
       };
-      var _cfg = aco.GetConfig(_fileName);
+      var _cfg = CC.GetConfig(_fileName);
       if (_cfg) {
         obj["author"] = _cfg["author"];
         obj["category"] = _cfg["category"];
-        obj["displayName"] = _cfg["displayName"];
+        obj["title"] = _cfg["title"];
+        obj["template"] = _cfg["template"];
       }
       const fileURL = pathes.pathArticle + _fileName;
       let _content = FileFolderHandler.ReadFileUTF8(fileURL);
@@ -46,7 +48,7 @@ class ModuleEdit extends Base {
 
     // cancel modify
     if (_content == null) {
-      if (aco.GetConfig(_fileName)) {
+      if (CC.GetConfig(_fileName)) {
         let _url = Utils.MakeArticleURL(_fileName);
         res.redirect(_url);
       } else {
@@ -58,7 +60,7 @@ class ModuleEdit extends Base {
 
     // delete
     if (_content.trim() == "delete") {
-      aco.Delete(_fileName);
+      CC.Delete(_fileName);
       let _url = Utils.MakeHomeURL(null);
       res.redirect(_url);
       return;
@@ -68,10 +70,11 @@ class ModuleEdit extends Base {
     const _title = req.body.title;
     const _author = req.body.author;
     const _category = req.body.category;
-    if (aco.GetConfig(_fileName)) {
-      aco.Modify(_fileName, _category, _title, _content);
+    const _template = req.body.template;
+    if (CC.GetConfig(_fileName)) {
+      CC.Modify(_fileName, _category, _title, _author, _template, _content);
     } else {
-      aco.Add(_fileName, _category, _title, _content);
+      CC.Add(_fileName, _category, _title, _author, _template, _content);
     }
     let _url = Utils.MakeArticleURL(_fileName);
     res.redirect(_url);
