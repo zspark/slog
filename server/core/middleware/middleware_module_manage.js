@@ -21,7 +21,7 @@ class ModuleManage extends Base {
     let _list = FileFolderHandler.ReadAllFileNamesInFolder(pathes.pathArticle);
     _list.map(_n => {
       if (_n != ".summary.json"){
-        CC.Add(_n, "default", "<no title assigned>", null, null, null, false);
+        CC.Add(_n, "_rebuild_collected_", "<no title assigned>", null, null, null, false);
       }
     });
     CC.SaveConfigToDisk();

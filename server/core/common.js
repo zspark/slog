@@ -25,7 +25,10 @@ const pathes = {
 };
 
 const constant = {
+  M_HOME: "home",
+  M_GALLERY: "gallery",
   M_ARTICLE: "articles",
+  M_LOGGED_IN: "loggedIn",
   M_FILE_NAME: "fileName",
   M_CATEGORY: "category",
   M_AUTHOR: "author",
@@ -33,7 +36,6 @@ const constant = {
   M_TITLE: "title",
   M_CREATE_TIME: "createTime",
   M_MODIFY_TIME: "modifyTime",
-  M_DISPLAY_TIME: "displayTime",
 };
 
 module.exports.pathes = pathes;

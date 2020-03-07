@@ -40,9 +40,10 @@ class ModuleBase {
       } else {
         ///TODO: to add a default template for article.
         const obj = Object.create(null);
-        obj[constant.M_FILE_NAME] = Utils.CheckLogin(req) ? _cfg[constant.M_FILE_NAME] : null;/// we judge logged in with file name;
+        obj[constant.M_LOGGED_IN] = Utils.CheckLogin(req);
+        obj[constant.M_FILE_NAME] = _cfg[constant.M_FILE_NAME];
         obj[constant.M_TITLE] = _cfg[constant.M_TITLE];
-        obj[constant.M_DISPLAY_TIME] = new Date(_cfg[constant.M_DISPLAY_TIME]).toDateString();
+        obj[constant.M_CREATE_TIME] = new Date(_cfg[constant.M_CREATE_TIME]).toDateString();
         obj[constant.M_AUTHOR] = _cfg[constant.M_AUTHOR];
         obj["mdHtml"] = mdHtml;
 

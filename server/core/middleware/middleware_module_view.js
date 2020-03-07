@@ -1,10 +1,11 @@
 const common = require("../common");
 const pathes = common.pathes;
+const constant = common.constant;
 var Base = require(pathes.pathMW + "middleware_module_base");
 const LOG = require(pathes.pathCore + 'logger');
 const Utils = require(pathes.pathCore + "utils");
-const aco = require(pathes.pathCore + "content_controller");
-const File = require(pathes.pathCore + "disk_visitor");
+const CC = require(pathes.pathCore + "content_controller");
+const DV = require(pathes.pathCore + "disk_visitor");
 
 class ModuleView extends Base {
   constructor() {
@@ -23,7 +24,7 @@ class ModuleView extends Base {
   }
 
   ComposeCodeViewPage(req, res, fileName) {
-    let _content = FileFolderHandler.ReadFileUTF8(pathes.pathCode + fileName);
+    let _content = DV.ReadFileUTF8(pathes.pathCode + fileName);
     if (_content == null) {
       res.end("file NOT exist!");
     } else {
@@ -44,16 +45,16 @@ class ModuleView extends Base {
 
   ComposeArticleList(req, res, category) {
     if (category) {
-      let _list = aco.GetCategory(category);
+      let _list = CC.GetCategory(category);
       if (!_list) { _list = []; }
       let obj = [];
       _list.map(_fileName => {
-        let _cfg = aco.GetConfig(_fileName);
-        obj.push({
-          "fileName": _fileName,
-          "title": _cfg["title"],
-          "displayTime": new Date(_cfg["createTime"]).toDateString()
-        });
+        let _cfg = CC.GetConfig(_fileName);
+        let _tmp = Object.create(null);
+        _tmp[constant.M_FILE_NAME] = _fileName;
+        _tmp[constant.M_TITLE] = _cfg[constant.M_TITLE];
+        _tmp[constant.M_CREATE_TIME] = new Date(_cfg[constant.M_CREATE_TIME]).toDateString();
+        obj.push(_tmp);
       });
       this.RenderEjs(req, res, this.articleListURL, { obj: obj });
     } else {
@@ -64,7 +65,7 @@ class ModuleView extends Base {
   };
 
   ComposeGalleryHtml(req, res) {
-    var arr = File.ReadAllFileNamesInFolder(this.galleryFolderPath);
+    var arr = DV.ReadAllFileNamesInFolder(this.galleryFolderPath);
 
     var objArr = [];
     arr.forEach(item => {
@@ -88,7 +89,7 @@ function Init() {
   let get = function (req, res) {
     const _fileName = Utils.GetQueryValueOfFileName(req);
     if (_fileName) {
-      if (aco.GetConfig(_fileName)) {
+      if (CC.GetConfig(_fileName)) {
         mw.ComposeArticleWithFileName(req, res, _fileName);
       } else {
         mw.ComposeArticle404(req, res, _fileName);
@@ -113,7 +114,7 @@ function Init() {
   };
 
   let getFrontPage = function (req, res) {
-    let _url = Utils.MakeArticleURL("_front_page_");
+    let _url = Utils.MakeArticleURL(constant.M_HOME);
     res.redirect(_url);
   };
 
