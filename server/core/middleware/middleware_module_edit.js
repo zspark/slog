@@ -1,10 +1,12 @@
 const common = require("../common");
 const pathes = common.pathes;
+const constant = common.constant;
 var Base = require(pathes.pathMW + "middleware_module_base");
 const LOG = require(pathes.pathCore + 'logger');
 const Utils = require(pathes.pathCore + "utils");
 const FileFolderHandler = require(pathes.pathCore + 'disk_visitor');
 const CC = require(pathes.pathCore + "content_controller");
+const UserManager = require(pathes.pathCore + "user_manager");
 
 class ModuleEdit extends Base {
   constructor() {
@@ -15,20 +17,20 @@ class ModuleEdit extends Base {
     const _fileName = Utils.GetQueryValueOfFileName(req);
     if (_fileName) {
       //Utils.SetCookie(req, "fileName",_fileName);
-      let obj = {
-        "fileName": _fileName,
-        "author": "Jerry Chaos",
-        "category": "default",
-        "title": "",
-        "template": "template_view.ejs",
-        "content": "",
-      };
+      let obj = Object.create(null);
+      obj[constant.M_FILE_NAME] = _fileName;
+      obj[constant.M_AUTHOR] = Utils.GetCookieUserName();
+      obj[constant.M_CATEGORY] = "default";
+      obj[constant.M_TITLE] = "";
+      obj[constant.M_TEMPLATE] = "template_view.ejs";
+      obj["content"] = "";
+
       var _cfg = CC.GetConfig(_fileName);
       if (_cfg) {
-        obj["author"] = _cfg["author"];
-        obj["category"] = _cfg["category"];
-        obj["title"] = _cfg["title"];
-        obj["template"] = _cfg["template"];
+        obj[constant.M_AUTHOR] = _cfg[constant.M_AUTHOR];
+        obj[constant.M_CATEGORY] = _cfg[constant.M_CATEGORY];
+        obj[constant.M_TITLE] = _cfg[constant.M_TITLE];
+        obj[constant.M_TEMPLATE] = _cfg[constant.M_TEMPLATE];
       }
       const fileURL = pathes.pathArticle + _fileName;
       let _content = FileFolderHandler.ReadFileUTF8(fileURL);

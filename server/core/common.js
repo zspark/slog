@@ -7,6 +7,7 @@ const ROOT_TEMPLATE = ROOT + "server/template/";
 const pathes = {
   pathRoot: ROOT,
   pathClient: ROOT_CLIENT,
+  pathUpload: ROOT_CLIENT + "share/",
   pathGallery: ROOT_CLIENT + "share/gallery/",
 
   pathCode: ROOT_CONTENT + "code/",

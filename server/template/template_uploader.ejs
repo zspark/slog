@@ -2,16 +2,40 @@
 <html lang="en">
 
 <%- include("component/head") %>
+<link rel="stylesheet" href="/lib/dropzone/dropzone.min.css" />
+<link rel="stylesheet" href="/lib/dropzone/basic.min.css" />
 
-<body id="body_editor">
+<body onLoad="OnBodyLoad()">
 
-  <form id="mydropzone" method="POST" action="/uploader/">
-    <div class="fallback">
-      <input name="file" type="file" multiple />
+
+  <div class="dropzone" id="dropz">
+    <div class="am-text-success dz-message">
+      将文件拖拽到此处<br>或点此打开文件管理器选择文件
     </div>
-  </form>
+  </div>
 
-  <script src="js/dropzone.min.js"></script>
+
+  <script src="/lib/dropzone/dropzone.min.js"></script>
+  <script>
+    function OnBodyLoad() {
+      Dropzone.autoDiscover = false;
+      var myDropzone = new Dropzone("#dropz", {
+        url: "/upload",
+        addRemoveLinks: true,
+        method: 'post',
+        filesizeBase: 1024,
+        sending: function (file, xhr, formData) {
+          formData.append("filesize", file.size);
+        },
+        success: function (file, response, e) {
+          var res = JSON.parse(response);
+          if (res.error) {
+            $(file.previewTemplate).children('.dz-error-mark').css('opacity', '1')
+          }
+        }
+      });
+    }
+  </script>
 
 </body>
 

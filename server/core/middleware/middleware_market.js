@@ -16,7 +16,7 @@ function Init(app) {
   var MiddlewareView = MWView.Init();
   var MiddlewareLogin = MWLogin.Init();
   var MiddlewareEdit = MWEdit.Init();
-  var MiddlewareUpload = MWUpload.Init();
+  //var MiddlewareUpload = MWUpload.Init();
   var MiddlewareManage = MWManage.Init();
 
   app.use(cookieParser('singedMyCookie'));
@@ -25,7 +25,8 @@ function Init(app) {
   app.get("/view", MiddlewareView.get);
   app.get("/edit", MiddlewareEdit.get);
   app.post("/edit", urlencodedParser, MiddlewareEdit.post);
-  ///TODO:Jerry WIP:app.get("/upload", MiddlewareUpload.get);
+  //app.get("/upload", MiddlewareUpload.get);
+  //app.post("/upload", MiddlewareUpload.post);
   app.get("/manage", MiddlewareManage.get);
   app.get("/gallery", MiddlewareView.getGallery);
   app.get("/index.html", MiddlewareView.getFrontPage);

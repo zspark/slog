@@ -61,6 +61,10 @@ var CheckLogin = function (req) {
   return (req.signedCookies.account) ? true : false;
 };
 
+var GetCookieUserName = function (req) {
+  return req.signedCookies.account;
+};
+
 var SetCookie = function (req, key, value) {
   req.signedCookies[key] = value;
 };
@@ -92,3 +96,4 @@ module.exports.SetValueIfNull = SetValueIfNull;
 module.exports.DeleteFromArray = DeleteFromArray;
 module.exports.MakeArticleURL = MakeArticleURL;
 module.exports.MakeHomeURL = MakeHomeURL;
+module.exports.GetCookieUserName = GetCookieUserName;
