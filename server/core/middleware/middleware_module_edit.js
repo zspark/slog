@@ -1,38 +1,41 @@
-const pathes = require("../pathes");
-const LOG = require(pathes.pathJS + 'debug_logger');
-const Utils = require(pathes.pathJS + "utils");
-const FileFolderHandler = require(pathes.pathJS + 'file_folder_handler');
-const aco = require(pathes.pathJS + "article_config_organizer");
-var Base = require(pathes.pathMW + "composer_base");
+const common = require("../common");
+const pathes = common.pathes;
+var Base = require(pathes.pathMW + "middleware_module_base");
+const LOG = require(pathes.pathCore + 'logger');
+const Utils = require(pathes.pathCore + "utils");
+const FileFolderHandler = require(pathes.pathCore + 'disk_visitor');
+const CC = require(pathes.pathCore + "content_controller");
 
-class ComposerEditor extends Base {
+class ModuleEdit extends Base {
   constructor() {
     super();
   };
 
   GetHandler(req, res) {
-    const _fileName = Utils.GetQueryValue(req, "fileName");
+    const _fileName = Utils.GetQueryValueOfFileName(req);
     if (_fileName) {
       //Utils.SetCookie(req, "fileName",_fileName);
       let obj = {
         "fileName": _fileName,
         "author": "Jerry Chaos",
         "category": "default",
-        "displayName": "",
+        "title": "",
+        "template": "template_view.ejs",
         "content": "",
       };
-      var _cfg = aco.GetConfig(_fileName);
+      var _cfg = CC.GetConfig(_fileName);
       if (_cfg) {
         obj["author"] = _cfg["author"];
         obj["category"] = _cfg["category"];
-        obj["displayName"] = _cfg["displayName"];
+        obj["title"] = _cfg["title"];
+        obj["template"] = _cfg["template"];
       }
-      const fileURL = this.articleFolderPath + _fileName;
+      const fileURL = pathes.pathArticle + _fileName;
       let _content = FileFolderHandler.ReadFileUTF8(fileURL);
       if (_content != null) {
         obj["content"] = _content;
       }
-      this.RenderEjs(this.editorHtmlURL, { obj: obj }, res);
+      this.RenderEjs(req, res, this.editorHtmlURL, { obj: obj });
     } else {
       res.end("no assigned file name!");
     };
@@ -40,12 +43,12 @@ class ComposerEditor extends Base {
 
   PostHandler(req, res) {
     //console.log(req.body);
-    const _fileName = Utils.GetQueryValue(req,"fileName");
+    const _fileName = Utils.GetQueryValueOfFileName(req);
     const _content = req.body.content;
 
     // cancel modify
     if (_content == null) {
-      if (aco.GetConfig(_fileName)) {
+      if (CC.GetConfig(_fileName)) {
         let _url = Utils.MakeArticleURL(_fileName);
         res.redirect(_url);
       } else {
@@ -57,7 +60,7 @@ class ComposerEditor extends Base {
 
     // delete
     if (_content.trim() == "delete") {
-      aco.Delete(_fileName);
+      CC.Delete(_fileName);
       let _url = Utils.MakeHomeURL(null);
       res.redirect(_url);
       return;
@@ -67,23 +70,24 @@ class ComposerEditor extends Base {
     const _title = req.body.title;
     const _author = req.body.author;
     const _category = req.body.category;
-    if (aco.GetConfig(_fileName)) {
-      aco.Modify(_fileName, _category, _title, _content);
+    const _template = req.body.template;
+    if (CC.GetConfig(_fileName)) {
+      CC.Modify(_fileName, _category, _title, _author, _template, _content);
     } else {
-      aco.Add(_fileName, _category, _title, _content);
+      CC.Add(_fileName, _category, _title, _author, _template, _content);
     }
     let _url = Utils.MakeArticleURL(_fileName);
     res.redirect(_url);
   };
 
   LoginFirst(req, res) {
-    this.RenderEjs(this.loginHtmlURL, {}, res);
+    this.RenderEjs(req, res, this.loginHtmlURL, {});
   };
 
 };
 
-function EditorHtmlComposer() {
-  let mw = new ComposerEditor();
+function Init() {
+  let mw = new ModuleEdit();
 
   let get = function (req, res) {
     if (Utils.CheckLogin(req)) {
@@ -102,4 +106,4 @@ function EditorHtmlComposer() {
   return { get: get, post: post };
 };
 
-module.exports.EditorHtmlComposer = EditorHtmlComposer;
+module.exports.Init = Init;

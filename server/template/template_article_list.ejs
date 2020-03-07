@@ -13,8 +13,8 @@
       <li>
         <!-- p class="description"><%= item.description %></p-->
         <!--p class="description"><%= item.author %></p-->
-        <span><a href="/article?fileName=<%= item.fileName %>"><%= item.displayName %></a></span> 
-        <span class="date"><%= item.displayTime %></span>
+        <span><a href="/view?n=<%= item.fileName %>"><%= item.title %></a></span> 
+        <span class="date"><%= item.createTime %></span>
       </li>
       <% }); %>
     </ul>

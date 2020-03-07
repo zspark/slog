@@ -32,11 +32,23 @@ var GetQueryValue = function (req, key) {
   }
 };
 
+var GetQueryValueOfCMD = function (req) {
+  return GetQueryValue(req,"cmd");
+}
+
+var GetQueryValueOfFileName = function (req) {
+  return GetQueryValue(req,"n");
+}
+
+var GetQueryValueOfCategory = function (req) {
+  return GetQueryValue(req,"c");
+}
+
 var MakeArticleURL = function (fileName) {
   let _obj = {
-    "fileName": fileName,
+    "n": fileName,
   };
-  let _query = "/article?" + QUERYSTRING.stringify(_obj);
+  let _query = "/view?" + QUERYSTRING.stringify(_obj);
   return _query;
 };
 
@@ -71,6 +83,9 @@ module.exports.SetCookie = SetCookie;
 module.exports.EraseValueFromArray = EraseValueFromArray;
 module.exports.CheckLogin = CheckLogin;
 module.exports.GetQueryValue = GetQueryValue;
+module.exports.GetQueryValueOfCMD = GetQueryValueOfCMD;
+module.exports.GetQueryValueOfFileName = GetQueryValueOfFileName;
+module.exports.GetQueryValueOfCategory = GetQueryValueOfCategory;
 module.exports.BindFunction = BindFunction;
 module.exports.BindFunction_reserve2 = BindFunction_reserve2;
 module.exports.SetValueIfNull = SetValueIfNull;

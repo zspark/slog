@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<%- include("../component/head") %>
+
+<body>
+  <div class="wrapper">
+    <%- include("../component/header",{param:{}}) %>
+
+    <h1>category name list:</h1>
+    <ul>
+      <% obj.arrCategoryName.forEach(function(name){ %>
+      <li>
+        <p><a href="/view?c=<%= name %>"><%= name %></a></p>
+      </li>
+      <% }); %>
+    </ul>
+
+    <%- include("../component/footer") %>
+  </div>
+</body>
+
+</html>

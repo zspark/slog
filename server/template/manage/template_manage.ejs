@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<%- include("../component/head") %>
+
+<body>
+  <div class="wrapper">
+    <%- include("../component/header",{param:{}}) %>
+
+    <h1>Commands:</h1>
+    <p>rebuild summary file:</p>
+    <p><a href="/manage?cmd=rebuildSummary">/manage?cmd=rebuildSummary</a></p>
+    <br>
+    <p>list all category names:</p>
+    <p><a href="/manage?cmd=listCategories">/manage?cmd=listCategories</a></p>
+
+    <%- include("../component/footer") %>
+  </div>
+</body>
+
+</html>

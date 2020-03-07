@@ -1,11 +1,18 @@
-const pathes = require("../pathes");
+const common = require("../common");
+const pathes = common.pathes;
 var Base = require(pathes.pathMW + "composer_base");
-const LOG = require(pathes.pathJS + 'debug_logger');
-const Utils = require(pathes.pathJS + "utils");
+const LOG = require(pathes.pathCore + 'logger');
+const Utils = require(pathes.pathCore + "utils");
 
 class ComposerProject extends Base {
   constructor() {
     super();
+    this.projectHtmlURL = Object.create(null);
+    this.projectHtmlURL.webgl = pathes.pathTemplate + "project/template_webgl.ejs";
+    this.projectHtmlURL.duck = pathes.pathTemplate + "project/template_duck.ejs";
+    this.projectHtmlURL.blog = pathes.pathTemplate + "project/template_blog.ejs";
+    this.projectHtmlURL.lsx = pathes.pathTemplate + "project/template_lsx.ejs";
+    this.projectHtmlURL.coper = pathes.pathTemplate + "project/template_coper.ejs";
   };
 
   ComposeProject_WebGL(req, res) {
