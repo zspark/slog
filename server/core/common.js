@@ -37,6 +37,12 @@ const constant = {
   M_TITLE: "title",
   M_CREATE_TIME: "createTime",
   M_MODIFY_TIME: "modifyTime",
+
+  M_CATEGORY_DEFAULT: "default",
+  M_CATEGORY_CG: "CG",
+  M_CATEGORY_PHILOSOPHY: "philosophy",
+  M_CATEGORY_MATH: "math",
+  M_CATEGORY_LANGUAGE: "language",
 };
 
 module.exports.pathes = pathes;

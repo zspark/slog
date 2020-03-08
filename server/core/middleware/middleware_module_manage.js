@@ -49,6 +49,13 @@ function Init() {
   let mw = new ModuleManage();
 
   let get = function (req, res) {
+    let _loggedIn = Utils.CheckLogin(req);
+    if (!_loggedIn) {
+      let _url = Utils.MakeLoginURL();
+      res.redirect(_url)
+      return;
+    }
+
     let _cmd = Utils.GetQueryValueOfCMD(req);
     switch(_cmd){
       case "rebuildSummary":

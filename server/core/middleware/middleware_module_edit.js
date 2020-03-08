@@ -14,20 +14,14 @@ class ModuleEdit extends Base {
   };
 
   GetHandler(req, res) {
-    let _loggedIn = Utils.CheckLogin(req);
-    if (!_loggedIn) {
-      let _url = Utils.MakeLoginURL();
-      res.redirect()
-      return;
-    }
-
+    LOG.Info("edit get handler.");
     const _fileName = Utils.GetQueryValueOfFileName(req);
     if (_fileName) {
       //Utils.SetCookie(req, "fileName",_fileName);
       let obj = Object.create(null);
       obj[constant.M_FILE_NAME] = _fileName;
       obj[constant.M_AUTHOR] = UserManager.GetUserInfo(Utils.GetUserAccount(req)).displayName;
-      obj[constant.M_CATEGORY] = "default";
+      obj[constant.M_CATEGORY] = constant.M_CATEGORY_DEFAULT;
       obj[constant.M_TITLE] = "";
       obj[constant.M_TEMPLATE] = "template_view.ejs";
       obj["content"] = "";
@@ -46,7 +40,9 @@ class ModuleEdit extends Base {
       }
       this.RenderEjs(req, res, this.editorHtmlURL, { obj: obj });
     } else {
-      res.end("no assigned file name!");
+      let _msg = "no assigned file name!";
+      LOG.Info(_msg);
+      res.end(_msg);
     };
   };
 
