@@ -11,44 +11,41 @@ const UserManager = require(pathes.pathCore + "user_manager");
 class ModuleEdit extends Base {
   constructor() {
     super();
+    this.editorHtmlURL = pathes.pathTemplate + "template_editor.ejs";
   };
 
-  GetHandler(req, res) {
+  GetHandler(req, res, queryObj) {
     LOG.Info("edit get handler.");
-    const _fileName = Utils.GetQueryValueOfFileName(req);
-    if (_fileName) {
-      //Utils.SetCookie(req, "fileName",_fileName);
-      let obj = Object.create(null);
-      obj[constant.M_FILE_NAME] = _fileName;
-      obj[constant.M_AUTHOR] = UserManager.GetUserInfo(Utils.GetUserAccount(req)).displayName;
-      obj[constant.M_CATEGORY] = constant.M_CATEGORY_DEFAULT;
-      obj[constant.M_TITLE] = "";
-      obj[constant.M_TEMPLATE] = "template_view.ejs";
-      obj["content"] = "";
+    const _fileName = queryObj[constant.M_FILE_NAME];
 
-      var _cfg = CC.GetConfig(_fileName);
-      if (_cfg) {
-        obj[constant.M_AUTHOR] = _cfg[constant.M_AUTHOR];
-        obj[constant.M_CATEGORY] = _cfg[constant.M_CATEGORY];
-        obj[constant.M_TITLE] = _cfg[constant.M_TITLE];
-        obj[constant.M_TEMPLATE] = _cfg[constant.M_TEMPLATE];
-      }
-      const fileURL = pathes.pathArticle + _fileName;
-      let _content = DV.ReadFileUTF8(fileURL);
-      if (_content != null) {
-        obj["content"] = _content;
-      }
-      this.RenderEjs(req, res, this.editorHtmlURL, { obj: obj });
-    } else {
-      let _msg = "no assigned file name!";
-      LOG.Info(_msg);
-      res.end(_msg);
-    };
+    let _obj = Object.create(null);
+    _obj[constant.M_FILE_NAME] = _fileName;
+    _obj[constant.M_AUTHOR] = UserManager.GetUserInfo(Utils.GetUserAccount(req)).displayName;
+    _obj[constant.M_CATEGORY] = constant.M_CATEGORY_DEFAULT;
+    _obj[constant.M_TITLE] = "";
+    _obj[constant.M_TEMPLATE] = "template_view.ejs";
+    _obj[constant.M_CONTENT] = "";
+
+    var _cfg = CC.GetConfig(_fileName);
+    if (_cfg) {
+      _obj[constant.M_AUTHOR] = _cfg[constant.M_AUTHOR];
+      _obj[constant.M_CATEGORY] = _cfg[constant.M_CATEGORY];
+      _obj[constant.M_TITLE] = _cfg[constant.M_TITLE];
+      _obj[constant.M_TEMPLATE] = _cfg[constant.M_TEMPLATE];
+    }
+
+    const _fileURL = pathes.pathArticle + _fileName;
+    let _content = DV.ReadFileUTF8(_fileURL);
+    if (_content != null) {
+      _obj[constant.M_CONTENT] = _content;
+    }
+
+    this.RenderEjs(req, res, this.editorHtmlURL, { obj: _obj });
   };
 
-  PostHandler(req, res) {
+  HandlePostArticle(req, res, queryObj) {
     //console.log(req.body);
-    const _fileName = Utils.GetQueryValueOfFileName(req);
+    const _fileName = queryObj[constant.M_FILE_NAME];
     const _content = req.body.content;
 
     // cancel modify
@@ -72,10 +69,10 @@ class ModuleEdit extends Base {
     }
 
     // save
-    const _title = req.body.title;
-    const _author = req.body.author;
-    const _category = req.body.category;
-    const _template = req.body.template;
+    const _title = req.body[constant.M_TITLE];
+    const _author = req.body[constant.M_AUTHOR];
+    const _category = req.body[constant.M_CATEGORY];
+    const _template = req.body[constant.M_TEMPLATE];
     if (CC.GetConfig(_fileName)) {
       CC.Modify(_fileName, _category, _title, _author, _template, _content);
     } else {
@@ -85,8 +82,8 @@ class ModuleEdit extends Base {
     res.redirect(_url);
   };
 
-  LoginFirst(req, res) {
-    const _fileName = Utils.GetQueryValueOfFileName(req);
+  LoginFirst(req, res, queryObj) {
+    const _fileName = queryObj[constant.M_FILE_NAME];
     if(_fileName){
       let _url = Utils.MakeLoginWithViewURL(_fileName);
       res.redirect(_url);
@@ -102,17 +99,27 @@ function Init() {
   let mw = new ModuleEdit();
 
   let get = function (req, res) {
+    const _q = Utils.GetQueryValues(req);
     if (Utils.CheckLogin(req)) {
-      mw.GetHandler(req, res);
+      const _fileName = _q[constant.M_FILE_NAME];
+      if (_fileName) {
+        mw.GetHandler(req, res, _q);
+      } else {
+        let _msg = "no assigned file name!";
+        LOG.Info(_msg);
+        res.end(_msg);
+      }
     } else {
-      mw.LoginFirst(req, res);
+      mw.LoginFirst(req, res, _q);
     }
   };
+
   let post = function (req, res) {
+    const _q = Utils.GetQueryValues(req);
     if (Utils.CheckLogin(req)) {
-      mw.PostHandler(req, res);
+      mw.HandlePostArticle(req, res, _q);
     } else {
-      mw.LoginFirst(req, res);
+      mw.LoginFirst(req, res, _q);
     }
   };
   return { get: get, post: post };

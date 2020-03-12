@@ -9,7 +9,7 @@ var editor = null;
 function OnBodyLoad() {
   console.log("editor body loaded!");
 
-  previewElem = document.querySelector('#preview');
+  previewElem = document.getElementById('preview');
   markdownElem = document.getElementById('markdown');
   changeTimeout = null;
   inputDirty = true;
@@ -61,11 +61,11 @@ function TryRenderToHTML() {
     inputDirty = false;
     var startTime = new Date();
 
-    marked(markdownElem.value, (err, mdHtml) => {
+    marked(markdownElem.value, (err, content) => {
       if (err) {
         previewElem.innerHTML = ("marked parse error!");
       } else {
-        previewElem.innerHTML = (mdHtml);
+        previewElem.innerHTML = (content);
       }
     });
 

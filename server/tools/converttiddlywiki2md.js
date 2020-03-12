@@ -1,6 +1,6 @@
 const FS = require('fs');
 
-const pathes = require("../js/pathes");
+const pathes = require("../core/common.js").pathes;
 const FileFolderHandler = require(pathes.pathCore + 'disk_visitor');
 var bQuote = false;
 var ConvertLine = function (line) {
@@ -87,4 +87,5 @@ var Start = function (path) {
 //Start("C:\\msys64\\home\\jerry\\tiddlywiki\\tiddlers\\posts\\computer_graphics\\interactive_computer_graphics\\");
 //Start("C:\\msys64\\home\\jerry\\tiddlywiki\\tiddlers\\posts\\linux\\");
 //Start("C:\\msys64\\home\\jerry\\tiddlywiki\\tiddlers\\posts\\philosophy_and_thoughts\\");
-Start("C:\\msys64\\home\\jerry\\tiddlywiki\\tiddlers\\posts\\");
+//Start("C:\\msys64\\home\\jerry\\tiddlywiki\\tiddlers\\posts\\");
+Start("C:\\msys64\\home\\jerry\\tiddlywiki\\tiddlers\\posts\\computer_graphics\\");

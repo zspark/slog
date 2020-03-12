@@ -4,7 +4,7 @@
 <%- include("component/head") %>
 
 <!-- Create a simple CodeMirror instance -->
-<link rel="stylesheet" href="lib/codemirror/lib/codemirror.css">
+<link rel="stylesheet" href="/lib/codemirror/lib/codemirror.css">
 <style>
   .CodeMirror {
     border: 1px solid #eee;
@@ -12,40 +12,44 @@
   }
 </style>
 
-<body id="body_editor" onLoad="OnBodyLoad()">
+<body onLoad="OnBodyLoad()">
+  <div id="basic_outer_div_edit">
 
-  <form id="myform_cancel" method="POST" onsubmit="return submitFun_cancel(this);"
-    action="/edit?n=<%- obj.fileName %>">
-  </form>
+    <form id="myform_cancel" method="POST" onsubmit="return submitFun_cancel(this);"
+      action="/edit?n=<%- obj.fileName %>&t=<%- obj.type %>">
+    </form>
 
-  <form id="myform" method="POST" onsubmit="return submitFun(this);" action="/edit?n=<%- obj.fileName %>">
-    <input type="submit" value="Submit" />
-    <input type="submit" value="Cancel" form="myform_cancel" />
+    <form id="myform" method="POST" onsubmit="return submitFun(this);"
+      action="/edit?n=<%- obj.fileName %>&t=<%- obj.type %>">
+      <input type="submit" value="Submit" />
+      <input type="submit" value="Cancel" form="myform_cancel" />
 
-    <!-- input type="text" name="fileName" id="inputFileName" placeholder="<%- obj.fileName %>"/-->
-    <input type="text" name="title" id="inputTitle" placeholder="<title>" value="<%- obj.title %>" />
-    <input type="text" name="author" id="inputAuthor" placeholder="<author>" value="<%- obj.author %>" />
-    <input type="text" name="category" id="inputCategory" placeholder="<category>" value="<%- obj.category %>" />
-    <input type="text" name="template" id="inputTemplate" placeholder="<template>" value="<%- obj.template %>" />
-  </form>
+      <!-- input type="text" name="fileName" id="inputFileName" placeholder="<%- obj.fileName %>"/-->
+      <input type="text" name="title" id="inputTitle" placeholder="<title>" value="<%- obj.title %>" />
+      <input type="text" name="author" id="inputAuthor" placeholder="<author>" value="<%- obj.author %>" />
+      <input type="text" name="category" id="inputCategory" placeholder="<category>" value="<%- obj.category %>" />
+      <input type="text" name="template" id="inputTemplate" placeholder="<template>" value="<%- obj.template %>" />
+    </form>
 
-  <div id="editor" style="display:block;">
-    <div class="containers">
-      <div class="container">
-        <textarea id="markdown" class="inputPane" form="myform" name="content"><%- obj.content %></textarea>
-      </div>
-      <div class="container">
-        <div id="preview"> </div>
+    <div id="editor">
+      <div class="containers">
+        <div class="container">
+          <textarea id="markdown" class="inputPane" form="myform" name="content"><%- obj.content %></textarea>
+        </div>
+        <div class="container">
+          <div id="preview"> </div>
+        </div>
       </div>
     </div>
+
   </div>
 
-  <script src="lib/marked/marked.min.js" defer></script>
-  <script src="lib/codemirror/lib/codemirror.js"></script>
-  <script src="lib/codemirror/mode/markdown/markdown.js"></script>
-  <script src="lib/codemirror/addon/edit/matchbrackets.js"></script>
+  <script src="/lib/marked/marked.min.js" defer></script>
+  <script src="/lib/codemirror/lib/codemirror.js"></script>
+  <script src="/lib/codemirror/mode/markdown/markdown.js"></script>
+  <!-- script src="/lib/codemirror/addon/edit/matchbrackets.js"></script-->
   <!-- script src="/js/codemirror/keymap/vim.js"></script-->
-  <script src="lib/custom/editor.js" defer></script>
+  <script src="/lib/custom/editor.js" defer></script>
 
 </body>
 

@@ -1,6 +1,9 @@
 const URL = require("url");
 const QUERYSTRING = require("querystring");
 
+const common = require("./common");
+const constant = common.constant;
+
 var EraseValueFromArray = function (arr, value) {
   const N = arr.length;
   let i = 0;
@@ -22,6 +25,24 @@ var BindFunction_reserve2 = function (fn, defaultValue) {
   };
 };
 
+var GetQueryValues = function (req) {
+  let _obj = Object.create(null);
+  _obj[constant.M_FILE_NAME] = null;
+  _obj[constant.M_COMMAND] = null;
+  _obj[constant.M_CATEGORY] = null;
+  _obj[constant.M_MODULE] = null;
+
+  const url = URL.parse(req.url);
+  if (url.query) {
+    const _q = QUERYSTRING.parse(url.query);
+    _obj[constant.M_FILE_NAME]=_q['n'];
+    _obj[constant.M_COMMAND]=_q['cmd'];
+    _obj[constant.M_CATEGORY]=_q['c'];
+    _obj[constant.M_MODULE]=_q['m'];
+  }
+  return _obj;
+};
+
 var GetQueryValue = function (req, key) {
   const url = URL.parse(req.url);
   if (url.query) {
@@ -31,18 +52,6 @@ var GetQueryValue = function (req, key) {
     return null;
   }
 };
-
-var GetQueryValueOfCMD = function (req) {
-  return GetQueryValue(req,"cmd");
-}
-
-var GetQueryValueOfFileName = function (req) {
-  return GetQueryValue(req,"n");
-}
-
-var GetQueryValueOfCategory = function (req) {
-  return GetQueryValue(req,"c");
-}
 
 var MakeLoginURL = function () {
   let _query = "/login";
@@ -67,6 +76,14 @@ var MakeEditURL = function (fileName) {
     "n": fileName,
   };
   let _query = "/edit?" + QUERYSTRING.stringify(_obj);
+  return _query;
+};
+
+var MakeViewURL = function (fileName) {
+  let _obj = {
+    "n": fileName,
+  };
+  let _query = "/view?" + QUERYSTRING.stringify(_obj);
   return _query;
 };
 
@@ -114,10 +131,7 @@ module.exports.SetCookie = SetCookie;
 module.exports.EraseValueFromArray = EraseValueFromArray;
 module.exports.CheckLogin = CheckLogin;
 module.exports.GetUserAccount = GetUserAccount;
-module.exports.GetQueryValue = GetQueryValue;
-module.exports.GetQueryValueOfCMD = GetQueryValueOfCMD;
-module.exports.GetQueryValueOfFileName = GetQueryValueOfFileName;
-module.exports.GetQueryValueOfCategory = GetQueryValueOfCategory;
+module.exports.GetQueryValues = GetQueryValues;
 module.exports.BindFunction = BindFunction;
 module.exports.BindFunction_reserve2 = BindFunction_reserve2;
 module.exports.SetValueIfNull = SetValueIfNull;
@@ -125,5 +139,6 @@ module.exports.DeleteFromArray = DeleteFromArray;
 module.exports.MakeArticleURL = MakeArticleURL;
 module.exports.MakeHomeURL = MakeHomeURL;
 module.exports.MakeEditURL = MakeEditURL;
+module.exports.MakeViewURL = MakeViewURL;
 module.exports.MakeLoginURL = MakeLoginURL;
 module.exports.MakeLoginWithViewURL = MakeLoginWithViewURL;

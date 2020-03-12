@@ -1,3 +1,5 @@
+const MARKED = require("marked");
+
 const common = require("../common");
 const pathes = common.pathes;
 const constant = common.constant;
@@ -10,12 +12,13 @@ const DV = require(pathes.pathCore + "disk_visitor");
 class ModuleView extends Base {
   constructor() {
     super();
-    this.codeViewTemplateURL = pathes.pathTemplate + "template_code_viewer.ejs";
+    this.file404 = pathes.pathTemplate + "template_file_404.ejs";
     this.galleryFolderPath = pathes.pathGallery;
     this.galleryFileURL = pathes.pathTemplate + "template_gallery.ejs";
     this.imagePathRelativeToPublic = "/share/gallery/";
     this.thumbnailPathRelativeToPublic = "/share/gallery/thumbnail/";
     this.thumbnailSuffix = ".thumbnail.jpg";
+    this.articleListURL = pathes.pathTemplate + "template_article_list.ejs";
   };
 
   _GetExtension(fileName) {
@@ -23,57 +26,68 @@ class ModuleView extends Base {
     return fileName.substring(_li + 1);
   }
 
-  ComposeCodeViewPage(req, res, fileName) {
-    let _content = DV.ReadFileUTF8(pathes.pathCode + fileName);
-    if (_content == null) {
-      res.end("file NOT exist!");
-    } else {
-      let _nCtt = "```" + this._GetExtension(fileName) + "\r\n" + _content + "\r\n```";
-      MARKED(_nCtt, (err, _htmlContent) => {
-        if (err) {
-          let _info = "marked parse error! file name:" + fileName;
-          LOG.Error(_info);
-          res.end(_info);
-        } else {
-          let _obj = Object.create(null);
-          _obj.content = _htmlContent;
-          this.RenderEjs(req, res, TemplateURL, { obj: _obj });
-        }
-      });
-    }
+  ComposeFile404(req, res, fileName, type) {
+    let _obj = Object.create(null);
+    _obj[constant.M_FILE_NAME] = fileName;
+    this.RenderEjs(req, res, this.file404, { obj: _obj });
   };
 
-  ComposeArticleList(req, res, category) {
-    if (category) {
-      let _list = CC.GetCategory(category);
-      if (!_list) { _list = []; }
-      let obj = [];
-      _list.map(_fileName => {
-        let _cfg = CC.GetConfig(_fileName);
-        let _tmp = Object.create(null);
-        _tmp[constant.M_FILE_NAME] = _fileName;
-        _tmp[constant.M_TITLE] = _cfg[constant.M_TITLE];
-        _tmp[constant.M_CREATE_TIME] = new Date(_cfg[constant.M_CREATE_TIME]).toDateString();
-        obj.push(_tmp);
-      });
-      this.RenderEjs(req, res, this.articleListURL, { obj: obj });
-    } else {
-      let _info = "please enter your category name";
-      LOG.Error(_info);
-      res.end(_info);
+  ComposeArticle(req, res, queryObj) {
+    let _fileName = queryObj[constant.M_FILE_NAME];
+    let _content = DV.ReadFileUTF8(pathes.pathArticle + _fileName);
+    if (_content == null) {
+      _content = "";
+      DV.WriteFileUTF8(pathes.pathArticle + _fileName, _content);
     }
+
+    let _cfg = CC.GetConfig(_fileName);
+    MARKED(_content, (err, content) => {
+      if (err) {
+        let _info = "marked parse error! file name:" + _fileName;
+        LOG.Error(_info);
+        res.end(_info);
+      } else {
+        ///TODO: to add a default template for article.
+        const obj = Object.create(null);
+        obj[constant.M_FILE_NAME] = _cfg[constant.M_FILE_NAME];
+        obj[constant.M_TITLE] = _cfg[constant.M_TITLE];
+        obj[constant.M_AUTHOR] = _cfg[constant.M_AUTHOR];
+        obj[constant.M_LOGGED_IN] = Utils.CheckLogin(req);
+        obj[constant.M_CREATE_TIME] = new Date(_cfg[constant.M_CREATE_TIME]).toDateString();
+        obj[constant.M_CONTENT] = content;
+
+        this.RenderEjs(req, res, pathes.pathTemplate + _cfg.template, { obj: obj });
+      }
+    });
+  };
+
+  ComposeArticleList(req, res, queryObj) {
+    let _category = queryObj[constant.M_CATEGORY];
+    let _list = CC.GetCategory(_category);
+    if (!_list) { _list = []; }
+    let _obj = [];
+    _list.map(_fileName => {
+      let _cfg = CC.GetConfig(_fileName);
+      let _tmp = Object.create(null);
+      _tmp[constant.M_FILE_NAME] = _fileName;
+      _tmp[constant.M_TITLE] = _cfg[constant.M_TITLE];
+      _tmp[constant.M_CREATE_TIME] = new Date(_cfg[constant.M_CREATE_TIME]).toDateString();
+      _obj.push(_tmp);
+    });
+
+    this.RenderEjs(req, res, this.articleListURL, { obj: _obj });
   };
 
   ComposeGalleryHtml(req, res) {
-    var arr = DV.ReadAllFileNamesInFolder(this.galleryFolderPath);
-
     var objArr = [];
+    var arr = DV.ReadAllFileNamesInFolder(this.galleryFolderPath);
     arr.forEach(item => {
       objArr.push({
         imagePath: this.imagePathRelativeToPublic + item,
         thumbnailPath: this.thumbnailPathRelativeToPublic + item + this.thumbnailSuffix,
       });
     });
+
     this.RenderEjs(req, res, this.galleryFileURL, { obj: objArr });
   };
 };
@@ -87,31 +101,23 @@ function Init() {
   let mw = new ModuleView();
 
   let get = function (req, res) {
-    const _fileName = Utils.GetQueryValueOfFileName(req);
+    const _q = Utils.GetQueryValues(req);
+    const _fileName = _q[constant.M_FILE_NAME];
     if (_fileName) {
       if (CC.GetConfig(_fileName)) {
-        mw.ComposeArticleWithFileName(req, res, _fileName);
+        mw.ComposeArticle(req, res, _q);
       } else {
-        mw.ComposeArticle404(req, res, _fileName);
+        mw.ComposeFile404(req, res, _fileName);
       }
       return;
     }
 
-    const _category = Utils.GetQueryValueOfCategory(req);
+    const _category = _q[constant.M_CATEGORY];
     if (_category) {
-      mw.ComposeArticleList(req, res, _category);
+      mw.ComposeArticleList(req, res, _q);
     } else {
       mw.ComposeURLFormatError(req, res);
     }
-  };
-
-  let getCode = function (req, res) {
-    const _fileName = Utils.GetQueryValueOfFileName(req);
-    if (_fileName) {
-      mw.ComposeCodeViewPage(req, res, _fileName);
-    } else {
-      res.end("no file name assign!");
-    };
   };
 
   let getFrontPage = function (req, res) {
@@ -127,7 +133,7 @@ function Init() {
     res.end("bad post");
   };
 
-  return { get: get, getCode: getCode, getFrontPage: getFrontPage, getGallery: getGallery, post: post };
+  return { get: get, getFrontPage: getFrontPage, getGallery: getGallery, post: post };
 };
 
 module.exports.Init = Init;
