@@ -1,6 +1,6 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.5;
   color: #333;
   background-color: #fff;
@@ -15,6 +15,12 @@ header {
   font-size: 1.4em;
 }
 
+header a{
+  text-decoration: none;
+  font-weight: 500;
+  color: rgb(230, 230, 230);
+}
+
 footer {
   margin: 1em 0 0;
   padding: 1em 0 0;
@@ -22,16 +28,72 @@ footer {
   color: #ccc;
 }
 
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+table, th, td {
+  border: 1px solid #d0d0d0;
+}
+
+thead tr{
+  background-color:#f5f2f0;
+  font-weight: 700;
+}
+
+tr:nth-child(even) {background-color: #f8f8f8;}
+
+a {
+  color: #003dbf;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+h1 {
+  font-size: 1.4em;
+  margin: 0.8em 0 0 0;
+}
+
+h2 {
+  font-size: 1.3em;
+  margin: 0.7em 0 0 0;
+}
+
+h3 {
+  font-size: 1.2em;
+  margin: 0.6em 0 0 0;
+}
+
+p {
+  font-size: 1em;
+  margin: 0.3em 0 0 0;
+}
+
+blockquote {
+  background: #f9f9f9;
+  border-left: 0.3em solid #ededed;
+  padding: 0.5em 1em;
+  margin: 0.5em 0;
+  font-style: italic;
+}
+
+blockquote p{
+  margin: 0em 0 0 0;
+}
+
 #basic_outer_div{
   display: block;
-  max-width: 60em;
-  margin: 0 auto;
+  max-width: 70em;
+  margin: 0;
+  margin-left: calc((100vw - 70em)/2); 
+  margin-right: calc((100vw - 70em)/2); 
   padding: 0 1em 1em;
 }
 
 #basic_outer_div_project{
   display: block;
-  margin: 0 auto;
+  margin: 0 0 0 0;
   padding: 0 1em 1em;
 }
 
@@ -48,40 +110,6 @@ footer {
   border: 0;
   padding: 0 0 0 0;
   background-color: #fbfbfb;
-}
-
-a {
-  color: #fd8000;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-h1 {
-  font-size: 2em;
-  margin: 0.8em 0 0 0;
-}
-
-h2 {
-  font-size: 1.7em;
-  margin: 0.7em 0 0 0;
-}
-
-h3 {
-  font-size: 1.4em;
-  margin: 0.6em 0 0 0;
-}
-
-p {
-  font-size: 1em;
-  margin: 0.3em 0 0 0;
-}
-
-blockquote {
-  background: #f9f9f9;
-  border-left: 0.3em solid #ededed;
-  padding: 0.5em 1em;
-  margin: 0.5em 0;
-  font-style: italic;
 }
 
 #menu {
@@ -110,16 +138,23 @@ blockquote {
   box-sizing: border-box;
 }
 
+#title{
+  font-size: 2.2em;
+  margin: 0.8em 0 0 0;
+  font-weight: bold;
+  color: #a15500;
+}
+
 #author{
   margin: 0;
   padding: 0;
   color:#80808080;
 }
 
-
 ul.articles {
 	margin-top: 1.5em;
   margin-left: 0em;
+  font-size: 1.2em;
 }
 ul.articles li {
   list-style-type: none;
@@ -130,4 +165,9 @@ ul.articles .date {
   margin:0 0 0 1em;
   font-size:smaller;
   font-style: italic;
+}
+ul.articles a {
+  color: #a15500;
+  text-decoration: none;
+  font-weight: 500;
 }

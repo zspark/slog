@@ -1,17 +1,15 @@
 <header>
-  <nav>
-    <h1><a href="/"><span style="color:black;">Jerry</span>Chaos</a></h1>
-    <ul id="menu">
-      <li><a href="/">Home</a></li>
-      <li><a href="/view?c=CG">Graphics</a></li>
-      <li><a href="/view?c=language">Language</a></li>
-      <li><a href="/view?c=philosophy">Philosophy</a></li>
-      <li><a href="/view?c=math">Math</a></li>
-      <li><a href="/view?c=default">Default</a></li>
-      <li><a href="/gallery">Gallery</a></li>
-      <% if(param.fileName){ %>
-      <li><a href="/edit?n=<%= param.fileName %>">-edit-</a></li>
-      <% } %>
-    </ul>
-  </nav>
+  <h1><a href="/"><span style="color:rgb(210, 210, 210);">Jerry</span>Chaos</a></h1>
+  <ul id="menu">
+    <li><a href="/">Home</a></li>
+    <li><a href="/view?c=language">Language</a></li>
+    <li><a href="/view?c=CG">Graphics</a></li>
+    <li><a href="/view?c=philosophy">Philosophy</a></li>
+    <li><a href="/view?c=basic">Basic</a></li>
+    <li><a href="/view?c=math">Math</a></li>
+    <li><a href="/view?c=default">Default</a></li>
+    <% if(param.fileName){ %>
+    <li><a href="/edit?n=<%= param.fileName %>" style="color: rgb(245, 245, 245);">-edit-</a></li>
+    <% } %>
+  </ul>
 </header>
