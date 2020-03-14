@@ -52,6 +52,8 @@ const constant = {
   M_CATEGORY_PHILOSOPHY: "philosophy",
   M_CATEGORY_MATH: "math",
   M_CATEGORY_LANGUAGE: "language",
+
+  M_ACCOUNT_DISPLAY_NAME: "displayName",
 };
 
 module.exports.pathes = pathes;

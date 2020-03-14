@@ -12,7 +12,25 @@ class ModuleEdit extends Base {
   constructor() {
     super();
     this.editorHtmlURL = pathes.pathTemplate + "template_editor.ejs";
+    this.noPermissionHtmlURL = pathes.pathTemplate + "template_no_permission.ejs";
   };
+
+  HandleAuthorCheck(req, res, queryObj) {
+    const _fileName = queryObj[constant.M_FILE_NAME];
+    var _cfg = CC.GetConfig(_fileName);
+    if (_cfg) {
+      const _accountInfo = UserManager.GetUserInfo(Utils.GetUserAccount(req));
+      const _accountDisplayName = _accountInfo[constant.M_ACCOUNT_DISPLAY_NAME];
+      if (_accountDisplayName != _cfg[constant.M_AUTHOR]) {
+        LOG.Warn("you have NO permission to edit this file!");
+        let _obj = Object.create(null);
+        _obj[constant.M_FILE_NAME] = _fileName;
+        this.RenderEjs(req, res, this.noPermissionHtmlURL, { obj: _obj });
+        return true;
+      }
+    }
+    return false;
+  }
 
   GetHandler(req, res, queryObj) {
     LOG.Info("edit get handler.");
@@ -41,6 +59,7 @@ class ModuleEdit extends Base {
     }
 
     this.RenderEjs(req, res, this.editorHtmlURL, { obj: _obj });
+    return true;
   };
 
   HandlePostArticle(req, res, queryObj) {
@@ -57,7 +76,7 @@ class ModuleEdit extends Base {
         let _url = Utils.MakeHomeURL();
         res.redirect(_url);
       }
-      return;
+      return true;
     }
 
     // delete
@@ -65,7 +84,7 @@ class ModuleEdit extends Base {
       CC.Delete(_fileName);
       let _url = Utils.MakeHomeURL();
       res.redirect(_url);
-      return;
+      return true;
     }
 
     // save
@@ -80,14 +99,15 @@ class ModuleEdit extends Base {
     }
     let _url = Utils.MakeArticleURL(_fileName);
     res.redirect(_url);
+    return true;
   };
 
   LoginFirst(req, res, queryObj) {
     const _fileName = queryObj[constant.M_FILE_NAME];
-    if(_fileName){
+    if (_fileName) {
       let _url = Utils.MakeLoginWithViewURL(_fileName);
       res.redirect(_url);
-    }else{
+    } else {
       let _url = Utils.MakeLoginURL();
       res.redirect(_url);
     }
@@ -103,7 +123,9 @@ function Init() {
     if (Utils.CheckLogin(req)) {
       const _fileName = _q[constant.M_FILE_NAME];
       if (_fileName) {
-        mw.GetHandler(req, res, _q);
+        if (!mw.HandleAuthorCheck(req, res, _q)) {
+          mw.GetHandler(req, res, _q);
+        }
       } else {
         let _msg = "no assigned file name!";
         LOG.Info(_msg);
