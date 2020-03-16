@@ -9,6 +9,7 @@ const MWLogin = require(pathes.pathMW + "middleware_module_login");
 const MWUpload = require(pathes.pathMW + "middleware_module_upload");
 const MWEdit = require(pathes.pathMW + "middleware_module_edit");
 const MWManage = require(pathes.pathMW + "middleware_module_manage");
+const MWQueryLegality = require(pathes.pathMW + "middleware_module_query_legality");
 
 function Init(app) {
   LOG.Info("middleware market Init()");
@@ -18,7 +19,9 @@ function Init(app) {
   var MiddlewareEdit = MWEdit.Init();
   //var MiddlewareUpload = MWUpload.Init();
   var MiddlewareManage = MWManage.Init();
+  var MiddlewareQueryLegality = MWQueryLegality.Init();
 
+  app.use(MiddlewareQueryLegality.use);
   app.use(cookieParser('singedMyCookie'));
   app.get("/login", MiddlewareLogin.get);
   app.post("/login", urlencodedParser, MiddlewareLogin.post);

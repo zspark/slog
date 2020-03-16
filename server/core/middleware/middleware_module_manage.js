@@ -25,7 +25,7 @@ class ModuleManage extends Base {
     let _list = DV.ReadAllFileNamesInFolder(pathes.pathArticle);
     _list.map(_n => {
       if (_n != ".summary.json"){
-        CC.Add(_n, "_rebuild_collected_", "<no title assigned>", null, null, null, false);
+        CC.Add(_n, "_rebuild_collected_", "<no title assigned>", "<anonymous>", null, null, false);
       }
     });
     CC.SaveConfigToDisk();

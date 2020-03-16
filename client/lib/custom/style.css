@@ -3,7 +3,7 @@ body {
   font-size: 16px;
   line-height: 1.5;
   color: #333;
-  background-color:rgb(240, 240, 240);
+  background-color:#f5f2f0;
   font-weight: normal;
   width: 100%;
   margin: 0;
@@ -84,7 +84,7 @@ blockquote p{
 #basic_outer_div{
   background-color:rgb(255, 255, 255);
   display: block;
-  max-width: 70em;
+  max-width: 60em;
   margin: 0;
   margin-left: calc((100vw - 70em)/2); 
   margin-right: calc((100vw - 70em)/2); 
@@ -167,7 +167,7 @@ ul.articles .date {
   font-style: italic;
 }
 ul.articles a {
-  color: #a15500;
+  color: rgb(161, 85, 0);
   text-decoration: none;
   font-weight: 500;
 }

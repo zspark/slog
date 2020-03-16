@@ -10,9 +10,8 @@ const pathes = {
   pathUpload: ROOT_CLIENT + "share/",
   pathGallery: ROOT_CLIENT + "share/gallery/",
 
-  pathCode: ROOT_CONTENT + "code/",
   pathArticle: ROOT_CONTENT + "article/",
-  urlArticleConfig: ROOT_CONTENT + "article/.summary.json",
+  urlArticleConfig: ROOT_CONTENT + ".summary.json",
 
   pathUser: ROOT_SERVER + "user/",
   pathCore: ROOT_SERVER + "core/",

@@ -13,13 +13,27 @@ let _ModifyConfig = function (cfg, fileName, category, title, author, template) 
   if (template != null) cfg[constant.M_TEMPLATE] = template;
 }
 
+var default_summary_json = {
+  "version": "1.0.0",
+  "articles": {}
+}
+
+var default_history_json = {
+  "version": "1.0.0",
+  "history": [],
+}
+
 class Organizer {
   constructor() {
     LOG.Info("[CONSTRUCT] article organizer...");
     this.configCategories = Object.create(null);
-    let configJson = DV.ReadFileUTF8(pathes.urlArticleConfig);
-    LOG.Info("parse article config...");
-    this.config = JSON.parse(configJson);
+    if (DV.FileExist(pathes.urlArticleConfig)) {
+      let configJson = DV.ReadFileUTF8(pathes.urlArticleConfig);
+      LOG.Info("parse article config...");
+      this.config = JSON.parse(configJson);
+    } else {
+      this.config = default_summary_json;
+    }
     this.configArticles = this.config[constant.M_ARTICLE];
 
     for (let fileName in this.configArticles) {
