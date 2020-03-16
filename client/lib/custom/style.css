@@ -151,6 +151,10 @@ blockquote p{
   color:#80808080;
 }
 
+#author a{
+  color:#80808080;
+}
+
 ul.articles {
 	margin-top: 1.5em;
   margin-left: 0em;
@@ -160,7 +164,7 @@ ul.articles li {
   list-style-type: none;
   margin-bottom: 0.2em;
 }
-ul.articles .date {
+ul.articles .date,ol.history .date{
   color: #c3c2c2;
   margin:0 0 0 1em;
   font-size:smaller;

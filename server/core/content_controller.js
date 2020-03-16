@@ -26,7 +26,7 @@ var default_history_json = {
 class Organizer {
   constructor() {
     LOG.Info("[CONSTRUCT] article organizer...");
-    this.configCategories = Object.create(null);
+
     if (DV.FileExist(pathes.urlArticleConfig)) {
       let configJson = DV.ReadFileUTF8(pathes.urlArticleConfig);
       LOG.Info("parse article config...");
@@ -36,6 +36,15 @@ class Organizer {
     }
     this.configArticles = this.config[constant.M_ARTICLE];
 
+    if (DV.FileExist(pathes.urlHistoryConfig)) {
+      let configJson = DV.ReadFileUTF8(pathes.urlHistoryConfig);
+      LOG.Info("parse history config...");
+      this.configHistory = JSON.parse(configJson);
+    } else {
+      this.configHistory = default_history_json;
+    }
+
+    this.configCategories = Object.create(null);
     for (let fileName in this.configArticles) {
       let category = this.configArticles[fileName][constant.M_CATEGORY];
       this._AppendToCategory(category, fileName);
@@ -57,6 +66,26 @@ class Organizer {
       this.configCategories[category] = _arr;
     }
     _arr.push(fileName);
+  }
+
+  _AppendToHistory(fileName) {
+    let _arr = this.configHistory[constant.M_HISTORY];
+    if (fileName == _arr[0]) return false;
+    _arr.unshift(fileName);
+    if (_arr.length > 50) {
+      _arr.pop();
+    }
+    return true;
+  }
+
+  _SaveHistoryToDisk() {
+    let configStr = JSON.stringify(this.configHistory);
+    var b = DV.WriteFileUTF8(pathes.urlHistoryConfig, configStr);
+    if (b) {
+      LOG.Info("save history config to disk successfully.");
+    } else {
+      LOG.Error("save history config to disk failed!");
+    }
   }
 
   _DeleteArticleFromDisk(fileName) {
@@ -99,6 +128,7 @@ class Organizer {
     if (save) {
       this.SaveConfigToDisk();
       this._SaveArticleToDisk(fileName, content);
+      if (this._AppendToHistory(fileName)) this._SaveHistoryToDisk();
     }
     return true;
   };
@@ -130,6 +160,7 @@ class Organizer {
       _ModifyConfig(_cfg, fileName, category, title, author, template);
       this.SaveConfigToDisk();
       this._SaveArticleToDisk(fileName, content);
+      if (this._AppendToHistory(fileName)) this._SaveHistoryToDisk();
       LOG.Info("article modified. file name:%s", fileName);
       return true;
     } else {
@@ -165,6 +196,11 @@ class Organizer {
       ++_n;
     }
     return _n;
+  }
+
+  GetHistoryArray(){
+    let _arr = this.configHistory[constant.M_HISTORY];
+    return _arr;
   }
 
   CreateArticleConfig() {

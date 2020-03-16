@@ -32,6 +32,7 @@ function Init(app) {
   //app.post("/upload", MiddlewareUpload.post);
   app.get("/manage", MiddlewareManage.get);
   app.get("/gallery", MiddlewareView.getGallery);
+  app.get("/history", MiddlewareView.getHistory);
   app.get("/index.html", MiddlewareView.getFrontPage);
   app.get("/index", MiddlewareView.getFrontPage)
   app.get("/", MiddlewareView.getFrontPage);

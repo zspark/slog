@@ -12,6 +12,7 @@ const pathes = {
 
   pathArticle: ROOT_CONTENT + "article/",
   urlArticleConfig: ROOT_CONTENT + ".summary.json",
+  urlHistoryConfig: ROOT_CONTENT + ".history.json",
 
   pathUser: ROOT_SERVER + "user/",
   pathCore: ROOT_SERVER + "core/",
@@ -44,6 +45,8 @@ const constant = {
   M_MODULE_MANAGE: "manage",
   M_MODULE_LOGIN: "login",
   M_MODULE_UPLOAD: "upload",
+
+  M_HISTORY: "history",
 
   M_CATEGORY: "category",
   M_CATEGORY_DEFAULT: "default",

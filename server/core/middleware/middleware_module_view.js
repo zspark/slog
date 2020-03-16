@@ -19,6 +19,7 @@ class ModuleView extends Base {
     this.thumbnailPathRelativeToPublic = "/share/gallery/thumbnail/";
     this.thumbnailSuffix = ".thumbnail.jpg";
     this.articleListURL = pathes.pathTemplate + "template_article_list.ejs";
+    this.historyURL = pathes.pathTemplate + "template_history.ejs";
   };
 
   _GetExtension(fileName) {
@@ -78,6 +79,22 @@ class ModuleView extends Base {
     this.RenderEjs(req, res, this.articleListURL, { obj: _obj });
   };
 
+  ComposeHistoryList(req, res, queryObj) {
+    let _list = CC.GetHistoryArray();
+    if (!_list) { _list = []; }
+    let _obj = [];
+    _list.map(_fileName => {
+      let _cfg = CC.GetConfig(_fileName);
+      let _tmp = Object.create(null);
+      _tmp[constant.M_FILE_NAME] = _fileName;
+      _tmp[constant.M_TITLE] = _cfg[constant.M_TITLE];
+      _tmp[constant.M_CREATE_TIME] = new Date(_cfg[constant.M_CREATE_TIME]).toDateString();
+      _obj.push(_tmp);
+    });
+
+    this.RenderEjs(req, res, this.historyURL, { obj: _obj });
+  };
+
   ComposeGalleryHtml(req, res) {
     var objArr = [];
     var arr = DV.ReadAllFileNamesInFolder(this.galleryFolderPath);
@@ -129,11 +146,16 @@ function Init() {
     mw.ComposeGalleryHtml(req, res);
   };
 
+  let getHistory = function (req, res) {
+    const _q = Utils.GetQueryValues(req);
+    mw.ComposeHistoryList(req, res, _q);
+  };
+
   let post = function (req, res) {
     res.end("bad post");
   };
 
-  return { get: get, getFrontPage: getFrontPage, getGallery: getGallery, post: post };
+  return { get: get, getFrontPage: getFrontPage, getGallery: getGallery, getHistory: getHistory, post: post };
 };
 
 module.exports.Init = Init;

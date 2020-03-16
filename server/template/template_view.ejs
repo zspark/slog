@@ -5,12 +5,11 @@
 
 <body>
   <div id="basic_outer_div">
-    <%- include("component/header",{param:{fileName:obj.fileName}}) %>
+    <%- include("component/header") %>
 
     <p id="title"> <%= obj.title %> </p>
     <p id="author">
-      <span> <%= obj.author %> </span>
-      <span> <%= obj.createTime %> </span>
+      <span> <%= obj.author %> | <%= obj.createTime %> | <a href="/edit?n=<%= obj.fileName %>">edit</a></span>
     </p>
     <%- obj.content %>
 
