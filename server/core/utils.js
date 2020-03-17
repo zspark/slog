@@ -26,7 +26,7 @@ var BindFunction_reserve2 = function (fn, defaultValue) {
 };
 
 var CheckFileNameLegality = function (fileName) {
-  let _arr = fileName.match(/^\w[\w\.]*\w$/g);
+  let _arr = fileName.match(/^\w[\w\.-]*\w$/g);
   if (_arr == null) return false;
   return _arr[0] == fileName;
 };
