@@ -39,6 +39,11 @@ const constant = {
   M_COMMAND_REBUILD_SUMMARY: "rebuildSummary",
   M_COMMAND_LIST_CATEGORIES: "listCategories",
 
+  M_ACTION: "action",
+  M_ACTION_NEW: "new",
+  M_ACTION_DELETE: "deleted",
+  M_ACTION_MODIFIED: "modified",
+
   M_MODULE: "module",
   M_MODULE_EDIT: "edit",
   M_MODULE_VIEW: "view",

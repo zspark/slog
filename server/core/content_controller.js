@@ -68,10 +68,22 @@ class Organizer {
     _arr.push(fileName);
   }
 
-  _AppendToHistory(fileName) {
+  _AppendToHistory(fileName, title, action) {
     let _arr = this.configHistory[constant.M_HISTORY];
-    if (fileName == _arr[0]) return false;
-    _arr.unshift(fileName);
+    if (_arr.length > 0) {
+      let _topElem = _arr[0];
+      if (fileName == _topElem[constant.M_FILE_NAME]) {
+        if (action == _topElem[constant.M_ACTION]) {
+          return false;
+        }
+      }
+    }
+
+    let _elem = Object.create(null);
+    _elem[constant.M_FILE_NAME] = fileName;
+    _elem[constant.M_TITLE] = title;
+    _elem[constant.M_ACTION] = action;
+    _arr.unshift(_elem);
     if (_arr.length > 50) {
       _arr.pop();
     }
@@ -128,7 +140,7 @@ class Organizer {
     if (save) {
       this.SaveConfigToDisk();
       this._SaveArticleToDisk(fileName, content);
-      if (this._AppendToHistory(fileName)) this._SaveHistoryToDisk();
+      if (this._AppendToHistory(fileName, title, constant.M_ACTION_NEW)) this._SaveHistoryToDisk();
     }
     return true;
   };
@@ -136,11 +148,13 @@ class Organizer {
   Delete(fileName) {
     let config = this.GetConfig(fileName);
     if (config) {
+      const _title = config[constant.M_TITLE];
       const _category = config[constant.M_CATEGORY];
       this._RemoveFromCategory(_category, fileName);
       delete this.configArticles[fileName];
       this.SaveConfigToDisk();
       this._DeleteArticleFromDisk(fileName);
+      if (this._AppendToHistory(fileName, _title, constant.M_ACTION_DELETE)) this._SaveHistoryToDisk();
       LOG.Info("article deleted. file name:%s", fileName);
       return true;
     } else {
@@ -160,7 +174,7 @@ class Organizer {
       _ModifyConfig(_cfg, fileName, category, title, author, template);
       this.SaveConfigToDisk();
       this._SaveArticleToDisk(fileName, content);
-      if (this._AppendToHistory(fileName)) this._SaveHistoryToDisk();
+      if (this._AppendToHistory(fileName, title, constant.M_ACTION_MODIFIED)) this._SaveHistoryToDisk();
       LOG.Info("article modified. file name:%s", fileName);
       return true;
     } else {

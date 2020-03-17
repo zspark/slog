@@ -83,12 +83,12 @@ class ModuleView extends Base {
     let _list = CC.GetHistoryArray();
     if (!_list) { _list = []; }
     let _obj = [];
-    _list.map(_fileName => {
-      let _cfg = CC.GetConfig(_fileName);
+    _list.map(_elem => {
       let _tmp = Object.create(null);
-      _tmp[constant.M_FILE_NAME] = _fileName;
-      _tmp[constant.M_TITLE] = _cfg[constant.M_TITLE];
-      _tmp[constant.M_CREATE_TIME] = new Date(_cfg[constant.M_CREATE_TIME]).toDateString();
+      _tmp[constant.M_FILE_NAME] = _elem[constant.M_FILE_NAME];
+      _tmp[constant.M_TITLE] = _elem[constant.M_TITLE];
+      _tmp[constant.M_ACTION] = _elem[constant.M_ACTION];
+      //_tmp[constant.M_CREATE_TIME] = new Date(_cfg[constant.M_CREATE_TIME]).toDateString();
       _obj.push(_tmp);
     });
 
