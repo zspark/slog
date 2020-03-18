@@ -88,6 +88,7 @@ class ModuleView extends Base {
       _tmp[constant.M_FILE_NAME] = _elem[constant.M_FILE_NAME];
       _tmp[constant.M_TITLE] = _elem[constant.M_TITLE];
       _tmp[constant.M_ACTION] = _elem[constant.M_ACTION];
+      _tmp[constant.M_TIME] = new Date(_elem[constant.M_TIME]).toDateString();
       //_tmp[constant.M_CREATE_TIME] = new Date(_cfg[constant.M_CREATE_TIME]).toDateString();
       _obj.push(_tmp);
     });

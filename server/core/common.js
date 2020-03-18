@@ -32,6 +32,7 @@ const constant = {
   M_AUTHOR: "author",
   M_TEMPLATE: "template",
   M_TITLE: "title",
+  M_TIME: "time",
   M_CREATE_TIME: "createTime",
   M_MODIFY_TIME: "modifyTime",
 

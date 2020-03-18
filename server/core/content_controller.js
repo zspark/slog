@@ -68,12 +68,13 @@ class Organizer {
     _arr.push(fileName);
   }
 
-  _AppendToHistory(fileName, title, action) {
+    _AppendToHistory(fileName, title, action) {
     let _arr = this.configHistory[constant.M_HISTORY];
     if (_arr.length > 0) {
       let _topElem = _arr[0];
       if (fileName == _topElem[constant.M_FILE_NAME]) {
         if (action == _topElem[constant.M_ACTION]) {
+          _topElem[constant.M_TIME]=new Date().toISOString();
           return false;
         }
       }
@@ -83,6 +84,7 @@ class Organizer {
     _elem[constant.M_FILE_NAME] = fileName;
     _elem[constant.M_TITLE] = title;
     _elem[constant.M_ACTION] = action;
+    _elem[constant.M_TIME]=new Date().toISOString();
     _arr.unshift(_elem);
     if (_arr.length > 50) {
       _arr.pop();
