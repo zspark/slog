@@ -5,6 +5,16 @@
   --body-font-color: #333;
   --title-font-color: rgb(161, 85, 0);
   --author-font-color: rgb(200,200,200);
+  --quote-left-color: rgb(200,200,200);
+  --quote-background-color: rgb(200,200,200,0.1);
+  --tip-left-color: rgb(100,170,100);
+  --tip-background-color: rgb(100,170,100,0.1);
+  --note-left-color: rgb(170,170,100);
+  --note-background-color: rgb(170,170,100,0.1);
+  --warn-left-color: rgb(80,80,170);
+  --warn-background-color: rgb(80,80,170,0.1);
+  --error-left-color: rgb(240,80,80);
+  --error-background-color: rgb(240,80,80,0.1);
 }
 
 body {
@@ -79,11 +89,37 @@ p {
 }
 
 blockquote {
-  background: #f9f9f9;
-  border-left: 0.3em solid #ededed;
+  box-shadow: 1px 1px 4px rgba(0,0,0,0.065);
+  border-radius: 3px;
+  background: var(--quote-background-color);
+  border-left: 0.3em solid var(--quote-left-color);
   padding: 0.5em 1em;
-  margin: 0.5em 0;
+  margin: 0.5em 2em 0.5em 2em;
   font-style: italic;
+}
+
+blockquote.tip {
+  background: var(--tip-background-color);
+  border-left: 0.3em solid var(--tip-left-color);
+  font-style:normal;
+}
+
+blockquote.note {
+  background: var(--note-background-color);
+  border-left: 0.3em solid var(--note-left-color);
+  font-style:normal;
+}
+
+blockquote.warn {
+  background: var(--warn-background-color);
+  border-left: 0.3em solid var(--warn-left-color);
+  font-style:normal;
+}
+
+blockquote.error {
+  background: var(--error-background-color);
+  border-left: 0.3em solid var(--error-left-color);
+  font-style:normal;
 }
 
 blockquote p{
@@ -157,7 +193,7 @@ blockquote p{
 
 #title{
   font-size: 2.2em;
-  margin: 0.8em 0 0 0;
+ /* margin: 0.8em 0 0 0;*/
   font-weight: bold;
   color: var(--title-font-color);
 }
@@ -169,7 +205,6 @@ blockquote p{
 }
 
 ul.articles {
-	margin-top: 1.5em;
   margin-left: 0em;
   font-size: 1.2em;
 }
