@@ -21,8 +21,7 @@ function Init() {
   let mw = new ModuleQueryLegality();
 
   let use = function (req, res, next) {
-    const _q = Utils.GetQueryValues(req);
-    const _fileName = _q[constant.M_FILE_NAME];
+    const _fileName = req.query.n;
     if (_fileName) {
       if (!Utils.CheckFileNameLegality(_fileName)) {
         mw.ComposeIllegalFileName(req, res);

@@ -27,14 +27,14 @@ class ModuleView extends Base {
     return fileName.substring(_li + 1);
   }
 
-  ComposeFile404(req, res, fileName, type) {
+  ComposeFile404(req, res) {
     let _obj = Object.create(null);
-    _obj[constant.M_FILE_NAME] = fileName;
+    _obj[constant.M_FILE_NAME] = req.query.n;
     this.RenderEjs(req, res, this.file404, { obj: _obj });
   };
 
-  ComposeArticle(req, res, queryObj) {
-    let _fileName = queryObj[constant.M_FILE_NAME];
+  ComposeArticle(req, res) {
+    let _fileName = req.query.n;
     let _content = DV.ReadFileUTF8(pathes.pathArticle + _fileName);
     if (_content == null) {
       _content = "";
@@ -62,8 +62,8 @@ class ModuleView extends Base {
     });
   };
 
-  ComposeArticleList(req, res, queryObj) {
-    let _category = queryObj[constant.M_CATEGORY];
+  ComposeArticleList(req, res) {
+    let _category = req.query.c;
     let _list = CC.GetCategory(_category);
     if (!_list) { _list = []; }
     let _obj = [];
@@ -79,7 +79,7 @@ class ModuleView extends Base {
     this.RenderEjs(req, res, this.articleListURL, { obj: _obj });
   };
 
-  ComposeHistoryList(req, res, queryObj) {
+  ComposeHistoryList(req, res) {
     let _list = CC.GetHistoryArray();
     if (!_list) { _list = []; }
     let _obj = [];
@@ -119,20 +119,19 @@ function Init() {
   let mw = new ModuleView();
 
   let get = function (req, res) {
-    const _q = Utils.GetQueryValues(req);
-    const _fileName = _q[constant.M_FILE_NAME];
+    const _fileName = req.query.n;
     if (_fileName) {
       if (CC.GetConfig(_fileName)) {
-        mw.ComposeArticle(req, res, _q);
+        mw.ComposeArticle(req, res);
       } else {
-        mw.ComposeFile404(req, res, _fileName);
+        mw.ComposeFile404(req, res);
       }
       return;
     }
 
-    const _category = _q[constant.M_CATEGORY];
+    const _category = req.query.c;
     if (_category) {
-      mw.ComposeArticleList(req, res, _q);
+      mw.ComposeArticleList(req, res);
     } else {
       mw.ComposeURLFormatError(req, res);
     }
@@ -148,8 +147,7 @@ function Init() {
   };
 
   let getHistory = function (req, res) {
-    const _q = Utils.GetQueryValues(req);
-    mw.ComposeHistoryList(req, res, _q);
+    mw.ComposeHistoryList(req, res);
   };
 
   let post = function (req, res) {

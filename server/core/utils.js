@@ -40,6 +40,7 @@ var GetQueryValues = function (req) {
     _obj[constant.M_COMMAND]=_q['cmd'];
     _obj[constant.M_CATEGORY]=_q['c'];
     _obj[constant.M_MODULE]=_q['m'];
+    _obj[constant.M_ACTION]=_q['a'];
   }
   return _obj;
 };
@@ -114,6 +115,14 @@ var SetCookie = function (req, key, value) {
   req.signedCookies[key] = value;
 };
 
+var GetClientIP = function (req) {
+  return req.connection.remoteAddress;
+}
+
+var GetClientPort = function (req) {
+  return req.connection.remotePort;
+}
+
 var GetCookie = function (req, key) {
   return req.signedCookies[key];
 };
@@ -144,3 +153,5 @@ module.exports.MakeEditURL = MakeEditURL;
 module.exports.MakeViewURL = MakeViewURL;
 module.exports.MakeLoginURL = MakeLoginURL;
 module.exports.MakeLoginWithViewURL = MakeLoginWithViewURL;
+module.exports.GetClientIP = GetClientIP;
+module.exports.GetClientPort = GetClientPort;

@@ -45,8 +45,8 @@ class ModuleManage extends Base {
     this.RenderEjs(req, res, this.templateManageListCategoryName, { obj: _obj });
   };
 
-  GetHandler(req, res, queryObj) {
-    let _cmd = queryObj[constant.M_COMMAND];
+  GetHandler(req, res) {
+    let _cmd = req.query.cmd;
     switch (_cmd) {
       case constant.M_COMMAND_REBUILD_SUMMARY:
         this._RebuildSummary(req, res);
@@ -75,8 +75,7 @@ function Init() {
       return;
     }
 
-    const _q = Utils.GetQueryValues(req);
-    mw.GetHandler(req, res, _q);
+    mw.GetHandler(req, res);
   };
 
   let post = function (req, res) {

@@ -98,6 +98,8 @@ blockquote p{
   margin-left: calc((100vw - var(--default-width))/2); 
   margin-right: calc((100vw - var(--default-width))/2); 
   padding: 0 1em 1em;
+  box-shadow: 1px 1px 4px rgba(0,0,0,0.065);
+  border-radius: 3px;
 }
 
 #basic_outer_div_project{
@@ -119,6 +121,14 @@ blockquote p{
   border: 0;
   padding: 0 0 0 0;
   background-color: #fbfbfb;
+}
+
+#basic_outer_div_edit_error{
+  display: block;
+  margin: 0 0 0 0;
+  border: 0;
+  padding: 0 0 0 0;
+  background-color: #FF0000;
 }
 
 #menu {

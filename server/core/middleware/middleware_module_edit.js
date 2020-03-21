@@ -8,33 +8,108 @@ const DV = require(pathes.pathCore + 'disk_visitor');
 const CC = require(pathes.pathCore + "content_controller");
 const UserManager = require(pathes.pathCore + "user_manager");
 
+class EditSession {
+  constructor() {
+    this.editingAccount = "";
+    this.editingIP = "0.0.0.0";
+    this.editingStartTime = null;
+    this.editingLastHeartBeatTime = null;
+    this.editingFileName = "";
+  };
+
+  Init(acc, ip, fileName) {
+    this.editingAccount = acc;
+    this.editingIP = ip;
+    this.editingFileName = fileName;
+    this.editingStartTime = new Date();
+    this.editingLastHeartBeatTime = new Date().getTime();
+  }
+
+  TryRefresh(acc, ip) {
+    if (acc != this.editingAccount) return false;
+    if (ip != this.editingIP) return false;
+    this.editingLastHeartBeatTime = new Date().getTime();
+    return true;
+  }
+
+  Delete() {
+    CC.Delete(this.editingFileName);
+  }
+
+  Save(title, author, category, template, content) {
+    const _fileName = this.editingFileName;
+    if (CC.GetConfig(_fileName)) {
+      CC.Modify(_fileName, category, title, author, template, content);
+    } else {
+      CC.Add(_fileName, category, title, author, template, content);
+    }
+  }
+}
+
+var _CreateDefaultPostBackInstance = function () {
+  let _obj = Object.create(null);
+  _obj.resTime = new Date();
+  _obj.code = constant.action_code.ACTION_CONFIRMED;
+  _obj.redirectURL = null;
+  _obj.msg = "";
+  return _obj;
+}
+
+var s_connectionCheck = null;
+var _StartHearBeatCheck = function (m) {
+  if (s_connectionCheck != null) return false;
+
+  s_connectionCheck = setInterval(() => {
+    let _map = m;
+
+    _map.forEach((value, key, m) => {
+      let _delta = new Date().getTime() - value.editingLastHeartBeatTime;
+      LOG.Info("delta:%d", _delta);
+      if (_delta > 20000) {
+        LOG.Info("delete session");
+        _map.delete(key);
+      }
+    });
+
+    if (_map.size <= 0) {
+      _ForceStopHeartBeatCheck();
+    }
+  }, 20000);
+  return true;
+}
+
+var _ForceStopHeartBeatCheck = function () {
+  if (s_connectionCheck != null) {
+    clearInterval(s_connectionCheck);
+    s_connectionCheck = null;
+  }
+}
+
+
 class ModuleEdit extends Base {
   constructor() {
     super();
     this.editorHtmlURL = pathes.pathTemplate + "template_editor.ejs";
     this.noPermissionHtmlURL = pathes.pathTemplate + "template_no_permission.ejs";
+    this.fileEditingHtmlURL = pathes.pathTemplate + "template_file_editing.ejs";
+    this.m_mapEditSession = new Map();
   };
 
-  HandleAuthorCheck(req, res, queryObj) {
-    const _fileName = queryObj[constant.M_FILE_NAME];
-    var _cfg = CC.GetConfig(_fileName);
-    if (_cfg) {
-      const _accountInfo = UserManager.GetUserInfo(Utils.GetUserAccount(req));
-      const _accountDisplayName = _accountInfo[constant.M_ACCOUNT_DISPLAY_NAME];
-      if (_accountDisplayName != _cfg[constant.M_AUTHOR]) {
-        LOG.Warn("you have NO permission to edit this file!");
-        let _obj = Object.create(null);
-        _obj[constant.M_FILE_NAME] = _fileName;
-        this.RenderEjs(req, res, this.noPermissionHtmlURL, { obj: _obj });
-        return true;
-      }
-    }
-    return false;
-  }
-
-  GetHandler(req, res, queryObj) {
+  GetHandler(req, res) {
     LOG.Info("edit get handler.");
-    const _fileName = queryObj[constant.M_FILE_NAME];
+    const _fileName = req.query.n;
+
+    let _es = this.m_mapEditSession.get(_fileName);
+    if (_es) {
+      this.RenderEjs(req, res, this.fileEditingHtmlURL, {});
+      return true;
+    }
+
+    _es = new EditSession();
+    _es.Init(Utils.GetUserAccount(req), Utils.GetClientIP(req), _fileName);
+    this.m_mapEditSession.set(_fileName, _es);
+
+    _StartHearBeatCheck(this.m_mapEditSession);
 
     let _obj = Object.create(null);
     _obj[constant.M_FILE_NAME] = _fileName;
@@ -62,48 +137,77 @@ class ModuleEdit extends Base {
     return true;
   };
 
-  HandlePostArticle(req, res, queryObj) {
-    //console.log(req.body);
-    const _fileName = queryObj[constant.M_FILE_NAME];
-    const _content = req.body.content;
+  HandlePostArticle(req, res) {
+    let _obj = _CreateDefaultPostBackInstance();
 
-    // cancel modify
-    if (_content == null) {
-      if (CC.GetConfig(_fileName)) {
-        let _url = Utils.MakeArticleURL(_fileName);
-        res.redirect(_url);
-      } else {
-        let _url = Utils.MakeHomeURL();
-        res.redirect(_url);
-      }
+    const _fileName = req.query.n;
+    if (!_fileName) {
+      _obj.code = constant.error_code.NO_FILE_NAME;
+      _obj.msg = "error, no file name!";
+      res.send(JSON.stringify(_obj));
       return true;
     }
 
-    // delete
-    if (_content.trim() == "delete") {
-      CC.Delete(_fileName);
-      let _url = Utils.MakeHomeURL();
-      res.redirect(_url);
+    let _es = this.m_mapEditSession.get(_fileName);
+    if (!_es) {
+      _obj.code = constant.error_code.SERVER_SHUT_DOWN;
+      res.send(JSON.stringify(_obj));
       return true;
     }
 
-    // save
-    const _title = req.body[constant.M_TITLE];
-    const _author = req.body[constant.M_AUTHOR];
-    const _category = req.body[constant.M_CATEGORY];
-    const _template = req.body[constant.M_TEMPLATE];
-    if (CC.GetConfig(_fileName)) {
-      CC.Modify(_fileName, _category, _title, _author, _template, _content);
-    } else {
-      CC.Add(_fileName, _category, _title, _author, _template, _content);
+    let _jsonObj = req.body;
+    if (!_jsonObj) {
+      _obj.code = constant.error_code.REQUESTING_FORMAT_ERROR;
+      res.send(JSON.stringify(_obj));
+      return true;
     }
-    let _url = Utils.MakeArticleURL(_fileName);
-    res.redirect(_url);
+
+    let _Save = function () {
+      const _title = _jsonObj[constant.M_TITLE];
+      const _author = _jsonObj[constant.M_AUTHOR];
+      const _category = _jsonObj[constant.M_CATEGORY];
+      const _template = _jsonObj[constant.M_TEMPLATE];
+      const _content = _jsonObj[constant.M_CONTENT];
+      _es.Save(_title, _author, _category, _template, _content);
+    }
+
+    const action_code = constant.action_code;
+    const error_code = constant.error_code;
+    switch (_jsonObj[constant.M_ACTION]) {
+      case action_code.HEART_BEAT:
+        if (_es.TryRefresh(Utils.GetUserAccount(req), Utils.GetClientIP(req))) {
+          LOG.Info("heart beat");
+        } else {
+          _obj.code = error_code.SERVER_SHUT_DOWN;
+        }
+        break;
+      case action_code.DELETE:
+        _es.Delete();
+        this.m_mapEditSession.delete(_fileName);
+        _obj.redirectURL = "/";
+        break;
+      case action_code.SAVE:
+        _Save();
+        break;
+      case action_code.SAVE_AND_EXIT:
+        _Save();
+        _obj.redirectURL = "view?n=" + _fileName;
+        this.m_mapEditSession.delete(_fileName);
+        break;
+      case action_code.CANCEL:
+        this.m_mapEditSession.delete(_fileName);
+        _obj.redirectURL = "view?n=" + _fileName;
+        break;
+      default:
+        break;
+    }
+
+    res.send(JSON.stringify(_obj));
     return true;
   };
 
-  LoginFirst(req, res, queryObj) {
-    const _fileName = queryObj[constant.M_FILE_NAME];
+  LoginFirst(req, res){
+    const _fileName = req.query.n;
     if (_fileName) {
       let _url = Utils.MakeLoginWithViewURL(_fileName);
       res.redirect(_url);
@@ -119,29 +223,25 @@ function Init() {
   let mw = new ModuleEdit();
 
   let get = function (req, res) {
-    const _q = Utils.GetQueryValues(req);
     if (Utils.CheckLogin(req)) {
-      const _fileName = _q[constant.M_FILE_NAME];
+      const _fileName = req.query.n;
       if (_fileName) {
-        if (!mw.HandleAuthorCheck(req, res, _q)) {
-          mw.GetHandler(req, res, _q);
-        }
+        mw.GetHandler(req, res);
       } else {
         let _msg = "no assigned file name!";
         LOG.Info(_msg);
         res.end(_msg);
       }
     } else {
-      mw.LoginFirst(req, res, _q);
+      mw.LoginFirst(req, res);
     }
   };
 
   let post = function (req, res) {
-    const _q = Utils.GetQueryValues(req);
     if (Utils.CheckLogin(req)) {
-      mw.HandlePostArticle(req, res, _q);
+      mw.HandlePostArticle(req, res);
     } else {
-      mw.LoginFirst(req, res, _q);
+      mw.LoginFirst(req, res);
     }
   };
   return { get: get, post: post };

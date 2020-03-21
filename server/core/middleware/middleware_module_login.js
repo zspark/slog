@@ -12,8 +12,8 @@ class ModuleLogin extends Base {
     this.loginHtmlURL = pathes.pathTemplate + "template_login.ejs";
   };
 
-  GetHandler(req, res, queryObj) {
-    const _fileName = queryObj[constant.M_FILE_NAME];
+  GetHandler(req, res){
+    const _fileName = req.query.n;
     if (_fileName) {
       this.RenderEjs(req, res, this.loginHtmlURL, { obj: { fileName: _fileName } });
     } else {
@@ -21,13 +21,40 @@ class ModuleLogin extends Base {
     }
   }
 
-  PostHandler(req, res, queryObj) {
-    let _url = Utils.MakeHomeURL();
-    const _fileName = queryObj[constant.M_FILE_NAME];
-    if (_fileName) {
-      _url = Utils.MakeEditURL(_fileName);
+  PostHandler(req, res){
+
+    let _obj = Object.create(null);
+    _obj.resTime = new Date();
+    _obj.code = constant.UNKNOWN;
+    _obj.redirectURL = "/";
+
+
+    let _data = req.body;
+    const _account = _data["account"];
+    const _userInfo = UserManager.GetUserInfo(_account);
+    if (_userInfo) {
+      const _pwd = _data["password"];
+      if (_userInfo.password === _pwd) {
+        res.cookie("account", _userInfo.account, { signed: true });//read cookies:(req.signedCookies.bwf) 
+        _obj.code = constant.action_code.ACTION_CONFIRMED;
+        const _q = Utils.GetQueryValues(req);
+        const _fileName = _q[constant.M_FILE_NAME];
+        if (_fileName) {
+          _obj.redirectURL = Utils.MakeEditURL(_fileName);
+        }
+
+      } else {
+        let _info = "Sorry wrong password!";
+        _obj.code = constant.error_code.WRONG_PWD;
+        LOG.Error(_info);
+      }
+    } else {
+      let _info = "Sorry wrong account! account:" + _account;
+      _obj.code = constant.error_code.WRONG_ACCOUNT;
+      LOG.Error(_info);
     }
-    res.redirect(_url);
+
+    res.send(JSON.stringify(_obj));
   };
 };
 
@@ -35,30 +62,13 @@ function Init() {
   let mw = new ModuleLogin();
 
   let get = function (req, res) {
-    const _q = Utils.GetQueryValues(req);
-    mw.GetHandler(req, res, _q);
+    mw.GetHandler(req, res);
   };
 
   let post = function (req, res) {
-    const _account = req.body["account"];
-    const _userInfo = UserManager.GetUserInfo(_account);
-    if (_userInfo) {
-      const _pwd = req.body["password"];
-      if (_userInfo.password === _pwd) {
-        res.cookie("account", _userInfo.account, { signed: true });//read cookies:(req.signedCookies.bwf) 
-        const _q = Utils.GetQueryValues(req);
-        mw.PostHandler(req, res, _q);
-      } else {
-        let _info = "Sorry wrong password!";
-        LOG.Error(_info);
-        res.end(_info);
-      }
-    } else {
-      let _info = "Sorry wrong account! account:" + _account;
-      LOG.Error(_info);
-      res.end(_info);
-    }
+    mw.PostHandler(req, res);
   };
+
   return { get: get, post: post };
 };
 

@@ -62,6 +62,26 @@ const constant = {
   M_CATEGORY_LANGUAGE: "language",
 
   M_ACCOUNT_DISPLAY_NAME: "displayName",
+
+  error_code: {
+    UNKNOWN: 10000,
+    REQUESTING_FORMAT_ERROR:10001,
+    NO_FILE_NAME: 10002,
+    SERVER_SHUT_DOWN: 10003,
+    WRONG_ACCOUNT: 10004,
+    WRONG_PWD: 10005,
+  },
+
+  action_code: {
+    HEART_BEAT: 0,
+    SAVE: 1,
+    SAVE_AND_EXIT: 2,
+    DELETE: 10,
+    CANCEL: 20,
+    LOGIN: 100,
+    ACTION_CONFIRMED: 9999,
+  },
+
 };
 
 module.exports.pathes = pathes;

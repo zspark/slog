@@ -11,20 +11,13 @@
     <p id="author">
       <span> <%= obj.author %> | <%= obj.createTime %> | <a href="/edit?n=<%= obj.fileName %>">edit</a></span>
     </p>
+
     <%- obj.content %>
 
     <%- include("component/footer") %>
   </div>
 
-  <%- include("component/body_bottom") %>
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script>
-    MathJax = {
-      tex: {
-        inlineMath: [['$', '$', '$$', '$$'], ['\\(', '\\)', '\\[', '\\]']],
-      }
-    };
-  </script>
+  <%- include("component/body_scripts") %>
 </body>
 
 </html>
