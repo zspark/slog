@@ -1,28 +1,30 @@
 <!doctype html>
 <html lang="en">
 
-  <%- include("component/head") %>
+<%- include("component/head") %>
 
-  <body>
+<body>
+  <%- include("component/header") %>
+  <div>
+
+    <div id="msg"></div>
+
     <div>
-
-      <div id="msg"></div>
-      
-      <div>
-        <span>account:</span>
-        <span><input type="email" name="account" id="inputAccount" placeholder="Email address"></span>
-      </div>
-      
-      <div>
-        <span>password:</span>
-        <span><input type="password" name="password" id="inputPassword" placeholder="Password"></span>
-      </div>
-      
-      <button type="button" id="submit" onclick='post()'>Sign in</button>
-
-      <script src="/lib/custom/login.js" defer></script>
-      <script src="/lib/md5/md5.min.js" defer></script>
+      <span>account:</span>
+      <span><input type="email" name="account" id="inputAccount" placeholder="Email address"></span>
     </div>
-  </body>
+
+    <div>
+      <span>password:</span>
+      <span><input type="password" name="password" id="inputPassword" placeholder="Password"></span>
+    </div>
+
+    <button type="button" id="submit" onclick='post()'>Sign in</button>
+
+    <script src="/lib/custom/login.js" defer></script>
+    <script src="/lib/md5/md5.min.js" defer></script>
+  </div>
+  <%- include("component/footer") %>
+</body>
 
 </html>

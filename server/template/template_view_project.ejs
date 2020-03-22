@@ -4,13 +4,13 @@
 <%- include("component/head") %>
 
 <body>
+  <%- include("component/header",{param:{fileName:obj.fileName}}) %>
   <div id="basic_outer_div_project">
-    <%- include("component/header",{param:{fileName:obj.fileName}}) %>
 
     <%- obj.content%>
 
-    <%- include("component/footer") %>
   </div>
+  <%- include("component/footer") %>
 </body>
 
 </html>

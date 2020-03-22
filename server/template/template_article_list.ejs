@@ -4,9 +4,10 @@
 <%- include("component/head") %>
 
 <body>
+  <%- include("component/header") %>
   <div id="basic_outer_div">
 
-    <%- include("component/header") %>
+    <h1>article list:</h1>
 
     <ul class="articles">
       <% obj.forEach(function(item){ %>
@@ -19,8 +20,8 @@
       <% }); %>
     </ul>
 
-    <%- include("component/footer") %>
   </div>
+  <%- include("component/footer") %>
 </body>
 
 </html>

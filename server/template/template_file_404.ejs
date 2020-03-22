@@ -4,14 +4,13 @@
 <%- include("component/head") %>
 
 <body>
+  <%- include("component/header") %>
   <div id="basic_outer_div">
-
-    <%- include("component/header") %>
 
     <p>This file is NOT exist,click to <a href="/edit?n=<%= obj.fileName %>">create.</a></p>
 
-    <%- include("component/footer") %>
   </div>
+  <%- include("component/footer") %>
 </body>
 
 </html>

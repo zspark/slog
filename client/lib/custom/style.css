@@ -1,6 +1,7 @@
 :root {
-  --default-width:60em;
+  --default-width:60rem;
   --body-bg-color: #f5f2f0;
+  --header-bg-color: #f5f2f0;
   --outer-bg-color: #fefefe;
   --body-font-color: #333;
   --title-font-color: rgb(161, 85, 0);
@@ -23,6 +24,7 @@ body {
   line-height: 1.7;
   color: var(--body-font-color);
   background-color:var(--body-bg-color);
+  /*background-image: url("/lib/custom/bg.jpg");*/
   font-weight: normal;
   width: 100%;
   margin: 0;
@@ -32,8 +34,9 @@ body {
 
 header {
   font-size: 1.4em;
+  width:var(--default-width);
+  margin-left: calc((100vw - var(--default-width))/2); 
 }
-
 header a{
   text-decoration: none;
   font-weight: bold;
@@ -47,20 +50,21 @@ footer {
 }
 
 table {
-  border-collapse: collapse;
-  width: 100%;
+  /*border-collapse: collapse;*/
+  width: 90%;
+  padding: 0.2em 0.2em;
+  margin: 0.5em 2em 0.5em 2em;
 }
-
+/*
 table, th, td {
   border: 1px solid var(--author-font-color);
 }
-
+*/
 thead tr{
-  background-color:var(--body-bg-color);
+  background-color:var(--tip-background-color);
   font-weight: bold;
 }
-
-tr:nth-child(even) {background-color: #f8f8f8;}
+tr:nth-child(even) {background-color: var(--tip-background-color)}
 
 a {
   color: #003dbf;
@@ -70,22 +74,19 @@ a {
 
 h1 {
   font-size: 1.4em;
-  margin: 0.8em 0 0 0;
+  margin: 1em 0 -0.5em 0;
 }
-
 h2 {
   font-size: 1.3em;
-  margin: 0.7em 0 0 0;
+  margin: 0.9em 0 -0.4em 0;
 }
-
 h3 {
   font-size: 1.2em;
-  margin: 0.6em 0 0 0;
+  margin: 0.8em 0 -0.3em 0;
 }
-
 p {
   font-size: 1em;
-  margin: 0.3em 0 0 0;
+  margin: 0.8em 0 0 0;
 }
 
 blockquote {
@@ -94,34 +95,29 @@ blockquote {
   background: var(--quote-background-color);
   border-left: 0.3em solid var(--quote-left-color);
   padding: 0.5em 1em;
-  margin: 0.5em 2em 0.5em 2em;
+  margin: 0.8em 2em 0.5em 2em;
   font-style: italic;
 }
-
 blockquote.tip {
   background: var(--tip-background-color);
   border-left: 0.3em solid var(--tip-left-color);
   font-style:normal;
 }
-
 blockquote.note {
   background: var(--note-background-color);
   border-left: 0.3em solid var(--note-left-color);
   font-style:normal;
 }
-
 blockquote.warn {
   background: var(--warn-background-color);
   border-left: 0.3em solid var(--warn-left-color);
   font-style:normal;
 }
-
 blockquote.error {
   background: var(--error-background-color);
   border-left: 0.3em solid var(--error-left-color);
   font-style:normal;
 }
-
 blockquote p{
   margin: 0em 0 0 0;
 }
@@ -129,11 +125,10 @@ blockquote p{
 #basic_outer_div{
   background-color:var(--outer-bg-color);
   display: block;
-  max-width: var(--default-width);
+  width: var(--default-width);
   margin: 0;
-  margin-left: calc((100vw - var(--default-width))/2); 
-  margin-right: calc((100vw - var(--default-width))/2); 
-  padding: 0 1em 1em;
+  margin-left: calc((100vw - var(--default-width) - 6em)/2); 
+  padding: 3em 3em;
   box-shadow: 1px 1px 4px rgba(0,0,0,0.065);
   border-radius: 3px;
 }
@@ -141,7 +136,7 @@ blockquote p{
 #basic_outer_div_project{
   display: block;
   margin: 0 0 0 0;
-  padding: 0 1em 1em;
+  padding: 0 3em 1em;
 }
 
 #basic_outer_div_code{
@@ -168,7 +163,7 @@ blockquote p{
 }
 
 #menu {
-  margin: 0;
+  margin: 0.8em 0;
   padding: 0;
 }
 #menu li {
@@ -193,7 +188,7 @@ blockquote p{
 
 #title{
   font-size: 2.2em;
- /* margin: 0.8em 0 0 0;*/
+  margin: 0.2em 0 0 0;
   font-weight: bold;
   color: var(--title-font-color);
 }
@@ -210,7 +205,6 @@ ul.articles {
 }
 ul.articles li {
   list-style-type: none;
-  margin-bottom: 0.2em;
 }
 ul.articles .date,ol.history .date{
   color:var(--author-font-color);

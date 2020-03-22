@@ -6,8 +6,8 @@
 <link type="text/css" href="lib/lightgallery/css/lightgallery.min.css" rel="stylesheet" />
 
 <body>
+  <%- include("component/header") %>
   <div id="basic_outer_div">
-    <%- include("component/header") %>
 
     <div id="lightgallery" style=" margin-top: 20px; ">
       <% obj.forEach(function(item){ %>
@@ -20,8 +20,8 @@
 
     </div>
 
-    <%- include("component/footer") %>
   </div>
+  <%- include("component/footer") %>
 
   <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.min.js"></script>
   <script src="lib/lightgallery/js/lightgallery.min.js"></script>
