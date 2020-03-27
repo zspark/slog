@@ -4,7 +4,8 @@ var titleElem = null;
 var authorElem = null;
 var categoryElem = null;
 var templateElem = null;
-var outerDivElem = null;
+var floatDiv = null;
+var iframeWnd = null;
 
 var changeTimeout = null;
 var heartbeatIntervalID = null;
@@ -20,9 +21,11 @@ function OnBodyLoad() {
   authorElem = document.getElementById("inputAuthor");
   categoryElem = document.getElementById("inputCategory");
   templateElem = document.getElementById("inputTemplate");
-  previewElem = document.getElementById('preview');
+  let _tmp = document.getElementById('preview');
+  iframeWnd = _tmp.contentWindow;
+  previewElem = iframeWnd.document.getElementById("basic_outer_div_preview");
   markdownElem = document.getElementById('markdown');
-  outerDivElem = document.getElementById('basic_outer_div_edit');
+  floatDiv = document.getElementById('float_buttons');
   changeTimeout = null;
   inputDirty = true;
 
@@ -36,6 +39,8 @@ function OnBodyLoad() {
     viewportMargin: Infinity,
     lineWrapping: true,
     theme: "default",
+    styleActiveLine: true, // 当前行背景高亮
+    nonEmpty:true,
     inputStyle: "contenteditable"
   });
   editor.on("change", function (ins, obj) {
@@ -44,45 +49,43 @@ function OnBodyLoad() {
     needSubmit = true;
   });
 
-  TryRenderToHTML();
+  _TryRenderToHTML();
 
   heartbeatIntervalID = setInterval(() => {
-    PostHeartBeat();
+    _PostXHR(_CreatePostData(0), null);
   }, 10000);
 };
 
-function StopHeartBeat() {
+function _StopHeartBeat(msg) {
   if (heartbeatIntervalID != null) {
     clearInterval(heartbeatIntervalID);
     heartbeatIntervalID = null;
-    outerDivElem.id = "basic_outer_div_edit_error";
-    console.error("connect failed.");
+    floatDiv.id = "float_buttons_error";
+    console.error(msg);
   }
 }
 
-function TryRenderToHTML() {
+function _TryRenderToHTML() {
+  let _delayTime = 400;
   if (inputDirty) {
     inputDirty = false;
-    var startTime = new Date();
+    let _startTime = new Date();
 
     marked(markdownElem.value, (err, content) => {
       if (err) {
-        previewElem.innerHTML = ("marked parse error!");
+        previewElem.innerHTML = "marked parse error!"
       } else {
-        previewElem.innerHTML = (content);
+        previewElem.innerHTML = content;
       }
     });
 
-    var endTime = new Date();
-    var delayTime = endTime - startTime;
-    if (delayTime < 100) {
-      delayTime = 100;
-    } else if (delayTime > 500) {
-      delayTime = 1000;
-    }
+    iframeWnd.Prism.highlightAll()
+    iframeWnd.MathJax.typeset()
+
+    _delayTime = Math.max(400, new Date() - _startTime);
   }
 
-  changeTimeout = window.setTimeout(TryRenderToHTML, delayTime);
+  changeTimeout = window.setTimeout(_TryRenderToHTML, _delayTime);
 };
 
 /**
@@ -108,73 +111,53 @@ function _CreatePostData(action) {
   return _obj;
 }
 
+function _Redirect(json) {
+  window.location.href = json.redirectURL;
+}
+
 function Delete() {
   let _r = confirm("Are your sure to delete this article?");
   if (_r) {
-    PostXHR(_CreatePostData(10), (json) => {
-      if (json.code == 9999){
-        window.location.href = json.redirectURL;
-      }else{
-        console.error(json.msg);
-        outerDivElem.id = "basic_outer_div_edit_error";
-      }
-    });
+    _PostXHR(_CreatePostData(10), _Redirect);
   }
 };
 
+function _CheckConnection() {
+  if (heartbeatIntervalID == null) {
+    alert("you has dis-connected with server, copy your article and try reopen to edit!");
+    return false;
+  } else { return true; }
+}
+
 function Cancel() {
-  let _r = true;
-  if (needSubmit) {
-    _r = confirm("You have changes which are NOT saved. Do you really want to cancel editing?");
-  }
-  if (_r) {
-    PostXHR(_CreatePostData(20), (json) => {
-      if (json.code == 9999) {
-        window.location.href = json.redirectURL;
-      }else{
-        console.error(json.msg);
-        outerDivElem.id = "basic_outer_div_edit_error";
-      }
-    });
+  if (_CheckConnection()) {
+    let _r = true;
+    if (needSubmit) {
+      _r = confirm("You have changes which are NOT saved. Do you really want to cancel editing?");
+    }
+    if (_r) {
+      _PostXHR(_CreatePostData(20), _Redirect);
+    }
   }
 };
 
 function Save() {
-  if (_CheckCompletion()) {
-    PostXHR(_CreatePostData(1), (json) => {
-      if (json.code != 9999) {
-        console.error(json.msg);
-        outerDivElem.id = "basic_outer_div_edit_error";
-      }
-    });
+  if (_CheckConnection()) {
+    if (_CheckCompletion()) {
+      _PostXHR(_CreatePostData(1), null);
+    }
   }
 };
 
 function SaveAndExit() {
-  if (_CheckCompletion()) {
-    PostXHR(_CreatePostData(2), (json) => {
-      if (json.code == 9999) {
-        window.location.href = json.redirectURL;
-      }else{
-        console.error(json.msg);
-        outerDivElem.id = "basic_outer_div_edit_error";
-      }
-    });
+  if (_CheckConnection()) {
+    if (_CheckCompletion()) {
+      _PostXHR(_CreatePostData(2), _Redirect);
+    }
   }
 };
 
-function PostHeartBeat() {
-  PostXHR(_CreatePostData(0), (json) => {
-    if (json.code != 9999) {
-      console.error(json.msg);
-      outerDivElem.id = "basic_outer_div_edit_error";
-    }
-  });
-};
-
-function PostXHR(obj, fn) {
-  if (heartbeatIntervalID == null) return;
-
+function _PostXHR(obj, fn) {
   let xhr = new XMLHttpRequest();
   xhr.open('POST', '/edit' + window.location.search, true);
   xhr.responseType = 'json';
@@ -182,29 +165,32 @@ function PostXHR(obj, fn) {
   xhr.onload = function () {
     if (xhr.readyState === xhr.DONE) {
       if (xhr.status === 200) {
-        if (fn) fn(xhr.response);
+        let _json = xhr.response;
+        if (_json.code === 9999) {
+          if (fn) fn(_json);
+        }else{
+          _StopHeartBeat(_json.msg);
+        }
         return;
       }
     }
+    _StopHeartBeat("error");
   }
-  xhr.onreadystatechange = function () { };
-  xhr.onprogress=function(){
+  let _fn = function () {
     if (xhr.status != 200) {
-      StopHeartBeat();
+      _StopHeartBeat("error");
     }
   }
-  xhr.onerror=function(){
-    StopHeartBeat();
-  }
-  xhr.onabort=function(){
-    StopHeartBeat();
-  }
+  xhr.onreadystatechange = _fn;
+  xhr.onprogress = _fn;
+  xhr.onerror = function () { _StopHeartBeat("error"); }
+  xhr.onabort = function () { _StopHeartBeat("error"); }
 
   let _jsonString = JSON.stringify(obj);
   xhr.send(_jsonString);
 };
 
-function _CheckCompletion(){
+function _CheckCompletion() {
   if (categoryElem.value == '') {
     alert("enter category.");
     return false;

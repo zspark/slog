@@ -12,6 +12,7 @@ const DV = require(pathes.pathCore + "disk_visitor");
 class ModuleView extends Base {
   constructor() {
     super();
+    MARKED.setOptions({ "smartLists": true, "smartypants": true, "gfm": true });
     this.file404 = pathes.pathTemplate + "template_file_404.ejs";
     this.galleryFolderPath = pathes.pathGallery;
     this.galleryFileURL = pathes.pathTemplate + "template_gallery.ejs";

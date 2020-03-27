@@ -26,6 +26,7 @@ function Init(app) {
   app.post("/login", bodyParser.json({ extended: false, limit: "1kb" }), MiddlewareLogin.post);
   app.get("/view", MiddlewareView.get);
   app.get("/edit", MiddlewareEdit.get);
+  app.get("/edit/previewHtml", MiddlewareEdit.getPreviewHtml);
   app.post("/edit", bodyParser.json({ extended: false, limit: "1mb" }), MiddlewareEdit.post);
   //app.get("/upload", MiddlewareUpload.get);
   //app.post("/upload", MiddlewareUpload.post);

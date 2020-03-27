@@ -92,8 +92,13 @@ class ModuleEdit extends Base {
     this.editorHtmlURL = pathes.pathTemplate + "template_editor.ejs";
     this.noPermissionHtmlURL = pathes.pathTemplate + "template_no_permission.ejs";
     this.fileEditingHtmlURL = pathes.pathTemplate + "template_file_editing.ejs";
+    this.previewHtmlURL = pathes.pathTemplate + "template_preview.ejs";
     this.m_mapEditSession = new Map();
   };
+
+  GetPreviewHtmlHandler(req, res) {
+    this.RenderEjs(req, res, this.previewHtmlURL, {});
+  }
 
   GetHandler(req, res) {
     LOG.Info("edit get handler.");
@@ -237,6 +242,14 @@ function Init() {
     }
   };
 
+  let getPreviewHtml = function (req, res) {
+    if (Utils.CheckLogin(req)) {
+      mw.GetPreviewHtmlHandler(req, res);
+    } else {
+      mw.LoginFirst(req, res);
+    }
+  };
+
   let post = function (req, res) {
     if (Utils.CheckLogin(req)) {
       mw.HandlePostArticle(req, res);
@@ -244,7 +257,7 @@ function Init() {
       mw.LoginFirst(req, res);
     }
   };
-  return { get: get, post: post };
+  return { get: get, getPreviewHtml: getPreviewHtml, post: post };
 };
 
 module.exports.Init = Init;

@@ -14,18 +14,22 @@
 
 <body onLoad="OnBodyLoad()">
   <div id="basic_outer_div_edit">
-
-    <span><button type="button" id="Delete" onclick='Delete()'>Delete</button></span>
-    <span><button type="button" id="Cancel" onclick='Cancel()'>Cancel</button></span>
-    <span><button type="button" id="Save" onclick='Save()'>Save</button></span>
-    <span><button type="button" id="SaveAndExit" onclick='SaveAndExit()'>SaveAndExit</button></span>
-
-    <span><input type="text" name="title" id="inputTitle" placeholder="<title>" value="<%- obj.title %>" /></span>
-    <span><input type="text" name="author" id="inputAuthor" placeholder="<author>" value="<%- obj.author %>" /></span>
-    <span><input type="text" name="category" id="inputCategory" placeholder="<category>"
-        value="<%- obj.category %>" /></span>
-    <span><input type="text" name="template" id="inputTemplate" placeholder="<template>"
-        value="<%- obj.template %>" /></span>
+  
+    <div id="float_buttons">
+      <center>
+        <span><button type="button" id="Delete" onclick='Delete()'>Delete</button></span>
+        <span><button type="button" id="Cancel" onclick='Cancel()'>Cancel</button></span>
+        <span><button type="button" id="Save" onclick='Save()'>Save</button></span>
+        <span><button type="button" id="SaveAndExit" onclick='SaveAndExit()'>SaveAndExit</button></span>
+      
+        <span><input type="text" name="title" id="inputTitle" style="width:300px;" placeholder="<title>" value="<%- obj.title %>" /></span>
+        <span><input type="text" name="author" id="inputAuthor" style="width:100px;" placeholder="<author>" value="<%- obj.author %>" /></span>
+        <span><input type="text" name="category" id="inputCategory" style="width:100px;" placeholder="<category>"
+            value="<%- obj.category %>" /></span>
+        <span><input type="text" name="template" id="inputTemplate" style="width:200px;" placeholder="<template>"
+            value="<%- obj.template %>" /></span>
+      </center>
+    </div>
 
     <div id="editor">
       <div class="containers">
@@ -33,7 +37,7 @@
           <textarea id="markdown" class="inputPane" form="myform" name="content"><%- obj.content %></textarea>
         </div>
         <div class="container">
-          <div id="preview"> </div>
+          <iframe id="preview" src="/edit/previewHtml"></iframe>
         </div>
       </div>
     </div>
@@ -44,6 +48,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.8.1/marked.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.0/codemirror.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.0/mode/markdown/markdown.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/addon/selection/active-line.min.js" defer></script>
 
 </body>
 

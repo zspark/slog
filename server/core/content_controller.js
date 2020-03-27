@@ -68,7 +68,7 @@ class Organizer {
     _arr.push(fileName);
   }
 
-    _AppendToHistory(fileName, title, action) {
+  _AppendToHistory(fileName, title, action) {
     let _arr = this.configHistory[constant.M_HISTORY];
     if (_arr.length > 0) {
       let _topElem = _arr[0];
