@@ -79,8 +79,12 @@ function _TryRenderToHTML() {
       }
     });
 
-    iframeWnd.Prism.highlightAll()
-    iframeWnd.MathJax.typeset()
+    try {
+      iframeWnd.Prism.highlightAll()
+      iframeWnd.MathJax.typeset()
+    } catch (e) {
+      console.error(e);
+    }
 
     _delayTime = Math.max(400, new Date() - _startTime);
   }
