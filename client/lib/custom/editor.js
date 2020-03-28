@@ -4,6 +4,7 @@ var titleElem = null;
 var authorElem = null;
 var categoryElem = null;
 var templateElem = null;
+var cbTypeMapElem = null;
 var floatDiv = null;
 var iframeWnd = null;
 
@@ -21,6 +22,7 @@ function OnBodyLoad() {
   authorElem = document.getElementById("inputAuthor");
   categoryElem = document.getElementById("inputCategory");
   templateElem = document.getElementById("inputTemplate");
+  cbTypeMapElem = document.getElementById("cbTypeMap");
   let _tmp = document.getElementById('preview');
   iframeWnd = _tmp.contentWindow;
   previewElem = iframeWnd.document.getElementById("basic_outer_div_preview");
@@ -117,6 +119,14 @@ function _CreatePostData(action) {
 
 function _Redirect(json) {
   window.location.href = json.redirectURL;
+}
+
+function ChangeTypeMode() {
+  if (cbTypeMapElem.checked) {
+    editor.setOption("keyMap", "vim");
+  } else {
+    editor.setOption("keyMap", "default");
+  }
 }
 
 function Delete() {

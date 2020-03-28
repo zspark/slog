@@ -22,12 +22,14 @@
         <span><button type="button" id="Save" onclick='Save()'>Save</button></span>
         <span><button type="button" id="SaveAndExit" onclick='SaveAndExit()'>SaveAndExit</button></span>
       
-        <span><input type="text" name="title" id="inputTitle" style="width:300px;" placeholder="<title>" value="<%- obj.title %>" /></span>
-        <span><input type="text" name="author" id="inputAuthor" style="width:100px;" placeholder="<author>" value="<%- obj.author %>" /></span>
-        <span><input type="text" name="category" id="inputCategory" style="width:100px;" placeholder="<category>"
+        <span><input type="text" id="inputTitle" style="width:300px;" placeholder="<title>" value="<%- obj.title %>" /></span>
+        <span><input type="text" id="inputAuthor" style="width:100px;" placeholder="<author>"
+            value="<%- obj.author %>" /></span>
+        <span><input type="text" id="inputCategory" style="width:100px;" placeholder="<category>"
             value="<%- obj.category %>" /></span>
-        <span><input type="text" name="template" id="inputTemplate" style="width:200px;" placeholder="<template>"
+        <span><input type="text" id="inputTemplate" style="width:200px;" placeholder="<template>"
             value="<%- obj.template %>" /></span>
+        <span><input type="checkbox" id="cbTypeMap" onchange="ChangeTypeMode()" />vim mode</span>
       </center>
     </div>
 
@@ -49,6 +51,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.0/codemirror.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.0/mode/markdown/markdown.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/addon/selection/active-line.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/keymap/vim.min.js" defer></script>
 
 </body>
 
