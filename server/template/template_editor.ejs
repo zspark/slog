@@ -27,8 +27,13 @@
             value="<%- obj.author %>" /></span>
         <span><input type="text" id="inputCategory" style="width:100px;" placeholder="<category>"
             value="<%- obj.category %>" /></span>
-        <span><input type="text" id="inputTemplate" style="width:200px;" placeholder="<template>"
-            value="<%- obj.template %>" /></span>
+
+        <select id="slcTemplate">
+          <% obj.templateOptions.forEach(function(item){ %>
+          <option><%= item %></option>
+          <% }); %>
+        </select>
+
         <span><input type="checkbox" id="cbTypeMap" onchange="ChangeTypeMode()" />vim mode</span>
       </center>
     </div>

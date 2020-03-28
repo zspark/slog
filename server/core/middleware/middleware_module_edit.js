@@ -72,17 +72,13 @@ var _StartHearBeatCheck = function (m) {
     });
 
     if (_map.size <= 0) {
-      _ForceStopHeartBeatCheck();
+      if (s_connectionCheck != null) {
+        clearInterval(s_connectionCheck);
+        s_connectionCheck = null;
+      }
     }
   }, 20000);
   return true;
-}
-
-var _ForceStopHeartBeatCheck = function () {
-  if (s_connectionCheck != null) {
-    clearInterval(s_connectionCheck);
-    s_connectionCheck = null;
-  }
 }
 
 class ModuleEdit extends Base {
@@ -92,7 +88,23 @@ class ModuleEdit extends Base {
     this.noPermissionHtmlURL = pathes.pathTemplate + "template_no_permission.ejs";
     this.previewHtmlURL = pathes.pathTemplate + "template_preview.ejs";
     this.m_mapEditSession = new Map();
+    this.templateOptions = [
+      "template_view.ejs",
+      "template_view_no_title.ejs",
+      "template_view_code.ejs",
+      "template_view_project.ejs",
+    ];
   };
+
+  _CreateTemplateOptions(name) {
+    let _obj = [];
+    if (name) _obj.push(name);
+    this.templateOptions.forEach(element => {
+      if (element == name) return;
+      _obj.push(element);
+    });
+    return _obj
+  }
 
   GetPreviewHtmlHandler(req, res) {
     this.RenderEjs(req, res, this.previewHtmlURL, {});
@@ -116,23 +128,25 @@ class ModuleEdit extends Base {
 
     let _obj = Object.create(null);
     _obj[constant.M_FILE_NAME] = _fileName;
-    _obj[constant.M_AUTHOR] = UserManager.GetUserInfo(Utils.GetUserAccount(req)).displayName;
-    _obj[constant.M_CATEGORY] = constant.M_CATEGORY_DEFAULT;
-    _obj[constant.M_TITLE] = "";
-    _obj[constant.M_TEMPLATE] = "template_view.ejs";
-    _obj[constant.M_CONTENT] = "";
 
     var _cfg = CC.GetConfig(_fileName);
     if (_cfg) {
       _obj[constant.M_AUTHOR] = _cfg[constant.M_AUTHOR];
       _obj[constant.M_CATEGORY] = _cfg[constant.M_CATEGORY];
       _obj[constant.M_TITLE] = _cfg[constant.M_TITLE];
-      _obj[constant.M_TEMPLATE] = _cfg[constant.M_TEMPLATE];
+      _obj[constant.M_TEMPLATE_OPTIONS] = this._CreateTemplateOptions(_cfg[constant.M_TEMPLATE]);
+    }else{
+      _obj[constant.M_AUTHOR] = UserManager.GetUserInfo(Utils.GetUserAccount(req)).displayName;
+      _obj[constant.M_CATEGORY] = constant.M_CATEGORY_DEFAULT;
+      _obj[constant.M_TITLE] = "";
+      _obj[constant.M_TEMPLATE_OPTIONS] = this._CreateTemplateOptions(null);
     }
 
     const _fileURL = pathes.pathArticle + _fileName;
     let _content = DV.ReadFileUTF8(_fileURL);
-    if (_content != null) {
+    if (_content == null) {
+      _obj[constant.M_CONTENT] = "";
+    }else{
       _obj[constant.M_CONTENT] = _content;
     }
 

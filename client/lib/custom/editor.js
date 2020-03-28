@@ -3,8 +3,8 @@ var markdownElem = null;
 var titleElem = null;
 var authorElem = null;
 var categoryElem = null;
-var templateElem = null;
 var cbTypeMapElem = null;
+var slcTemplateElem = null;
 var floatDiv = null;
 var iframeWnd = null;
 
@@ -21,8 +21,8 @@ function OnBodyLoad() {
   titleElem = document.getElementById("inputTitle");
   authorElem = document.getElementById("inputAuthor");
   categoryElem = document.getElementById("inputCategory");
-  templateElem = document.getElementById("inputTemplate");
   cbTypeMapElem = document.getElementById("cbTypeMap");
+  slcTemplateElem = document.getElementById("slcTemplate");
   let _tmp = document.getElementById('preview');
   iframeWnd = _tmp.contentWindow;
   previewElem = iframeWnd.document.getElementById("basic_outer_div_preview");
@@ -109,7 +109,7 @@ function _CreatePostData(action) {
     "title": titleElem.value,
     "author": authorElem.value,
     "category": categoryElem.value,
-    "template": templateElem.value,
+    "template": slcTemplateElem.selectedOptions[0].text,
   };
   if (action == 1 || action == 2) {
     _obj["content"] = markdownElem.value;
@@ -215,10 +215,6 @@ function _CheckCompletion() {
   }
   if (authorElem.value == '') {
     alert("enter author.");
-    return false;
-  }
-  if (templateElem.value == '') {
-    alert("enter template.");
     return false;
   }
   return true;

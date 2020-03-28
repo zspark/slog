@@ -28,6 +28,7 @@ const constant = {
   M_ARTICLE: "articles",
   M_LOGGED_IN: "loggedIn",
   M_CONTENT: "content",
+  M_TEMPLATE_OPTIONS: "templateOptions",
   M_FILE_NAME: "fileName",
   M_AUTHOR: "author",
   M_TEMPLATE: "template",
