@@ -37,12 +37,12 @@ class EditSession {
     CC.Delete(this.editingFileName);
   }
 
-  Save(title, author, category, template, content) {
+  Save(title, author, category, template, allowHistory, content) {
     const _fileName = this.editingFileName;
     if (CC.GetConfig(_fileName)) {
-      CC.Modify(_fileName, category, title, author, template, content);
+      CC.Modify(_fileName, category, title, author, template, allowHistory, content);
     } else {
-      CC.Add(_fileName, category, title, author, template, content);
+      CC.Add(_fileName, category, title, author, template, allowHistory, content);
     }
   }
 }
@@ -109,27 +109,16 @@ class ModuleEdit extends Base {
 
     _StartHearBeatCheck(this.m_mapEditSession);
 
-    let _title = "";
-    let _author = "";
-    let _category = "";
-    let _listTemplate = [];
-    var _cfg = CC.GetConfig(_fileName);
-    if (_cfg) {
-      _author = _cfg.author;
-      _category = _cfg.category;
-      _title = _cfg.title;
-      _listTemplate.push(_cfg.template);
-    } else {
-      _author = UserManager.GetUserInfo(Utils.GetUserAccount(req)).displayName;
-      _category = constant.M_CATEGORY_DEFAULT;
-      _title = "";
-      _listTemplate.push(constant.M_TEMPLATE_DEFAULT);
+    let _GetTemplateList = function (firstEle) {
+      let _list = [];
+      _list.push(firstEle);
+      constant.M_TEMPLATE_LIST.forEach(template => {
+        if (template != firstEle) {
+          _list.push(template);
+        }
+      });
+      return _list;
     }
-    constant.M_TEMPLATE_LIST.forEach(template => {
-      if (template != _listTemplate[0]) {
-        _listTemplate.push(template);
-      }
-    });
 
     const _fileURL = pathes.pathArticle + _fileName;
     let _content = DV.ReadFileUTF8(_fileURL);
@@ -137,8 +126,29 @@ class ModuleEdit extends Base {
       _content = "";
     }
 
-    let _html = TPLGEN.GenerateHTMLEdit(_content, _title, _author, _category, _listTemplate);
-    res.end(_html);
+    const _cfg = CC.GetConfig(_fileName);
+    if (_cfg) {
+      let _html = TPLGEN.GenerateHTMLEdit(
+        _content,
+        _cfg.title,
+        _cfg.author,
+        _cfg.category,
+        _cfg.allowHistory == null ? true : _cfg.allowHistory,
+        _GetTemplateList(_cfg.template)
+      );
+      res.end(_html);
+    } else {
+      let _html = TPLGEN.GenerateHTMLEdit(
+        _content,
+        "",
+        UserManager.GetUserInfo(Utils.GetUserAccount(req)).displayName,
+        constant.M_CATEGORY_DEFAULT,
+        true,
+        _GetTemplateList(constant.M_TEMPLATE_DEFAULT)
+      );
+      res.end(_html);
+    }
+
     return true;
   };
 
@@ -168,7 +178,7 @@ class ModuleEdit extends Base {
     }
 
     let _Save = function () {
-      _es.Save(_jsonObj.title, _jsonObj.author, _jsonObj.category, _jsonObj.template, _jsonObj.content);
+      _es.Save(_jsonObj.title, _jsonObj.author, _jsonObj.category, _jsonObj.template, _jsonObj.allowHistory, _jsonObj.content);
     }
 
     const action_code = constant.action_code;

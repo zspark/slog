@@ -4,6 +4,7 @@ var titleElem = null;
 var authorElem = null;
 var categoryElem = null;
 var cbTypeMapElem = null;
+var cbAllowHistoryElem = null;
 var slcTemplateElem = null;
 var floatDiv = null;
 var iframeWnd = null;
@@ -22,6 +23,7 @@ function OnBodyLoad() {
   authorElem = document.getElementById("inputAuthor");
   categoryElem = document.getElementById("inputCategory");
   cbTypeMapElem = document.getElementById("cbTypeMap");
+  cbAllowHistoryElem = document.getElementById("cbAllowHistory");
   slcTemplateElem = document.getElementById("slcTemplate");
   let _tmp = document.getElementById('preview');
   iframeWnd = _tmp.contentWindow;
@@ -110,6 +112,7 @@ function _CreatePostData(action) {
     "author": authorElem.value,
     "category": categoryElem.value,
     "template": slcTemplateElem.selectedOptions[0].text,
+    "allowHistory": cbAllowHistoryElem.checked,
   };
   if (action == 1 || action == 2) {
     _obj["content"] = markdownElem.value;

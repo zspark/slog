@@ -193,7 +193,7 @@ var GenerateHTMLHistory = function (arrList) {
     return _GenerateHTML(_HTMLhead, _HTMLbody);
 }
 
-var GenerateHTMLEdit = function (content, title, author, category, templateOptions) {
+var GenerateHTMLEdit = function (content, title, author, category, allowHistory, templateOptions) {
     let _GenrateHeader_edit = function (arr) {
         let _out1 =
             `<div id="float_buttons">
@@ -214,7 +214,9 @@ var GenerateHTMLEdit = function (content, title, author, category, templateOptio
             _out2 += `<option>${item}</option>`;
         });
 
-        let _out3 = `</select><span><input type="checkbox" id="cbTypeMap" onchange="ChangeTypeMode()" />vim mode</span>
+        let _out3 = `</select>
+        <span><input type="checkbox" id="cbTypeMap" onchange="ChangeTypeMode()" />vim mode</span>
+        <span><input type="checkbox" id="cbAllowHistory" ${allowHistory ? "checked" : ""} />allow history</span>
     </center>
 </div>`
         return _out1 + _out2 + _out3;

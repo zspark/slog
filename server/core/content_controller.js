@@ -5,12 +5,13 @@ const LOG = require(pathes.pathCore + 'logger');
 const Utils = require(pathes.pathCore + "utils");
 const DV = require(pathes.pathCore + 'disk_visitor');
 
-let _ModifyConfig = function (cfg, fileName, category, title, author, template) {
+let _ModifyConfig = function (cfg, fileName, category, title, author, template, allowHistory) {
   if (fileName != null) cfg.fileName = fileName;
   if (category != null) cfg.category = category;
   if (title != null) cfg.title = title;
   if (author != null) cfg.author = author;
   if (template != null) cfg.template = template;
+  if (allowHistory != null) cfg.allowHistory = allowHistory;
 }
 
 var default_summary_json = {
@@ -131,18 +132,20 @@ class Organizer {
     }
   };
 
-  Add(fileName, category, title, author, template, content, save = true) {
+  Add(fileName, category, title, author, template, allowHistory, content, save = true) {
     if (this.GetConfig(fileName)) return false;
 
     let _cfg = this.CreateArticleConfig();
-    _ModifyConfig(_cfg, fileName, category, title, author, template);
+    _ModifyConfig(_cfg, fileName, category, title, author, template, allowHistory);
     this.configArticles[fileName] = _cfg;
     this._AppendToCategory(category, fileName);
 
     if (save) {
       this.SaveConfigToDisk();
       this._SaveArticleToDisk(fileName, content);
-      if (this._AppendToHistory(fileName, title, constant.M_ACTION_NEW)) this._SaveHistoryToDisk();
+      if(allowHistory){
+        if (this._AppendToHistory(fileName, title, constant.M_ACTION_NEW)) this._SaveHistoryToDisk();
+      }
     }
     return true;
   };
@@ -165,7 +168,7 @@ class Organizer {
     }
   };
 
-  Modify(fileName, category, title, author, template, content) {
+  Modify(fileName, category, title, author, template, allowHistory, content) {
     let _cfg = this.GetConfig(fileName);
     if (_cfg) {
       let lastCategory = _cfg[constant.M_CATEGORY];
@@ -173,10 +176,12 @@ class Organizer {
         this._RemoveFromCategory(lastCategory, fileName);
         this._AppendToCategory(category, fileName);
       }
-      _ModifyConfig(_cfg, fileName, category, title, author, template);
+      _ModifyConfig(_cfg, fileName, category, title, author, template, allowHistory);
       this.SaveConfigToDisk();
       this._SaveArticleToDisk(fileName, content);
-      if (this._AppendToHistory(fileName, title, constant.M_ACTION_MODIFIED)) this._SaveHistoryToDisk();
+      if(allowHistory){
+        if (this._AppendToHistory(fileName, title, constant.M_ACTION_MODIFIED)) this._SaveHistoryToDisk();
+      }
       LOG.Info("article modified. file name:%s", fileName);
       return true;
     } else {
@@ -227,6 +232,7 @@ class Organizer {
       author: "anonymous",
       category: "default",
       template: constant.M_TEMPLATE_DEFAULT,
+      allowHistory: true,
     };
     return _obj;
   }
