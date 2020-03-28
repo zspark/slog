@@ -6,6 +6,7 @@ const LOG = require(pathes.pathCore + 'logger');
 
 class ModuleBase {
   constructor() {
+    this.infoboardHtmlURL = pathes.pathTemplate + "template_infoboard.ejs";
   };
 
   _GetFileURL(category, fileName) {
@@ -26,6 +27,10 @@ class ModuleBase {
   ComposeURLFormatError(req, res) {
     res.end("oops!, wrong URL format!");
   };
+
+  ComposeInfoboard(req, res, msg) {
+    this.RenderEjs(req, res, this.infoboardHtmlURL, { info: msg });
+  }
 };
 
 module.exports = ModuleBase;

@@ -85,13 +85,11 @@ var _ForceStopHeartBeatCheck = function () {
   }
 }
 
-
 class ModuleEdit extends Base {
   constructor() {
     super();
     this.editorHtmlURL = pathes.pathTemplate + "template_editor.ejs";
     this.noPermissionHtmlURL = pathes.pathTemplate + "template_no_permission.ejs";
-    this.fileEditingHtmlURL = pathes.pathTemplate + "template_file_editing.ejs";
     this.previewHtmlURL = pathes.pathTemplate + "template_preview.ejs";
     this.m_mapEditSession = new Map();
   };
@@ -106,7 +104,7 @@ class ModuleEdit extends Base {
 
     let _es = this.m_mapEditSession.get(_fileName);
     if (_es) {
-      this.RenderEjs(req, res, this.fileEditingHtmlURL, {});
+      this.ComposeInfoboard(req, res, `This file is currently editing by someone!`);
       return true;
     }
 

@@ -9,11 +9,10 @@ const UserManager = require(pathes.pathCore + "user_manager");
 class ModuleQueryLegality extends Base {
   constructor() {
     super();
-    this.illegalFileNameEJS = pathes.pathTemplate + "template_illegal_file_name.ejs";
   };
 
   ComposeIllegalFileName(req, res) {
-    this.RenderEjs(req, res, this.illegalFileNameEJS, {});
+    this.ComposeInfoboard(req, res, `You have typed a illegal file name!`);
   }
 };
 

@@ -29,9 +29,7 @@ class ModuleView extends Base {
   }
 
   ComposeFile404(req, res) {
-    let _obj = Object.create(null);
-    _obj[constant.M_FILE_NAME] = req.query.n;
-    this.RenderEjs(req, res, this.file404, { obj: _obj });
+    this.ComposeInfoboard(req, res, `This file is NOT exist,click to <a href="/edit?n=${req.query.n}">create.</a>`);
   };
 
   ComposeArticle(req, res) {
