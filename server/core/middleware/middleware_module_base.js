@@ -3,10 +3,10 @@ const EJS = require("ejs");
 const common = require("../common");
 const pathes = common.pathes;
 const LOG = require(pathes.pathCore + 'logger');
+const TPLGEN = require(pathes.pathCore + "template_generator");
 
 class ModuleBase {
   constructor() {
-    this.infoboardHtmlURL = pathes.pathTemplate + "template_infoboard.ejs";
   };
 
   _GetFileURL(category, fileName) {
@@ -28,8 +28,9 @@ class ModuleBase {
     res.end("oops!, wrong URL format!");
   };
 
-  ComposeInfoboard(req, res, msg) {
-    this.RenderEjs(req, res, this.infoboardHtmlURL, { info: msg });
+  ComposeInfoboard(req, res, info) {
+    let _html = TPLGEN.GenerateHTMLInfoBoard(info);
+    res.end(_html);
   }
 };
 

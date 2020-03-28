@@ -32,6 +32,7 @@ const constant = {
   M_FILE_NAME: "fileName",
   M_AUTHOR: "author",
   M_TEMPLATE: "template",
+  M_STYLE: "style",
   M_TITLE: "title",
   M_TIME: "time",
   M_CREATE_TIME: "createTime",
@@ -64,6 +65,17 @@ const constant = {
 
   M_ACCOUNT_DISPLAY_NAME: "displayName",
 
+  M_TEMPLATE_DEFAULT: "default",
+  M_TEMPLATE_DEFAULT_NO_TITLE: "default_no_title",
+  M_TEMPLATE_FULLSCREEN: "fullscreen",
+  M_TEMPLATE_FULLSCREEN_NO_TITLE: "fullscreen_no_title",
+  M_TEMPLATE_LIST: [
+    "default",
+    "default_no_title",
+    "fullscreen",
+    "fullscreen_no_title",
+  ],
+
   error_code: {
     UNKNOWN: 10000,
     REQUESTING_FORMAT_ERROR:10001,
@@ -82,7 +94,6 @@ const constant = {
     LOGIN: 100,
     ACTION_CONFIRMED: 9999,
   },
-
 };
 
 module.exports.pathes = pathes;

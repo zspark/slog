@@ -7,6 +7,7 @@ const Utils = require(pathes.pathCore + "utils");
 const DV = require(pathes.pathCore + 'disk_visitor');
 const CC = require(pathes.pathCore + "content_controller");
 const UserManager = require(pathes.pathCore + "user_manager");
+const TPLGEN = require(pathes.pathCore + "template_generator");
 
 class EditSession {
   constructor() {
@@ -46,7 +47,7 @@ class EditSession {
   }
 }
 
-var _CreateDefaultPostBackInstance = function () {
+var _CreateDefaultResponseObject = function () {
   let _obj = Object.create(null);
   _obj.resTime = new Date();
   _obj.code = constant.action_code.ACTION_CONFIRMED;
@@ -84,30 +85,12 @@ var _StartHearBeatCheck = function (m) {
 class ModuleEdit extends Base {
   constructor() {
     super();
-    this.editorHtmlURL = pathes.pathTemplate + "template_editor.ejs";
-    this.noPermissionHtmlURL = pathes.pathTemplate + "template_no_permission.ejs";
-    this.previewHtmlURL = pathes.pathTemplate + "template_preview.ejs";
     this.m_mapEditSession = new Map();
-    this.templateOptions = [
-      "template_view.ejs",
-      "template_view_no_title.ejs",
-      "template_view_code.ejs",
-      "template_view_project.ejs",
-    ];
   };
 
-  _CreateTemplateOptions(name) {
-    let _obj = [];
-    if (name) _obj.push(name);
-    this.templateOptions.forEach(element => {
-      if (element == name) return;
-      _obj.push(element);
-    });
-    return _obj
-  }
-
   GetPreviewHtmlHandler(req, res) {
-    this.RenderEjs(req, res, this.previewHtmlURL, {});
+    let _html = TPLGEN.GenerateHTMLPreview();
+    res.end(_html);
   }
 
   GetHandler(req, res) {
@@ -126,36 +109,41 @@ class ModuleEdit extends Base {
 
     _StartHearBeatCheck(this.m_mapEditSession);
 
-    let _obj = Object.create(null);
-    _obj[constant.M_FILE_NAME] = _fileName;
-
+    let _title = "";
+    let _author = "";
+    let _category = "";
+    let _listTemplate = [];
     var _cfg = CC.GetConfig(_fileName);
     if (_cfg) {
-      _obj[constant.M_AUTHOR] = _cfg[constant.M_AUTHOR];
-      _obj[constant.M_CATEGORY] = _cfg[constant.M_CATEGORY];
-      _obj[constant.M_TITLE] = _cfg[constant.M_TITLE];
-      _obj[constant.M_TEMPLATE_OPTIONS] = this._CreateTemplateOptions(_cfg[constant.M_TEMPLATE]);
-    }else{
-      _obj[constant.M_AUTHOR] = UserManager.GetUserInfo(Utils.GetUserAccount(req)).displayName;
-      _obj[constant.M_CATEGORY] = constant.M_CATEGORY_DEFAULT;
-      _obj[constant.M_TITLE] = "";
-      _obj[constant.M_TEMPLATE_OPTIONS] = this._CreateTemplateOptions(null);
+      _author = _cfg.author;
+      _category = _cfg.category;
+      _title = _cfg.title;
+      _listTemplate.push(_cfg.template);
+    } else {
+      _author = UserManager.GetUserInfo(Utils.GetUserAccount(req)).displayName;
+      _category = constant.M_CATEGORY_DEFAULT;
+      _title = "";
+      _listTemplate.push(constant.M_TEMPLATE_DEFAULT);
     }
+    constant.M_TEMPLATE_LIST.forEach(template => {
+      if (template != _listTemplate[0]) {
+        _listTemplate.push(template);
+      }
+    });
 
     const _fileURL = pathes.pathArticle + _fileName;
     let _content = DV.ReadFileUTF8(_fileURL);
     if (_content == null) {
-      _obj[constant.M_CONTENT] = "";
-    }else{
-      _obj[constant.M_CONTENT] = _content;
+      _content = "";
     }
 
-    this.RenderEjs(req, res, this.editorHtmlURL, { obj: _obj });
+    let _html = TPLGEN.GenerateHTMLEdit(_content, _title, _author, _category, _listTemplate);
+    res.end(_html);
     return true;
   };
 
   HandlePostArticle(req, res) {
-    let _obj = _CreateDefaultPostBackInstance();
+    let _obj = _CreateDefaultResponseObject();
 
     const _fileName = req.query.n;
     if (!_fileName) {
@@ -180,12 +168,7 @@ class ModuleEdit extends Base {
     }
 
     let _Save = function () {
-      const _title = _jsonObj[constant.M_TITLE];
-      const _author = _jsonObj[constant.M_AUTHOR];
-      const _category = _jsonObj[constant.M_CATEGORY];
-      const _template = _jsonObj[constant.M_TEMPLATE];
-      const _content = _jsonObj[constant.M_CONTENT];
-      _es.Save(_title, _author, _category, _template, _content);
+      _es.Save(_jsonObj.title, _jsonObj.author, _jsonObj.category, _jsonObj.template, _jsonObj.content);
     }
 
     const action_code = constant.action_code;
@@ -223,7 +206,7 @@ class ModuleEdit extends Base {
     return true;
   };
 
-  LoginFirst(req, res){
+  LoginFirst(req, res) {
     const _fileName = req.query.n;
     if (_fileName) {
       let _url = Utils.MakeLoginWithViewURL(_fileName);

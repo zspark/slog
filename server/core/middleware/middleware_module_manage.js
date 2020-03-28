@@ -7,15 +7,12 @@ const Utils = require(pathes.pathCore+"utils");
 const UserManager = require(pathes.pathCore+"user_manager");
 const DV = require(pathes.pathCore+'disk_visitor');
 const CC = require(pathes.pathCore + "content_controller");
+const TPLGEN = require(pathes.pathCore + "template_generator");
 
 class ModuleManage extends Base {
   constructor() {
     super();
-    this.templateManage = pathes.pathTemplate + "manage/template_manage.ejs";
-    this.templateManageRebuildSummary = pathes.pathTemplate + "manage/template_manage_rebuild_summary.ejs";
-    this.templateManageListCategoryName = pathes.pathTemplate + "manage/template_manage_list_category_name.ejs";
   };
-
 
   _RebuildSummary(req, res) {
     let _obj = Object.create(null);
@@ -32,17 +29,19 @@ class ModuleManage extends Base {
 
     _obj.contentAfter = DV.ReadFileUTF8(pathes.urlArticleConfig);
     _obj.articleCountAfter = CC.GetArticleCount();
-    this.RenderEjs(req, res, this.templateManageRebuildSummary, { obj: _obj });
+
+    let _html = TPLGEN.GenerateHTMLRebuildSummay(_obj.articleCountBefore, _obj.contentBefore, _obj.articleCountAfter, _obj.contentAfter);
+    res.end(_html);
   };
 
   _ListCategories(req, res) {
     let _cfgC = CC.GetCategories();
-    let _obj = Object.create(null);
-    _obj.arrCategoryName = [];
+    let _arrList = [];
     for (let c in _cfgC){
-      _obj.arrCategoryName.push(c);
+      _arrList.push(c);
     }
-    this.RenderEjs(req, res, this.templateManageListCategoryName, { obj: _obj });
+    let _html = TPLGEN.GenerateHTMLListCategory(_arrList);
+    res.end(_html);
   };
 
   GetHandler(req, res) {
@@ -55,7 +54,8 @@ class ModuleManage extends Base {
         this._ListCategories(req, res);
         break;
       default:
-        this.RenderEjs(req, res, this.templateManage, {});
+        let _html = TPLGEN.GenerateHTMLManage();
+        res.end(_html);
         break;
     }
   };

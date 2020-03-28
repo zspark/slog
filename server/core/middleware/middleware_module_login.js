@@ -5,28 +5,26 @@ var Base = require(pathes.pathMW + "middleware_module_base");
 const LOG = require(pathes.pathCore + 'logger');
 const Utils = require(pathes.pathCore + "utils");
 const UserManager = require(pathes.pathCore + "user_manager");
+const TPLGEN = require(pathes.pathCore + "template_generator");
 
 class ModuleLogin extends Base {
   constructor() {
     super();
-    this.loginHtmlURL = pathes.pathTemplate + "template_login.ejs";
   };
 
   GetHandler(req, res){
     const _fileName = req.query.n;
-    if (_fileName) {
-      this.RenderEjs(req, res, this.loginHtmlURL, { obj: { fileName: _fileName } });
-    } else {
-      this.RenderEjs(req, res, this.loginHtmlURL, { obj: {} });
-    }
+    let _html = TPLGEN.GenerateHTMLLogin(_fileName);
+    res.end(_html);
   }
 
   PostHandler(req, res){
 
-    let _obj = Object.create(null);
-    _obj.resTime = new Date();
-    _obj.code = constant.UNKNOWN;
-    _obj.redirectURL = "/";
+    let _obj = {
+      resTime: new Date(),
+      code: constant.UNKNOWN,
+      redirectURL: "/",
+    };
 
 
     let _data = req.body;

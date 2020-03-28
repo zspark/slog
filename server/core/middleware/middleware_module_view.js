@@ -8,19 +8,17 @@ const LOG = require(pathes.pathCore + 'logger');
 const Utils = require(pathes.pathCore + "utils");
 const CC = require(pathes.pathCore + "content_controller");
 const DV = require(pathes.pathCore + "disk_visitor");
+const TPLGEN = require(pathes.pathCore + "template_generator");
 
 class ModuleView extends Base {
   constructor() {
     super();
     MARKED.setOptions({ "smartLists": true, "smartypants": true, "gfm": true });
-    this.file404 = pathes.pathTemplate + "template_file_404.ejs";
     this.galleryFolderPath = pathes.pathGallery;
     this.galleryFileURL = pathes.pathTemplate + "template_gallery.ejs";
     this.imagePathRelativeToPublic = "/share/gallery/";
     this.thumbnailPathRelativeToPublic = "/share/gallery/thumbnail/";
     this.thumbnailSuffix = ".thumbnail.jpg";
-    this.articleListURL = pathes.pathTemplate + "template_article_list.ejs";
-    this.historyURL = pathes.pathTemplate + "template_history.ejs";
   };
 
   _GetExtension(fileName) {
@@ -40,23 +38,16 @@ class ModuleView extends Base {
       DV.WriteFileUTF8(pathes.pathArticle + _fileName, _content);
     }
 
-    let _cfg = CC.GetConfig(_fileName);
-    MARKED(_content, (err, content) => {
+    MARKED(_content, (err, HTMLcontent) => {
       if (err) {
         let _info = "marked parse error! file name:" + _fileName;
         LOG.Error(_info);
         res.end(_info);
       } else {
-        ///TODO: to add a default template for article.
-        const obj = Object.create(null);
-        obj[constant.M_FILE_NAME] = _cfg[constant.M_FILE_NAME];
-        obj[constant.M_TITLE] = _cfg[constant.M_TITLE];
-        obj[constant.M_AUTHOR] = _cfg[constant.M_AUTHOR];
-        obj[constant.M_LOGGED_IN] = Utils.CheckLogin(req);
-        obj[constant.M_CREATE_TIME] = new Date(_cfg[constant.M_CREATE_TIME]).toDateString();
-        obj[constant.M_CONTENT] = content;
-
-        this.RenderEjs(req, res, pathes.pathTemplate + _cfg.template, { obj: obj });
+        let _cfg = CC.GetConfig(_fileName);
+        let _time = new Date(_cfg[constant.M_CREATE_TIME]).toDateString();
+        let _html = TPLGEN.GenerateHTMLArticle(_cfg.template, _fileName, HTMLcontent, _cfg.title, _cfg.author, _time);
+        res.end(_html);
       }
     });
   };
@@ -65,47 +56,51 @@ class ModuleView extends Base {
     let _category = req.query.c;
     let _list = CC.GetCategory(_category);
     if (!_list) { _list = []; }
-    let _obj = [];
+    let _arrObj = [];
     _list.map(_fileName => {
       let _cfg = CC.GetConfig(_fileName);
-      let _tmp = Object.create(null);
-      _tmp[constant.M_FILE_NAME] = _fileName;
-      _tmp[constant.M_TITLE] = _cfg[constant.M_TITLE];
-      _tmp[constant.M_CREATE_TIME] = new Date(_cfg[constant.M_CREATE_TIME]).toDateString();
-      _obj.push(_tmp);
+      let _tmp = {
+        fileName: _fileName,
+        title: _cfg.title,
+        createTime: new Date(_cfg.createTime).toDateString(),
+      };
+      _arrObj.push(_tmp);
     });
 
-    this.RenderEjs(req, res, this.articleListURL, { obj: _obj });
+    let _html = TPLGEN.GenerateHTMLArticleList(_arrObj);
+    res.end(_html);
   };
 
   ComposeHistoryList(req, res) {
     let _list = CC.GetHistoryArray();
     if (!_list) { _list = []; }
-    let _obj = [];
+    let _arrObj = [];
     _list.map(_elem => {
-      let _tmp = Object.create(null);
-      _tmp[constant.M_FILE_NAME] = _elem[constant.M_FILE_NAME];
-      _tmp[constant.M_TITLE] = _elem[constant.M_TITLE];
-      _tmp[constant.M_ACTION] = _elem[constant.M_ACTION];
-      _tmp[constant.M_TIME] = new Date(_elem[constant.M_TIME]).toDateString();
-      //_tmp[constant.M_CREATE_TIME] = new Date(_cfg[constant.M_CREATE_TIME]).toDateString();
-      _obj.push(_tmp);
+      let _tmp = {
+        fileName: _elem.fileName,
+        title: _elem.title,
+        action: _elem.action,
+        time: new Date(_elem.time).toDateString(),
+      };
+      _arrObj.push(_tmp);
     });
 
-    this.RenderEjs(req, res, this.historyURL, { obj: _obj });
+    let _html = TPLGEN.GenerateHTMLHistory(_arrObj);
+    res.end(_html);
   };
 
   ComposeGalleryHtml(req, res) {
-    var objArr = [];
+    var _arrObj = [];
     var arr = DV.ReadAllFileNamesInFolder(this.galleryFolderPath);
     arr.forEach(item => {
-      objArr.push({
+      _arrObj.push({
         imagePath: this.imagePathRelativeToPublic + item,
         thumbnailPath: this.thumbnailPathRelativeToPublic + item + this.thumbnailSuffix,
       });
     });
 
-    this.RenderEjs(req, res, this.galleryFileURL, { obj: objArr });
+    let _html = TPLGEN.GenerateHTMLGallery(_arrObj);
+    res.end(_html);
   };
 };
 

@@ -6,11 +6,11 @@ const Utils = require(pathes.pathCore + "utils");
 const DV = require(pathes.pathCore + 'disk_visitor');
 
 let _ModifyConfig = function (cfg, fileName, category, title, author, template) {
-  if (fileName != null) cfg[constant.M_FILE_NAME] = fileName;
-  if (category != null) cfg[constant.M_CATEGORY] = category;
-  if (title != null) cfg[constant.M_TITLE] = title;
-  if (author != null) cfg[constant.M_AUTHOR] = author;
-  if (template != null) cfg[constant.M_TEMPLATE] = template;
+  if (fileName != null) cfg.fileName = fileName;
+  if (category != null) cfg.category = category;
+  if (title != null) cfg.title = title;
+  if (author != null) cfg.author = author;
+  if (template != null) cfg.template = template;
 }
 
 var default_summary_json = {
@@ -220,13 +220,14 @@ class Organizer {
   }
 
   CreateArticleConfig() {
-    let _obj = Object.create(null);
-    _obj[constant.M_FILE_NAME] = "";
-    _obj[constant.M_TITLE] = "<no title>";
-    _obj[constant.M_CREATE_TIME] = new Date().toISOString();
-    _obj[constant.M_AUTHOR] = "anonymous";
-    _obj[constant.M_CATEGORY] = "default";
-    _obj[constant.M_TEMPLATE] = "template_view.ejs";
+    let _obj = {
+      fileName: "",
+      title: "<no title>",
+      createTime: new Date().toISOString(),
+      author: "anonymous",
+      category: "default",
+      template: constant.M_TEMPLATE_DEFAULT,
+    };
     return _obj;
   }
 };
