@@ -60,7 +60,7 @@ var ConvertLine = function (line) {
 var Convert = function (c) {
   let newArray = [];
   let ListArry = c.split("\r\n");
-  ListArry.forEach((line) => {
+    ListArry.forEach((line) => {
     newArray.push(ConvertLine(line));
   });
 
@@ -88,4 +88,5 @@ var Start = function (path) {
 //Start("C:\\msys64\\home\\jerry\\tiddlywiki\\tiddlers\\posts\\linux\\");
 //Start("C:\\msys64\\home\\jerry\\tiddlywiki\\tiddlers\\posts\\philosophy_and_thoughts\\");
 //Start("C:\\msys64\\home\\jerry\\tiddlywiki\\tiddlers\\posts\\");
-Start("C:\\msys64\\home\\jerry\\tiddlywiki\\tiddlers\\posts\\computer_graphics\\");
+//Start("C:\\msys64\\home\\jerry\\tiddlywiki\\tiddlers\\posts\\computer_graphics\\");
+Start("C:\\msys64\\home\\jerry\\tiddlywiki\\tiddlers\\posts\\sidelights\\");
