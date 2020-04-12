@@ -13,7 +13,23 @@ const TPLGEN = require(pathes.pathCore + "template_generator");
 class ModuleView extends Base {
   constructor() {
     super();
-    MARKED.setOptions({ "smartLists": true, "smartypants": true, "gfm": true });
+    MARKED.setOptions({
+      /*
+      renderer: new marked.Renderer(),
+      highlight: function (code, language) {
+        const hljs = require('highlight.js');
+        const validLanguage = hljs.getLanguage(language) ? language : 'plaintext';
+        return hljs.highlight(validLanguage, code).value;
+      },
+      */
+      pedantic: false,
+      gfm: true,
+      breaks: false,
+      sanitize: false,
+      smartLists: true,
+      smartypants: true,
+      xhtml: false
+    });
     this.galleryFolderPath = pathes.pathGallery;
     this.galleryFileURL = pathes.pathTemplate + "template_gallery.ejs";
     this.imagePathRelativeToPublic = "/share/gallery/";

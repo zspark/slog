@@ -79,9 +79,7 @@ $(document).ready(function () {
 
 var _GenerateHTMLTitle = function (fileName, title, author, createTime) {
     let _HTMLtitle = `<p id="title"> ${title} </p>
-<p id="author">
-    <span> ${author} | ${createTime} | <a href="/edit?n=${fileName}">edit</a></span>
-</p>`;
+<p id="author"> ${author} | ${createTime} | <a href="/edit?n=${fileName}">edit</a> </p>`;
     return _HTMLtitle;
 }
 
@@ -334,7 +332,7 @@ var GenerateHTMLListCategory = function (arrList) {
 
 var GenerateHTMLSearch = function () {
     let _content = `<h1> 🔍 Search</h1>
-<input type="text" id="searchInput" placeholder="input your searching content." autofocus="autofocus" style="width:100%;"/>
+<input type="text" id="searchInput" placeholder="input your searching content." autofocus="autofocus"/>
 <div id=searchContent>nothing found</div>`;
 
     let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div", "", _content);

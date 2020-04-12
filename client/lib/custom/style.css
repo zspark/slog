@@ -1,7 +1,7 @@
 :root {
   --default-view-width:60rem;
   --default-edit-width:55rem;
-  --body-bg-color: #f5f2f0;
+  --body-bg-color: #DCE2F1;
   --header-bg-color: #f5f2f0;
   --outer-bg-color: #fefefe;
   --body-font-color: #333;
@@ -17,6 +17,7 @@
   --warn-background-color: rgb(80,80,170,0.1);
   --error-left-color: rgb(240,80,80);
   --error-background-color: rgb(240,80,80,0.1);
+  --padding-left-right:3rem;
 }
 
 body {
@@ -74,20 +75,29 @@ a {
 }
 
 h1 {
-  font-size: 1.4em;
-  margin: 1em 0 -0.5em 0;
+  font-size: 1.5em;
+  margin: 1em 0 0 0;
+  padding: 0 2rem;
 }
+/*
+#basic_outer_div h1{
+  border-bottom: 1px solid #eaecef;
+}
+*/
 h2 {
-  font-size: 1.3em;
-  margin: 0.9em 0 -0.4em 0;
+  font-size: 1.35em;
+  margin: 0.9em 0 0 0;
+  padding: 0 2rem;
 }
 h3 {
   font-size: 1.2em;
-  margin: 0.8em 0 -0.3em 0;
+  margin: 0.8em 0 0 0;
+  padding: 0 2rem;
 }
 p {
   font-size: 1em;
   margin: 0.8em 0 0 0;
+  padding: 0 var(--padding-left-right);
 }
 
 blockquote {
@@ -95,8 +105,8 @@ blockquote {
   border-radius: 3px;
   background: var(--quote-background-color);
   border-left: 0.3em solid var(--quote-left-color);
-  padding: 0.5em 1em;
-  margin: 0.8em 2em 0.5em 2em;
+  margin: 0.5em 0em 0.5em var(--padding-left-right);
+  padding: 0.2em 0.3em;
   font-style: italic;
 }
 blockquote.tip {
@@ -121,15 +131,15 @@ blockquote.error {
 }
 blockquote p{
   margin: 0em 0 0 0;
+  padding: 0 0 0 1rem;
 }
 
 #basic_outer_div{
   background-color:var(--outer-bg-color);
   display: block;
   width: var(--default-view-width);
-  margin: 0;
-  margin-left: calc((100vw - var(--default-view-width) - 6em)/2); /*6em = padding * 2 */
-  padding: 3em 3em;
+  margin: 0 calc((100vw - var(--default-view-width) )/2);
+  padding: 1rem 0rem 3rem;
   box-shadow: 1px 1px 4px rgba(0,0,0,0.065);
   border-radius: 3px;
 }
@@ -218,18 +228,25 @@ blockquote p{
 #title{
   font-size: 2.2em;
   margin: 0.2em 0 0 0;
+  padding: 0 2rem;
   font-weight: bold;
   color: var(--title-font-color);
 }
 
 #author,#author a{
   margin: 0;
-  padding: 0;
+  padding: 0 2rem;
   color:var(--author-font-color);
 }
+#author a{
+  padding: 0;
+}
 
+ul,ol{
+  margin: 1rem;
+  padding: 0 var(--padding-left-right);
+}
 ul.articles {
-  margin-left: 0em;
   font-size: 1.2em;
 }
 ul.articles li {
@@ -258,4 +275,13 @@ iframe#preview{
 
 #CSS_search_from{
   color:var(--author-font-color);
+}
+
+input#searchInput{
+  width: 66%;
+  margin: 2rem calc((30%-2rem-4px)/2);
+  border-width: 2px;
+  border-style: inset;
+  border-color: rgb(118, 118, 118);
+  padding: 0.3rem 1rem 0.3rem 1rem;
 }
