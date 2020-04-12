@@ -7,6 +7,7 @@ const LOG = require(pathes.pathCore + 'logger');
 const MWView = require(pathes.pathMW + "middleware_module_view");
 const MWLogin = require(pathes.pathMW + "middleware_module_login");
 const MWUpload = require(pathes.pathMW + "middleware_module_upload");
+const MWSearch = require(pathes.pathMW + "middleware_module_search");
 const MWEdit = require(pathes.pathMW + "middleware_module_edit");
 const MWManage = require(pathes.pathMW + "middleware_module_manage");
 const MWQueryLegality = require(pathes.pathMW + "middleware_module_query_legality");
@@ -18,6 +19,7 @@ function Init(app) {
   var MiddlewareEdit = MWEdit.Init();
   //var MiddlewareUpload = MWUpload.Init();
   var MiddlewareManage = MWManage.Init();
+  var MiddlewareSearch = MWSearch.Init();
   var MiddlewareQueryLegality = MWQueryLegality.Init();
 
   app.use(MiddlewareQueryLegality.use);
@@ -28,6 +30,8 @@ function Init(app) {
   app.get("/edit", MiddlewareEdit.get);
   app.get("/edit/previewHtml", MiddlewareEdit.getPreviewHtml);
   app.post("/edit", bodyParser.json({ extended: false, limit: "1mb" }), MiddlewareEdit.post);
+  app.get("/search", MiddlewareSearch.get);
+  app.post("/search", bodyParser.json({ extended: false, limit: "1mb" }), MiddlewareSearch.post);
   //app.get("/upload", MiddlewareUpload.get);
   //app.post("/upload", MiddlewareUpload.post);
   app.get("/manage", MiddlewareManage.get);

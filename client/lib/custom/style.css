@@ -255,3 +255,7 @@ iframe#preview{
   border: 0px;
   background-color:var(--body-bg-color);
 }
+
+#CSS_search_from{
+  color:var(--author-font-color);
+}

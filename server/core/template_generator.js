@@ -29,13 +29,14 @@ const _HTMLbody_top =
   <center>
     <h1><a href="/"><span style="color:rgb(161, 85, 0);">Jerry</span>Chaos</a></h1>
     <ul id="menu">
-      <li><a href="/">Home</a></li>
+      <li><a href="/">🏠Home</a></li>
       <li><a href="/view?c=basic">Basic</a></li>
       <li><a href="/view?c=major">Major</a></li>
       <li><a href="/view?c=philosophy">Philosophy</a></li>
       <li><a href="/view?c=math">Math</a></li>
       <li><a href="/view?c=default">Default</a></li>
-      <li><a href="/history">History</a></li>
+      <li><a href="/search">🔍Search</a></li>
+      <li><a href="/history">⏳History</a></li>
     </ul>
   </center>
 </header>`;
@@ -50,6 +51,8 @@ const _HTMLbody_script =
     function OnBodyLoad() {}
 </script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>`;
+
+const _HTMLbody_script_search =`<script src="/lib/custom/search.js" defer></script>`;
 
 const _HTMLbody_script_edit =
     `<script src="/lib/custom/editor.js" defer></script>
@@ -183,7 +186,7 @@ var GenerateHTMLHistory = function (arrList) {
 </li>`;
     });
 
-    let _content = `<h1>These articles were modified/created/deleted recently.</h1>
+    let _content = `<h1>⏳History</h1><h1>These articles were modified/created/deleted recently.</h1>
 <ol class="history">
     ${_HTMLlist}
 </ol>`;
@@ -329,6 +332,28 @@ var GenerateHTMLListCategory = function (arrList) {
     return _GenerateHTML(_HTMLhead, _HTMLbody);
 };
 
+var GenerateHTMLSearch = function () {
+    let _content = `<h1> 🔍 Search</h1>
+<input type="text" id="searchInput" placeholder="input your searching content." autofocus="autofocus" style="width:100%;"/>
+<div id=searchContent>nothing found</div>`;
+
+    let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div", "", _content);
+    let _HTMLbody = _GenerateHTMLbody(_HTMLbody_top, _HTMLbodyMiddle, _HTMLbody_bottom, _HTMLbody_script_search);
+    return _GenerateHTML(_HTMLhead, _HTMLbody);
+};
+
+var GenerateHTMLSearchContent = function (arrList) {
+    if (arrList.length > 0) {
+        let _out = "";
+        arrList.forEach(function (item) {
+            _out += `<li><span><a href="/view?n=${item.fileName}">${item.content}</a></span> - <span id="CSS_search_from">from:${item.from}</span></li>`;
+        });
+        return `<ul>${_out}</ul>`;
+    }else{
+        return `nothing found!`;
+    }
+};
+
 module.exports.GenerateHTMLArticle = GenerateHTMLArticle;
 module.exports.GenerateHTMLArticleList = GenerateHTMLArticleList;
 module.exports.GenerateHTMLInfoBoard = GenerateHTMLInfoBoard;
@@ -340,3 +365,5 @@ module.exports.GenerateHTMLGallery = GenerateHTMLGallery;
 module.exports.GenerateHTMLManage = GenerateHTMLManage;
 module.exports.GenerateHTMLRebuildSummay = GenerateHTMLRebuildSummay;
 module.exports.GenerateHTMLListCategory = GenerateHTMLListCategory;
+module.exports.GenerateHTMLSearch = GenerateHTMLSearch;
+module.exports.GenerateHTMLSearchContent = GenerateHTMLSearchContent;

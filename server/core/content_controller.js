@@ -52,6 +52,19 @@ class Organizer {
     }
   };
 
+  _CreateArticleConfig() {
+    let _obj = {
+      fileName: "",
+      title: "<no title>",
+      createTime: new Date().toISOString(),
+      author: "anonymous",
+      category: "default",
+      template: constant.M_TEMPLATE_DEFAULT,
+      allowHistory: true,
+    };
+    return _obj;
+  }
+
   _RemoveFromCategory(category, fileName) {
     let _arr = this.configCategories[category];
     if (_arr) {
@@ -135,7 +148,7 @@ class Organizer {
   Add(fileName, category, title, author, template, allowHistory, content, save = true) {
     if (this.GetConfig(fileName)) return false;
 
-    let _cfg = this.CreateArticleConfig();
+    let _cfg = this._CreateArticleConfig();
     _ModifyConfig(_cfg, fileName, category, title, author, template, allowHistory);
     this.configArticles[fileName] = _cfg;
     this._AppendToCategory(category, fileName);
@@ -190,6 +203,42 @@ class Organizer {
     }
   }
 
+  Search(str, out) {
+    if (typeof str != "string") return false;
+    if (str.length <= 0) return false;
+    if (!(out instanceof Array)) return false;
+
+    let _arr = str.split(/ +/);/// using / +/ to replace ' ' for multiply spaces. e.g. "aa bb cc       dd"
+    const N = _arr.length;
+
+    let _test = function (str) {
+      let i = 0;
+      do {
+        let offset = str.indexOf(_arr[i]);
+        if (offset < 0){
+          return false;
+        }
+        str = str.substring(offset + _arr[i].length +1);/// +1 : pass one space char.
+        ++i;
+      } while (i < N)
+      return true;
+    }
+
+    for (var _fileName in this.configArticles) {
+      let _obj = this.configArticles[_fileName];
+
+      if (_test(_obj.fileName)) {
+        out.push({ fileName: _obj.fileName, from: "name", content: _obj.fileName });
+        continue;
+      }
+
+      if (_test(_obj.title)) {
+        out.push({ fileName: _obj.fileName, from: "title", content: _obj.title });
+      }
+    }
+    return true;
+  }
+
   /**
    * @param {String} fileName
    * @param {Object}
@@ -224,18 +273,6 @@ class Organizer {
     return _arr;
   }
 
-  CreateArticleConfig() {
-    let _obj = {
-      fileName: "",
-      title: "<no title>",
-      createTime: new Date().toISOString(),
-      author: "anonymous",
-      category: "default",
-      template: constant.M_TEMPLATE_DEFAULT,
-      allowHistory: true,
-    };
-    return _obj;
-  }
 };
 
 let org = new Organizer();

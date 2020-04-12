@@ -48,11 +48,12 @@ class EditSession {
 }
 
 var _CreateDefaultResponseObject = function () {
-  let _obj = Object.create(null);
-  _obj.resTime = new Date();
-  _obj.code = constant.action_code.ACTION_CONFIRMED;
-  _obj.redirectURL = null;
-  _obj.msg = "";
+  let _obj = {
+    resTime: new Date(),
+    code: constant.action_code.ACTION_CONFIRMED,
+    redirectURL: null,
+    msg: "",
+  }
   return _obj;
 }
 
