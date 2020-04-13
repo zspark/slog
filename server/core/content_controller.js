@@ -203,22 +203,25 @@ class Organizer {
     }
   }
 
-  Search(str, out) {
-    if (typeof str != "string") return false;
-    if (str.length <= 0) return false;
+  Search(searchValue, out) {
+    if (typeof searchValue != "string") return false;
+    if (searchValue.length <= 0) return false;
     if (!(out instanceof Array)) return false;
+    searchValue = searchValue.toLowerCase();
 
-    let _arr = str.split(/ +/);/// using / +/ to replace ' ' for multiply spaces. e.g. "aa bb cc       dd"
+    let _arr = searchValue.split(/ +/);/// using / +/ to replace ' ' for multiply spaces. e.g. "aa bb cc       dd"
     const N = _arr.length;
 
     let _test = function (str) {
+      str = str.toLowerCase();
       let i = 0;
+      let fromIdx = 0;
       do {
-        let offset = str.indexOf(_arr[i]);
+        let offset = str.indexOf(_arr[i], fromIdx);
         if (offset < 0){
           return false;
         }
-        str = str.substring(offset + _arr[i].length +1);/// +1 : pass one space char.
+        fromIdx = offset + _arr[i].length + 1; /// +1 : pass one space char.
         ++i;
       } while (i < N)
       return true;
