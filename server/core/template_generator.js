@@ -332,7 +332,7 @@ var GenerateHTMLListCategory = function (arrList) {
 
 var GenerateHTMLSearch = function () {
     let _content = `<h1> 🔍 Search</h1>
-<input type="text" id="searchInput" placeholder="input your searching content." autofocus="autofocus"/>
+<center><input type="search" id="searchInput" placeholder="input your searching content." autofocus="autofocus"/></center>
 <div id=searchContent>nothing found</div>`;
 
     let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div", "", _content);

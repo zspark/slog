@@ -3,7 +3,7 @@
   --default-edit-width:55rem;
   --body-bg-color: #DCE2F1;
   --header-bg-color: #f5f2f0;
-  --outer-bg-color: #fefefe;
+  --outer-bg-color: #fafafa;
   --body-font-color: #333;
   --title-font-color: rgb(161, 85, 0);
   --author-font-color: rgb(200,200,200);
@@ -246,6 +246,9 @@ ul,ol{
   margin: 1rem;
   padding: 0 var(--padding-left-right);
 }
+ol p {
+  padding: 0;
+}
 ul.articles {
   font-size: 1.2em;
 }
@@ -278,8 +281,8 @@ iframe#preview{
 }
 
 input#searchInput{
-  width: 66%;
-  margin: 2rem calc((30%-2rem-4px)/2);
+  width: 70%;
+  text-align: center;
   border-width: 2px;
   border-style: inset;
   border-color: rgb(118, 118, 118);
