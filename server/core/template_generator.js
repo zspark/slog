@@ -342,9 +342,34 @@ var GenerateHTMLSearch = function () {
 
 var GenerateHTMLSearchContent = function (arrList) {
     if (arrList.length > 0) {
+        var _makeHighlightString = function (str, r) {
+            let _out = "";
+            let index = 0;
+            let i = 0;
+            while (i < r.length) {
+                _out += str.substring(index, r[i]);
+                index = r[i] + r[i + 1];
+                _out += '<span class="CSS_search_highlight">' + str.substring(r[i], index) + '</span>';
+                i += 2;
+            };
+            _out += str.substring(index);
+            return _out;
+        }
         let _out = "";
         arrList.forEach(function (item) {
-            _out += `<li><span><a href="/view?n=${item.fileName}">${item.content}</a></span> - <span id="CSS_search_from">from:${item.from}</span></li>`;
+            if (item.from == "name") {
+                _out += `<li><span><a href="/view?n=${item.fileName}">`;
+                _out += _makeHighlightString(item.fileName, item.range);
+                _out += `</a></span>`;
+                _out += `<span> | ${item.title}</span>`;
+                _out += `<span class="CSS_search_author"> | ${item.author}</span>`;
+            } else if (item.from == "title") {
+                _out += `<li><span>${item.fileName}</span><span> | <a href="/view?n=${item.fileName}">`;
+                _out += _makeHighlightString(item.title, item.range);
+                _out += `</a></span>`;
+                _out += `<span class="CSS_search_author"> | ${item.author}</span>`;
+            }
+            _out += `</li>`;
         });
         return `<ul>${_out}</ul>`;
     }else{

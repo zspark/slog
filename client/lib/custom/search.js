@@ -8,20 +8,25 @@ function OnBodyLoad() {
   searchInput = document.getElementById("searchInput");
   searchInput.addEventListener('input', function () {
     clearTimeout(changeTimeout);
-    changeTimeout = window.setTimeout(_TryRenderToHTML, MAX_DELAY_TIME_MS);
+    changeTimeout = window.setTimeout(_PostSearch, MAX_DELAY_TIME_MS);
   });
 
   searchInput.addEventListener('keypress', function (event) {
     if (event.keyCode == "13") {
       clearTimeout(changeTimeout);
-      _TryRenderToHTML();
+      _PostSearch();
     }
   });
 }
 
-function _TryRenderToHTML() {
-  if (searchInput.value == "") return;
-  _PostXHR(searchInput.value, html => {
+function _PostSearch() {
+  let _searchValue = searchInput.value;
+  if (_searchValue == "") return;
+  _PostXHR(_searchValue, html => {
+    /*
+    const reg = new RegExp(_searchValue, "g");
+    var newinner = html.replace(reg, '<span class="CSS_search_highlight">' + _searchValue + '</span>')//处理HTML字符串，为目标文本加上样式，即替换对应的HTML结构
+    */
     searchContent.innerHTML = html;
   });
 }

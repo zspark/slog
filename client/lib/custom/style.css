@@ -276,10 +276,6 @@ iframe#preview{
   background-color:var(--body-bg-color);
 }
 
-#CSS_search_from{
-  color:var(--author-font-color);
-}
-
 input#searchInput{
   width: 70%;
   text-align: center;
@@ -287,4 +283,13 @@ input#searchInput{
   border-style: inset;
   border-color: rgb(118, 118, 118);
   padding: 0.3rem 1rem 0.3rem 1rem;
+}
+
+span.CSS_search_highlight{
+  color:var(--title-font-color);
+  font-weight:bold;
+}
+
+span.CSS_search_author{
+  color:var(--author-font-color);
 }

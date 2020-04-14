@@ -212,7 +212,7 @@ class Organizer {
     let _arr = searchValue.split(/ +/);/// using / +/ to replace ' ' for multiply spaces. e.g. "aa bb cc       dd"
     const N = _arr.length;
 
-    let _test = function (str) {
+    let _test = function (str, outRange) {
       str = str.toLowerCase();
       let i = 0;
       let fromIdx = 0;
@@ -221,6 +221,7 @@ class Organizer {
         if (offset < 0){
           return false;
         }
+        outRange.push(offset, _arr[i].length);
         fromIdx = offset + _arr[i].length + 1; /// +1 : pass one space char.
         ++i;
       } while (i < N)
@@ -229,14 +230,15 @@ class Organizer {
 
     for (var _fileName in this.configArticles) {
       let _obj = this.configArticles[_fileName];
+      let _range = [];
 
-      if (_test(_obj.fileName)) {
-        out.push({ fileName: _obj.fileName, from: "name", content: _obj.fileName });
+      if (_test(_obj.fileName, _range)) {
+        out.push({ fileName: _obj.fileName, title: _obj.title, range: _range, from: "name", author: _obj.author });
         continue;
       }
 
-      if (_test(_obj.title)) {
-        out.push({ fileName: _obj.fileName, from: "title", content: _obj.title });
+      if (_test(_obj.title, _range)) {
+        out.push({ fileName: _obj.fileName, title: _obj.title, range: _range, from: "title", author: _obj.author });
       }
     }
     return true;
