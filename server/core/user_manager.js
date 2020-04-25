@@ -1,12 +1,12 @@
 const common = require("./common");
 const pathes = common.pathes;
 const LOG = require(pathes.pathCore + 'logger');
-const FileFolderHandler = require(pathes.pathCore + 'disk_visitor');
+const IOSystem = require(pathes.pathCore + 'io_system');
 
 var userMap = new Map();
 
 var Init = function () {
-  let _content = FileFolderHandler.ReadFileUTF8(pathes.urlUsersConfig);
+  let _content = IOSystem.ReadFileUTF8(pathes.urlUsersConfig);
   if (_content == null){
     LOG.Warn("There is NO user config file!");
     return false;

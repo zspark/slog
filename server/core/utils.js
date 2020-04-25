@@ -136,6 +136,15 @@ var DeleteFromArray = function (array, value) {
   if (idx >= 0) array.splice(idx, 1);
 };
 
+var CreateProperty = function (obj, p, v, w, c, e) {
+  Object.defineProperty(obj, p, {
+    value: v,
+    writable: w, //设置属性只读
+    configurable: c,
+    enumerable: e
+  });
+}
+
 module.exports.GetCookie = GetCookie;
 module.exports.SetCookie = SetCookie;
 module.exports.EraseValueFromArray = EraseValueFromArray;
@@ -155,3 +164,4 @@ module.exports.MakeLoginURL = MakeLoginURL;
 module.exports.MakeLoginWithViewURL = MakeLoginWithViewURL;
 module.exports.GetClientIP = GetClientIP;
 module.exports.GetClientPort = GetClientPort;
+module.exports.CreateProperty = CreateProperty;

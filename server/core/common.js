@@ -1,22 +1,23 @@
 const ROOT = __dirname + "/../../";// blog's root
 const ROOT_SERVER = ROOT + "server/";
 const ROOT_CLIENT = ROOT + "client/";
-const ROOT_CONTENT = ROOT + "server/content/";
-const ROOT_TEMPLATE = ROOT + "server/template/";
+const ROOT_CONTENT = ROOT_CLIENT + "content/";
+const ROOT_TEMPLATE = ROOT_SERVER + "template/";
 
 const pathes = {
   pathRoot: ROOT,
   pathClient: ROOT_CLIENT,
-  pathUpload: ROOT_CLIENT + "share/",
-  pathGallery: ROOT_CLIENT + "share/gallery/",
+  pathContent: ROOT_CONTENT,
+  pathUpload: ROOT_CONTENT + "share/",
+  pathGallery: ROOT_CONTENT + "share/gallery/",
 
-  pathArticle: ROOT_CONTENT + "article/",
-  urlArticleConfig: ROOT_CONTENT + ".summary.json",
-  urlHistoryConfig: ROOT_CONTENT + ".history.json",
+  pathArticle: ROOT_CONTENT + "article/article/",
+  urlArticleConfig: ROOT_CONTENT + "article/.summary.json",
+  urlHistoryConfig: ROOT_CONTENT + "article/.history.json",
 
   pathUser: ROOT_SERVER + "user/",
   pathCore: ROOT_SERVER + "core/",
-  pathMW: ROOT_SERVER + "core/middleware/",
+  pathMW: ROOT_SERVER + "middleware/",
   urlUsersConfig: ROOT_SERVER + "users.json",
 
   pathTemplate: ROOT_TEMPLATE,
@@ -26,12 +27,16 @@ const constant = {
   M_HOME: "home",
   M_GALLERY: "gallery",
   M_ARTICLE: "articles",
+  M_ARTICLES: "articles",
   M_LOGGED_IN: "loggedIn",
   M_CONTENT: "content",
   M_TEMPLATE_OPTIONS: "templateOptions",
   M_FILE_NAME: "fileName",
   M_AUTHOR: "author",
   M_TEMPLATE: "template",
+  M_LAYOUT: "layout",
+  M_ALLOW_HISTORY: "allowHistory",
+  M_SECRET: "secret",
   M_STYLE: "style",
   M_TITLE: "title",
   M_TIME: "time",
@@ -92,7 +97,9 @@ const constant = {
     DELETE: 10,
     CANCEL: 20,
     LOGIN: 100,
-    ACTION_CONFIRMED: 9999,
+    UPLOAD:1000,
+    ACTION_CONFIRMED: 5000,
+    FILE_EXIST:5100,
   },
 };
 

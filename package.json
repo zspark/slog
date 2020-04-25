@@ -28,6 +28,7 @@
     "codemirror": "5.52.0",
     "prismjs": "1.19.0",
     "md5": "2.2.1",
+    "formidable": "1.2.2",
     "uglify-js": "3.8.0"
   },
   "author": "Jerry Chaos",

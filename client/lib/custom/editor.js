@@ -3,6 +3,7 @@ var markdownElem = null;
 var titleElem = null;
 var authorElem = null;
 var categoryElem = null;
+var uploadFolderElem = null;
 var cbTypeMapElem = null;
 var cbAllowHistoryElem = null;
 var slcTemplateElem = null;
@@ -22,6 +23,7 @@ function OnBodyLoad() {
   titleElem = document.getElementById("inputTitle");
   authorElem = document.getElementById("inputAuthor");
   categoryElem = document.getElementById("inputCategory");
+  uploadFolderElem = document.getElementById("inputUploadFolder");
   cbTypeMapElem = document.getElementById("cbTypeMap");
   cbAllowHistoryElem = document.getElementById("cbAllowHistory");
   slcTemplateElem = document.getElementById("slcTemplate");
@@ -56,8 +58,37 @@ function OnBodyLoad() {
   _TryRenderToHTML();
 
   heartbeatIntervalID = setInterval(() => {
-    _PostXHR(_CreatePostData(0), null);
+    _PostXHRAction(_CreatePostData(0), null);
   }, 10000);
+
+  /// upload
+  document.ondragenter = function (e) {
+    e.preventDefault();
+  }
+
+  document.ondragover = function (e) {
+    e.preventDefault();
+    //document.innerHTML = '请松开';
+  }
+
+  document.ondragleave = function (e) {
+    e.preventDefault();
+    //document.innerHTML = '请拖入要上传的文件';
+  }
+
+  document.ondrop = function (e) {
+    e.preventDefault();
+    if (_CheckConnection()) {
+      var upfile = e.dataTransfer.files[0]; //获取要上传的文件对象(可以上传多个)  
+      var formdata = new FormData();
+      formdata.append('upfile', upfile); //设置服务器端接收的name为upfile  
+      let _q = `/upload?f=${uploadFolderElem.value}&n=${upfile.name}`;
+      _PostXHR(formdata, _q, 'json', null, (json) => {
+      //_PostXHR(formdata, _q, 'json', "application/x-www-form-urlencoded", (json) => {
+        console.log("successfully");
+      });
+    }
+  }
 };
 
 function _StopHeartBeat(msg) {
@@ -111,6 +142,7 @@ function _CreatePostData(action) {
     "title": titleElem.value,
     "author": authorElem.value,
     "category": categoryElem.value,
+    "uploadFolder": uploadFolderElem.value,
     "template": slcTemplateElem.selectedOptions[0].text,
     "allowHistory": cbAllowHistoryElem.checked,
   };
@@ -135,7 +167,7 @@ function ChangeTypeMode() {
 function Delete() {
   let _r = confirm("Are your sure to delete this article?");
   if (_r) {
-    _PostXHR(_CreatePostData(10), _Redirect);
+    _PostXHRAction(_CreatePostData(10), _Redirect);
   }
 };
 
@@ -153,7 +185,7 @@ function Cancel() {
       _r = confirm("You have changes which are NOT saved. Do you really want to cancel editing?");
     }
     if (_r) {
-      _PostXHR(_CreatePostData(20), _Redirect);
+      _PostXHRAction(_CreatePostData(20), _Redirect);
     }
   }
 };
@@ -161,7 +193,7 @@ function Cancel() {
 function Save() {
   if (_CheckConnection()) {
     if (_CheckCompletion()) {
-      _PostXHR(_CreatePostData(1), null);
+      _PostXHRAction(_CreatePostData(1), null);
     }
   }
 };
@@ -169,21 +201,26 @@ function Save() {
 function SaveAndExit() {
   if (_CheckConnection()) {
     if (_CheckCompletion()) {
-      _PostXHR(_CreatePostData(2), _Redirect);
+      _PostXHRAction(_CreatePostData(2), _Redirect);
     }
   }
 };
 
-function _PostXHR(obj, fn) {
+function _PostXHRAction(obj,fn){
+  let _jsonString = JSON.stringify(obj);
+  _PostXHR(_jsonString, '/edit' + window.location.search, 'json', "application/json", fn);
+}
+
+function _PostXHR(obj, url, responseType, contentType, fn) {
   let xhr = new XMLHttpRequest();
-  xhr.open('POST', '/edit' + window.location.search, true);
-  xhr.responseType = 'json';
-  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.open('POST', url, true);
+  xhr.responseType = responseType;
+  if (contentType) xhr.setRequestHeader("Content-Type", contentType);
   xhr.onload = function () {
     if (xhr.readyState === xhr.DONE) {
       if (xhr.status === 200) {
         let _json = xhr.response;
-        if (_json.code === 9999) {
+        if (_json.code >= 5000) {
           if (fn) fn(_json);
         }else{
           _StopHeartBeat(_json.msg);
@@ -203,8 +240,7 @@ function _PostXHR(obj, fn) {
   xhr.onerror = function () { _StopHeartBeat("error"); }
   xhr.onabort = function () { _StopHeartBeat("error"); }
 
-  let _jsonString = JSON.stringify(obj);
-  xhr.send(_jsonString);
+  xhr.send(obj);
 };
 
 function _CheckCompletion() {

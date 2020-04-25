@@ -3,19 +3,19 @@ const constant = common.constant;
 
 const _HTMLhead =
     `<head>
-  <meta charset="utf-8">
-  <title>Spark Notes</title>
-  <meta name="description" content="This is a developing blog site.">
-  <link rel="icon" href="/lib/custom/favicon.ico" type="image/x-icon">
-  <link href="/lib/custom/style.css" rel="stylesheet">
-  <!--link rel="stylesheet" href="/lib/prismjs/prism.css" data-noprefix /-->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css" rel="stylesheet" />
+    <meta charset="utf-8">
+    <title>Spark Notes</title>
+    <meta name="description" content="This is a developing blog site.">
+    <link rel="icon" href="/lib/custom/favicon.ico" type="image/x-icon">
+    <link href="/lib/custom/style.css" rel="stylesheet">
+    <!--link rel="stylesheet" href="/lib/prismjs/prism.css" data-noprefix /-->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css" rel="stylesheet" />
 </head>`;
 
 const _HTMLhead_edit = _HTMLhead +
     `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.0/codemirror.min.css">
 <style>
-  .CodeMirror {
+    .CodeMirror {
     border: 1px solid #eee;
     height: auto;
     font-size: 0.9em;
@@ -26,19 +26,19 @@ const _HTMLhead_gallery = _HTMLhead + `<link type="text/css" href="lib/lightgall
 
 const _HTMLbody_top =
     `<header>
-  <center>
-    <h1><a href="/"><span style="color:rgb(161, 85, 0);">Jerry</span>Chaos</a></h1>
-    <ul id="menu">
-      <li><a href="/">🏠Home</a></li>
-      <li><a href="/view?c=basic">Basic</a></li>
-      <li><a href="/view?c=major">Major</a></li>
-      <li><a href="/view?c=philosophy">Philosophy</a></li>
-      <li><a href="/view?c=math">Math</a></li>
-      <li><a href="/view?c=default">Default</a></li>
-      <li><a href="/search">🔍Search</a></li>
-      <li><a href="/history">⏳History</a></li>
-    </ul>
-  </center>
+    <center>
+        <h1><a href="/"><span style="color:rgb(161, 85, 0);">Jerry</span>Chaos</a></h1>
+        <ul id="menu">
+        <li><a href="/">🏠Home</a></li>
+        <li><a href="/view?c=basic">Basic</a></li>
+        <li><a href="/view?c=major">Major</a></li>
+        <li><a href="/view?c=philosophy">Philosophy</a></li>
+        <li><a href="/view?c=math">Math</a></li>
+        <li><a href="/view?c=default">Default</a></li>
+        <li><a href="/search">🔍Search</a></li>
+        <li><a href="/history">⏳History</a></li>
+        </ul>
+    </center>
 </header>`;
 
 const _HTMLbody_bottom = `<footer> &copy; 2011&ndash;2020 Jerry Chaos </footer>`;
@@ -52,7 +52,7 @@ const _HTMLbody_script =
 </script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>`;
 
-const _HTMLbody_script_search =`<script src="/lib/custom/search.js" defer></script>`;
+const _HTMLbody_script_search = `<script src="/lib/custom/search.js" defer></script>`;
 
 const _HTMLbody_script_edit =
     `<script src="/lib/custom/editor.js" defer></script>
@@ -63,7 +63,7 @@ const _HTMLbody_script_edit =
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/keymap/vim.min.js" defer></script>`;
 
 const _HTMLbody_script_gallery =
-`<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.min.js"></script>
+    `<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.min.js"></script>
 <script src="lib/lightgallery/js/lightgallery.min.js"></script>
 
 <script type="text/javascript">
@@ -78,13 +78,14 @@ $(document).ready(function () {
 
 
 var _GenerateHTMLTitle = function (fileName, title, author, createTime) {
-    let _HTMLtitle = `<p id="title"> ${title} </p>
-<p id="author"> ${author} | ${createTime} | <a href="/edit?n=${fileName}">edit</a> </p>`;
+    let _HTMLtitle =
+        `<p id="title"> ${title} </p><p id="author"> ${author} | ${createTime} | <a href="/edit?n=${fileName}">edit</a> </p>`;
     return _HTMLtitle;
 }
 
 var _GenerateHTMLbodyMiddle = function (outerDivID, HTMLtitle, HTMLcontent) {
-    let _HTMLbody = `<div id="${outerDivID}">
+    let _HTMLbody = 
+        `<div id="${outerDivID}">
     ${HTMLtitle}
     ${HTMLcontent}
 </div>`;
@@ -92,7 +93,8 @@ var _GenerateHTMLbodyMiddle = function (outerDivID, HTMLtitle, HTMLcontent) {
 }
 
 var _GenerateHTMLbody = function (HTMLbodyTop, HTMLbodyMiddle, HTMLbodyBottom, HTMLbodyScript) {
-    let _HTMLbody = `<body onLoad="OnBodyLoad()">
+    let _HTMLbody =
+        `<body onLoad="OnBodyLoad()">
 ${HTMLbodyTop}
 ${HTMLbodyMiddle}
 ${HTMLbodyBottom}
@@ -102,7 +104,8 @@ ${HTMLbodyScript}
 };
 
 var _GenerateHTML = function (HTMLhead, HTMLbody) {
-    let _HTML = `<!DOCTYPE html>
+    let _HTML =
+        `<!DOCTYPE html>
 <html lang="en">
 ${HTMLhead}
 ${HTMLbody}
@@ -207,6 +210,7 @@ var GenerateHTMLEdit = function (content, title, author, category, allowHistory,
         <span><input type="text" id="inputTitle" style="width:300px;" placeholder="<title>" value="${title}" /></span>
         <span><input type="text" id="inputAuthor" style="width:100px;" placeholder="<author>" value="${author}" /></span>
         <span><input type="text" id="inputCategory" style="width:100px;" placeholder="<category>" value="${category}" /></span>
+        <span><input type="text" id="inputUploadFolder" style="width:100px;" placeholder="<image>" value="uploadFolder" /></span>
 
         <select id="slcTemplate">`;
 
@@ -275,7 +279,7 @@ var GenerateHTMLGallery = function (arrList) {
     });
 
     let _content =
-    `<div id="lightgallery" style=" margin-top: 20px; ">
+        `<div id="lightgallery" style=" margin-top: 20px; ">
     ${_out}
 </div>`
 
@@ -372,7 +376,7 @@ var GenerateHTMLSearchContent = function (arrList) {
             _out += `</li>`;
         });
         return `<ul>${_out}</ul>`;
-    }else{
+    } else {
         return `nothing found!`;
     }
 };

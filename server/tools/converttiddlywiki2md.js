@@ -1,7 +1,7 @@
 const FS = require('fs');
 
 const pathes = require("../core/common.js").pathes;
-const FileFolderHandler = require(pathes.pathCore + 'disk_visitor');
+const IOSystem = require(pathes.pathCore + 'io_system');
 var bQuote = false;
 var ConvertLine = function (line) {
   const L = line.length;
@@ -72,14 +72,14 @@ var Convert = function (c) {
 }
 
 var Start = function (path) {
-  let arr = FileFolderHandler.ReadAllFileNamesInFolder(path);
+  let arr = IOSystem.ReadAllFileNamesInFolder(path);
   const N = arr.length;
   for (let i = 0; i < N; ++i) {
     let url = path + arr[i];
-    let content = FileFolderHandler.ReadFileUTF8(url);
+    let content = IOSystem.ReadFileUTF8(url);
     let out = Convert(content);
     let fileName = arr[i].substr(0, arr[i].length - 4);
-    FileFolderHandler.WriteFileUTF8(path + "out/" + fileName + ".md", out);
+    IOSystem.WriteFileUTF8(path + "out/" + fileName + ".md", out);
   }
 }
 
