@@ -43,6 +43,11 @@ const constant = {
   M_CREATE_TIME: "createTime",
   M_MODIFY_TIME: "modifyTime",
 
+  M_DEFAULT_FILE_NAME: "no-file-name",
+  M_DEFAULT_TITLE: "no-title",
+  M_DEFAULT_AUTHOR: "anonymous",
+  M_DEFAULT_CATEGORY: "default",
+
   M_COMMAND: "command",
   M_COMMAND_REBUILD_SUMMARY: "rebuildSummary",
   M_COMMAND_LIST_CATEGORIES: "listCategories",

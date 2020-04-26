@@ -4,8 +4,6 @@ const constant = common.constant;
 var Base = require(pathes.pathMW + "middleware_module_base");
 const LOG = require(pathes.pathCore + 'logger');
 const Utils = require(pathes.pathCore + "utils");
-const IOSystem = require(pathes.pathCore + 'io_system');
-const ArticleHandler = require(pathes.pathCore + "article_handler");
 const UserManager = require(pathes.pathCore + "user_manager");
 const TPLGEN = require(pathes.pathCore + "template_generator");
 const SessionMgr = require(pathes.pathCore + "client_session");
@@ -40,38 +38,18 @@ class ModuleEdit extends Base {
         if (_es) {
             this.ComposeInfoboard(req, res, `This file is currently editing by someone!`);
             return true;
-        } else {
-            _es = SessionMgr.CreateEditSession(Utils.GetUserAccount(req), Utils.GetClientIP(req), _fileName);
-        }
+        } 
 
+        _es = SessionMgr.CreateEditSession(req, res);
 
-        const _fileURL = pathes.pathArticle + _fileName;
-        let _content = IOSystem.ReadFileUTF8(_fileURL);
-        if (_content == null) {
-            _content = "";
-        }
-
-        let _html = "";
-        const _cfg = ArticleHandler.GetConfig(_fileName);
-        if (_cfg) {
-            _html = TPLGEN.GenerateHTMLEdit(
-                _content,
-                _cfg.GetTitle(),
-                _cfg.GetAuthor(),
-                _cfg.GetCategory(),
-                _cfg.GetAllowHistory(),
-                this._GetTemplateList(_cfg.GetLayout())
-            );
-        } else {
-            _html = TPLGEN.GenerateHTMLEdit(
-                _content,
-                "",
-                UserManager.GetUserInfo(Utils.GetUserAccount(req)).displayName,
-                constant.M_CATEGORY_DEFAULT,
-                true,
-                this._GetTemplateList(constant.M_TEMPLATE_DEFAULT)
-            );
-        }
+        let _html = TPLGEN.GenerateHTMLEdit(
+            _es.GetContent(),
+            _es.GetTitle(),
+            _es.GetAuthor(),
+            _es.GetCategory(),
+            _es.GetAllowHistory(),
+            this._GetTemplateList(_es.GetLayout())
+        );
         res.end(_html);
 
         return true;
@@ -81,9 +59,7 @@ class ModuleEdit extends Base {
         let _obj = this.CreateDefaultResponseObject();
 
         const _fileName = req.query.n;
-        if (!_fileName) {
-            _obj.code = constant.error_code.NO_FILE_NAME;
-            _obj.msg = "error, no file name!";
+        if (!this.CheckFileName(_fileName, _obj)) {
             res.send(JSON.stringify(_obj));
             return true;
         }
@@ -103,7 +79,12 @@ class ModuleEdit extends Base {
         }
 
         let _Save = function () {
-            _es.Save(_jsonObj.title, _jsonObj.author, _jsonObj.category, _jsonObj.template, _jsonObj.allowHistory, _jsonObj.content);
+            _es.SetTitle(_jsonObj.title);
+            _es.SetAuthor(_jsonObj.author);
+            _es.SetCategory(_jsonObj.category);
+            _es.SetLayout(_jsonObj.template);
+            _es.SetAllowHistory(_jsonObj.allowHistory);
+            _es.Save(_jsonObj.content);
         }
 
         const action_code = constant.action_code;

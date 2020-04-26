@@ -2,6 +2,7 @@ const common = require("./common");
 const pathes = common.pathes;
 const constant = common.constant;
 const LOG = require(pathes.pathCore + 'logger');
+const IOSystem = require(pathes.pathCore + 'io_system');
 const Utils = require(pathes.pathCore + "utils");
 const ArticleHandler = require(pathes.pathCore + "article_handler");
 const UserManager = require(pathes.pathCore + "user_manager");
@@ -51,27 +52,49 @@ class ClientSession {
 };
 
 class EditSession extends ClientSession {
-    #editingFileName;
+
+    #m_articleConfig;
     constructor(acc, ip, fileName) {
         super(acc, ip);
-        this.#editingFileName = fileName;
+
+        this.#m_articleConfig = ArticleHandler.GetConfig(fileName);
+        if (!this.#m_articleConfig) {
+            this.#m_articleConfig = ArticleHandler.CreateConfig(fileName);
+        }
     };
 
     Delete() {
-        ArticleHandler.Delete(this.#editingFileName);
+        ArticleHandler.Delete(this.#m_articleConfig);
     }
 
-    Save(title, author, category, template, allowHistory, content) {
-        const _fileName = this.#editingFileName;
-        if (ArticleHandler.GetConfig(_fileName)) {
-            ArticleHandler.Modify(_fileName, category, title, author, template, allowHistory, content);
-        } else {
-            ArticleHandler.Add(_fileName, category, title, author, template, allowHistory, content);
+    Save(content) {
+        if (!ArticleHandler.Add(this.#m_articleConfig, content)) {
+            ArticleHandler.Modify(this.#m_articleConfig, content);
         }
     }
 
+    GetFileName() { return this.#m_articleConfig.GetFileName(); }
+    GetTitle() { return this.#m_articleConfig.GetTitle(); }
+    GetAuthor() { return this.#m_articleConfig.GetAuthor(); }
+    GetCategory() { return this.#m_articleConfig.GetCategory(); }
+    GetLayout() { return this.#m_articleConfig.GetLayout(); }
+    GetAllowHistory() { return this.#m_articleConfig.GetAllowHistory(); }
+    GetSecret() { return this.#m_articleConfig.GetSecret(); }
+    GetContent() {
+        const _fileURL = pathes.pathArticle + this.#m_articleConfig.GetFileName();
+        let _c = IOSystem.ReadFileUTF8(_fileURL);
+        return _c == null ? "" : _c;
+    }
+
+    SetTitle(v) { this.#m_articleConfig.SetTitle(v);}
+    SetAuthor(v) { this.#m_articleConfig.SetAuthor(v);}
+    SetCategory(v) { this.#m_articleConfig.SetCategory(v);}
+    SetLayout(v) { this.#m_articleConfig.SetLayout(v);}
+    SetAllowHistory(b) { this.#m_articleConfig.SetAllowHistory(b);}
+    SetSecret(b) { this.#m_articleConfig.SetSecret(b);}
+
     GetID() {
-        return this.#editingFileName;
+        return this.#m_articleConfig.GetFileName();
     }
 }
 
@@ -83,7 +106,7 @@ class FileManageSession extends ClientSession {
     Delete(relativePath, fileName) {
     }
 
-    Save(title, author, category, template, allowHistory, content) {
+    Save(){
     }
 }
 
@@ -128,8 +151,9 @@ class SessionManager {
         this.#m_connectionCheck = null;
     }
 
-    CreateEditSession(account, ip, fileName) {
-        let _es = new EditSession(account, ip, fileName);
+    CreateEditSession(req, res) {
+        /// TODO:create session instance according to user's rights;
+        let _es = new EditSession(Utils.GetUserAccount(req), Utils.GetClientIP(req), req.query.n);
         this.#m_mapEditSession.set(_es.GetID(), _es);
         this._StartHearBeatCheck();
         return _es;

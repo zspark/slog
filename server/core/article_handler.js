@@ -16,108 +16,103 @@ const default_history_json = {
 }
 
 class HistoryConfig {
-    #fileName;
-    #title;
-    #action;
-    #time;
-
     constructor(obj) {
-        this.#fileName = obj ? obj.fileName : "<no-file-name>";
-        this.#title = obj ? obj.title : "<no-title>";
-        this.#action = obj ? obj.action : "";
-        this.#time = obj ? obj.time : new Date().toISOString();
+        this._fileName = obj ? obj.fileName : constant.M_DEFAULT_FILE_NAME;
+        this._title = obj ? obj.title : constant.M_DEFAULT_TITLE;
+        this._action = obj ? obj.action : "";
+        this._time = obj ? obj.time : new Date().toISOString();
     }
 
     ToObject() {
         let _obj = {
-            fileName: this.#fileName,
-            title: this.#title,
-            action: this.#action,
-            time: this.#time,
+            fileName: this._fileName,
+            title: this._title,
+            action: this._action,
+            time: this._time,
         };
         return _obj;
     }
 
-    GetFileName() { return this.#fileName; }
-    SetFileName(fileName) { this.#fileName = fileName; }
-    GetTitle() { return this.#title; }
-    SetTitle(title) { this.#title = title; }
-    GetAction() { return this.#action; }
-    SetAction(action) { this.#action = action; }
-    GetTime() { return this.#time; }
-    GetTimeString() { return new Date(this.#time).toISOString(); }
-    SetTime(time) { this.#time = time; }
+    GetFileName() { return this._fileName; }
+    SetFileName(fileName) { this._fileName = fileName; }
+    GetTitle() { return this._title; }
+    SetTitle(title) { this._title = title; }
+    GetAction() { return this._action; }
+    SetAction(action) { this._action = action; }
+    GetTime() { return this._time; }
+    GetTimeString() { return new Date(this._time).toISOString(); }
+    SetTime(time) { this._time = time; }
 };
 
 class ArticleConfig {
-
-    #fileName;
-    #title;
-    #createTime;
-    #modifyTime;
-    #author;
-    #category;
-    #layout;
-    #allowHistory;
-    #secret;
-
     constructor(obj, fileName) {
-        this.#fileName = obj ? obj[constant.M_FILE_NAME] : fileName;
-        this.#title = obj ? obj[constant.M_TITLE] : "<no-title>";
-        this.#createTime = obj ? obj[constant.M_CREATE_TIME] : new Date().toISOString();
-        this.#modifyTime = obj ? obj[constant.M_MODIFY_TIME] : new Date().toISOString();
-        this.#author = obj ? obj[constant.M_AUTHOR] : "anonymous";
-        this.#category = obj ? obj[constant.M_CATEGORY] : "default";
-        this.#layout = obj ? obj[constant.M_LAYOUT] : constant.M_TEMPLATE_DEFAULT;
-        this.#allowHistory = obj ? obj[constant.M_ALLOW_HISTORY] : true;
-        this.#secret = obj ? obj[constant.M_SECRET] : false;
+        if (obj instanceof ArticleConfig) {
+            this.CopyFrom(obj);
+        } else {
+            this._fileName = obj ? obj[constant.M_FILE_NAME] : fileName;
+            this._title = obj ? obj[constant.M_TITLE] : constant.M_DEFAULT_TITLE;
+            this._createTime = obj ? obj[constant.M_CREATE_TIME] : new Date().toISOString();
+            this._modifyTime = obj ? obj[constant.M_MODIFY_TIME] : new Date().toISOString();
+            this._author = obj ? obj[constant.M_AUTHOR] : constant.M_DEFAULT_AUTHOR;
+            this._category = obj ? obj[constant.M_CATEGORY] : constant.M_DEFAULT_CATEGORY;
+            this._layout = obj ? obj[constant.M_LAYOUT] : constant.M_TEMPLATE_DEFAULT;
+            this._allowHistory = obj ? obj[constant.M_ALLOW_HISTORY] : true;
+            this._secret = obj ? obj[constant.M_SECRET] : false;
+        }
     }
 
     ToObject() {
         let _obj = {
-            fileName: this.#fileName,
-            title: this.#title,
-            createTime: this.#createTime,
-            modifyTime: this.#modifyTime,
-            author: this.#author,
-            category: this.#category,
-            layout: this.#layout,
-            allowHistory: this.#allowHistory,
-            secret: this.#secret,
+            fileName: this._fileName,
+            title: this._title,
+            createTime: this._createTime,
+            modifyTime: this._modifyTime,
+            author: this._author,
+            category: this._category,
+            layout: this._layout,
+            allowHistory: this._allowHistory,
+            secret: this._secret,
         };
         return _obj;
     }
 
-
-    /*
-    Modify(fileName, category, title, author, layout, allowHistory) {
-        if (fileName != null) this.#fileName = fileName;
-        if (category != null) this.#category = category;
-        if (title != null) this.#title = title;
-        if (author != null) this.#author = author;
-        if (layout != null) this.#layout = layout;
-        if (allowHistory != null) this.#allowHistory = allowHistory;
+    Clone() {
+        let _ac = new ArticleConfig(this);
+        return _ac;
     }
-    */
+
+    CopyFrom(ac) {
+        this._fileName = ac._fileName;
+        this._title = ac._title;
+        this._createTime = ac._createTime;
+        this._modifyTime = ac._modifyTime;
+        this._author = ac._author;
+        this._category = ac._category;
+        this._layout = ac._layout;
+        this._allowHistory = ac._allowHistory;
+        this._secret = ac._secret;
+    }
 
 
-    GetTitle() { return this.#title; }
-    SetTitle(title) { this.#title = title; }
-    SetAuthor(author) { this.#author = author; }
-    GetAuthor() { return this.#author; }
-    GetFileName() { return this.#fileName; }
-    SetCategory(category) { this.#category = category; }
-    GetCategory() { return this.#category; }
-    SetLayout(layout) { this.#layout = layout; }
-    GetLayout() { return this.#layout; }
-    SetAllowHistory(b) { this.#allowHistory = b; }
-    GetAllowHistory() { return this.#allowHistory; }
-    SetSecret(b) { this.#secret = b; }
-    GetSecret() { return this.#secret; }
-    GetCreateTime() { return this.#createTime; }
-    GetCreateTimeString() { return new Date(this.#createTime).toDateString(); }
-    GetModifyTime() { return this.#modifyTime; }
-    GetModifyTimeString() { return new Date(this.#modifyTime).toDateString(); }
+    GetFileName() { return this._fileName; }
+    GetTitle() { return this._title; }
+    GetAuthor() { return this._author; }
+    GetCategory() { return this._category; }
+    GetLayout() { return this._layout; }
+    GetAllowHistory() { return this._allowHistory; }
+    GetSecret() { return this._secret; }
+    GetCreateTime() { return this._createTime; }
+    GetCreateTimeString() { return new Date(this._createTime).toDateString(); }
+    GetModifyTime() { return this._modifyTime; }
+    GetModifyTimeString() { return new Date(this._modifyTime).toDateString(); }
+
+    SetTitle(t) { this._title = t; }
+    SetAuthor(v) { this._author = v; }
+    SetCategory(category) { this._category = category; }
+    SetLayout(layout) { this._layout = layout; }
+    SetAllowHistory(b) { this._allowHistory = b; }
+    SetSecret(b) { this._secret = b; }
+    SetModifyTime(v) { this._modifyTime = v; }
 
 };
 
@@ -150,7 +145,7 @@ class ArticleHandler {
             const _data = IOSystem.ReadFileUTF8(pathes.urlHistoryConfig);
             let _configJson = JSON.parse(_data);
             let _arr = _configJson[constant.M_HISTORY];
-            
+
             const N = _arr.length;
             for (let i = 0; i < N; ++i) {
                 let _hc = new HistoryConfig(_arr[i]);
@@ -176,11 +171,11 @@ class ArticleHandler {
         _arr.push(fileName);
     }
 
-    _AppendToHistory(fileName, title, action) {
+    _AppendToHistory(ac, action) {
         if (this.#m_ArrayHistoryConfig.length > 0) {
             let _topElem = this.#m_ArrayHistoryConfig[0];
-            if (fileName == _topElem.GetFileName()) {
-                if (action == _topElem.GetAction()){
+            if (ac.GetFileName() == _topElem.GetFileName()) {
+                if (action == _topElem.GetAction()) {
                     _topElem.SetTime(new Date().toISOString());
                     return false;
                 }
@@ -188,8 +183,8 @@ class ArticleHandler {
         }
 
         let _elem = new HistoryConfig(null);
-        _elem.SetFileName(fileName);
-        _elem.SetTitle(title);
+        _elem.SetFileName(ac.GetFileName());
+        _elem.SetTitle(ac.GetTitle());
         _elem.SetAction(action);
         this.#m_ArrayHistoryConfig.unshift(_elem);
         if (this.#m_ArrayHistoryConfig.length > 50) {
@@ -233,7 +228,7 @@ class ArticleHandler {
         if (cb) cb(b);
     }
 
-    SaveConfigToDisk() {
+    _SaveConfigToDisk() {
         let _config = JSON.parse(JSON.stringify(default_summary_json));// copy
         let _configArticles = _config[constant.M_ARTICLES];
         this.#m_MapFileNameToArticleConfig.forEach((ac, k, m) => {
@@ -249,71 +244,67 @@ class ArticleHandler {
         }
     };
 
-    Add(fileName, category, title, author, layout, allowHistory, content, save = true) {
-        if (this.GetConfig(fileName)) return false;
+    Add(ac, content) {
+        if (!ac) return false;
+        if (!ac instanceof ArticleConfig) return false;
 
-        let _cfg = new ArticleConfig(null, fileName);
-        _cfg.SetCategory(category);
-        _cfg.SetTitle(title);
-        _cfg.SetAuthor(author);
-        _cfg.SetLayout(layout);
-        _cfg.SetAllowHistory(allowHistory);
+        const fileName = ac.GetFileName();
+        if (this.HasConfig(fileName)) return false;
 
-        this.#m_MapFileNameToArticleConfig.set(fileName) = _cfg;
-        this._AppendToCategory(category, fileName);
+        let _articleConfig = ac.Clone();
+        this.#m_MapFileNameToArticleConfig.set(fileName, _articleConfig);
+        this._AppendToCategory(_articleConfig.GetCategory(), fileName);
 
-        if (save) {
-            this.SaveConfigToDisk();
-            this._SaveArticleToDisk(fileName, content);
-            if (allowHistory) {
-                if (this._AppendToHistory(fileName, title, constant.M_ACTION_NEW)) this._SaveHistoryToDisk();
-            }
+        this._SaveConfigToDisk();
+        this._SaveArticleToDisk(fileName, content);
+        if (_articleConfig.GetAllowHistory()) {
+            this._AppendToHistory(_articleConfig, constant.M_ACTION_NEW);
+            this._SaveHistoryToDisk();
         }
         return true;
     };
 
-    Delete(fileName) {
-        let _ac = this.GetConfig(fileName);
-        if (_ac) {
-            this._RemoveFromCategory(_ac.GetCategory(), fileName);
-            this.#m_MapFileNameToArticleConfig.delete(fileName);
-            this.SaveConfigToDisk();
-            this._DeleteArticleFromDisk(fileName);
-            if (this._AppendToHistory(fileName, _ac.GetTitle(), constant.M_ACTION_DELETE)) this._SaveHistoryToDisk();
-            return true;
-        } else {
-            LOG.Error("there is no config exist! file name:%s", fileName);
-            return false;
-        }
+    Delete(ac) {
+        if (!ac) return false;
+        if (!ac instanceof ArticleConfig) return false;
+
+        const fileName = ac.GetFileName();
+        if (!this.HasConfig(fileName)) return false;
+
+        this._RemoveFromCategory(ac.GetCategory(), fileName);
+        this.#m_MapFileNameToArticleConfig.delete(fileName);
+        this._SaveConfigToDisk();
+        this._DeleteArticleFromDisk(fileName);
+        this._AppendToHistory(ac, constant.M_ACTION_DELETE);
+        this._SaveHistoryToDisk();
+        return true;
     };
 
-    Modify(fileName, category, title, author, layout, allowHistory, content) {
-        let _cfg = this.GetConfig(fileName);
-        if (_cfg) {
-            let lastCategory = _cfg.GetCategory();
-            if (lastCategory != category) {
-                this._RemoveFromCategory(lastCategory, fileName);
-                this._AppendToCategory(category, fileName);
-            }
+    Modify(ac, content) {
+        if (!ac) return false;
+        if (!ac instanceof ArticleConfig) return false;
 
-            _cfg.SetCategory(category);
-            _cfg.SetTitle(title);
-            _cfg.SetAuthor(author);
-            _cfg.SetLayout(layout);
-            _cfg.SetAllowHistory(allowHistory);
+        const fileName = ac.GetFileName();
+        if(!this.HasConfig(fileName))return false;
 
-
-            this.SaveConfigToDisk();
-            this._SaveArticleToDisk(fileName, content);
-            if (allowHistory) {
-                if (this._AppendToHistory(fileName, title, constant.M_ACTION_MODIFIED)) this._SaveHistoryToDisk();
-            }
-            LOG.Info("article modified. file name:%s", fileName);
-            return true;
-        } else {
-            LOG.Error("there is no config exist! file name:%s", fileName);
-            return false;
+        let _targetAc = this.#m_MapFileNameToArticleConfig.get(fileName);
+        const currentCategory = ac.GetCategory();
+        const lastCategory = _targetAc.GetCategory();
+        if (lastCategory != currentCategory) {
+            this._RemoveFromCategory(lastCategory, fileName);
+            this._AppendToCategory(currentCategory, fileName);
         }
+        _targetAc.CopyFrom(ac);
+
+
+        this._SaveConfigToDisk();
+        this._SaveArticleToDisk(fileName, content);
+        if (_targetAc.GetAllowHistory()) {
+            this._AppendToHistory(ac, constant.M_ACTION_MODIFIED);
+            this._SaveHistoryToDisk();
+        }
+        LOG.Info("article modified. file name:%s", fileName);
+        return true;
     }
 
     Search(searchValue, out) {
@@ -356,11 +347,26 @@ class ArticleHandler {
         return true;
     }
 
-    GetConfig(fileName) { return this.#m_MapFileNameToArticleConfig.get(fileName); }
-    GetCategory(category) { 
+    HasConfig(fileName) {
+        let _ac = this.#m_MapFileNameToArticleConfig.get(fileName);
+        return _ac != null;
+    }
+
+    GetConfig(fileName) {
+        let _ac = this.#m_MapFileNameToArticleConfig.get(fileName);
+        if (_ac) {
+            return _ac.Clone();
+        } else {
+            return null;
+        }
+    }
+
+    CreateConfig(fileName) { return new ArticleConfig(null, fileName); }
+
+    GetCategory(category) {
         if (typeof category != "string") return null;
         return this.#m_MapCategoryToFileName.get(category);
-     }
+    }
     GetHistoryArray() { return this.#m_ArrayHistoryConfig; }
 
     /*

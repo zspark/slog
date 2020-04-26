@@ -25,7 +25,7 @@ class ModuleManage extends Base {
         ArticleHandler.Add(_n, "_rebuild_collected_", "<no title assigned>", "<anonymous>", null, null, false);
       }
     });
-    ArticleHandler.SaveConfigToDisk();
+    ArticleHandler._SaveConfigToDisk();
 
     _obj.contentAfter = IOSystem.ReadFileUTF8(pathes.urlArticleConfig);
     _obj.articleCountAfter = ArticleHandler.GetArticleCount();

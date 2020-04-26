@@ -12,7 +12,7 @@ class ModuleBase {
         return pathes.pathArticle + category + "/" + fileName;
     }
 
-    CreateDefaultResponseObject = function () {
+    CreateDefaultResponseObject() {
         let _obj = {
             resTime: new Date(),
             code: constant.action_code.ACTION_CONFIRMED,
@@ -20,6 +20,15 @@ class ModuleBase {
             msg: "",
         }
         return _obj;
+    }
+
+    CheckFileName(fileName, obj) {
+        if (!fileName) {
+            obj.code = constant.error_code.NO_FILE_NAME;
+            obj.msg = "error, no file name!";
+            return false;
+        }
+        return true;
     }
 
     ComposeURLFormatError(req, res) {

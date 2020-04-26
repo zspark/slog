@@ -22,7 +22,7 @@ function post() {
         //console.log(xhr.response);
         let _res = xhr.response;
         switch(_res.code){
-          case 9999:
+          case 5000:
             msg.innerText = "success, redirect after 1 second.";
             setTimeout(() => {
               window.location.href = _res.redirectURL;
