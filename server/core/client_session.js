@@ -102,8 +102,9 @@ class FileManageSession extends ClientSession {
     }
 }
 
+const s_heartBeatInternal = 20000;
+
 class SessionManager {
-    static #m_heartBeatInternal = 20000;
 
     _StartHearBeatCheck() {
         if (this.#m_connectionCheck != null) return false;
@@ -114,7 +115,7 @@ class SessionManager {
             _map.forEach((value, key, _map) => {
                 let _delta = new Date().getTime() - value.GetLastHeartBeatTime();
                 LOG.Info("delta:%d", _delta);
-                if (_delta > SessionManager.#m_heartBeatInternal) {
+                if (_delta > s_heartBeatInternal) {
                     LOG.Info("delete session");
                     _removeArray.push(key);
                 }
@@ -131,7 +132,7 @@ class SessionManager {
                     this.#m_connectionCheck = null;
                 }
             }
-        }, SessionManager.#m_heartBeatInternal);
+        }, s_heartBeatInternal);
         return true;
     }
 
