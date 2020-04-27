@@ -7,94 +7,86 @@ const Utils = require(pathes.pathCore + "utils");
 const ArticleHandler = require(pathes.pathCore + "article_handler");
 const UserManager = require(pathes.pathCore + "user_manager");
 
+var s_nextID = 0;
+var _GetNextID = function () {
+    return s_nextID++;
+};
+
 class ClientSession {
-    static s_nextID = 0;
-    static GetNextID() {
-        return ClientSession.s_nextID++;
-    };
-
-
-    #ID;
-    #editingAccount;
-    #editingIP;
-    #editingStartTime;
-    #editingLastHeartBeatTime;
-
     _Validate(account, ip) {
-        if (account != this.#editingAccount) return false;
-        if (ip != this.#editingIP) return false;
+        if (account != this.editingAccount) return false;
+        if (ip != this.editingIP) return false;
         return true;
     }
 
     constructor(account, ip) {
-        this.#ID = ClientSession.GetNextID();
-        this.#editingAccount = account;
-        this.#editingIP = ip;
-        this.#editingStartTime = new Date();
-        this.#editingLastHeartBeatTime = new Date().getTime();
+        this.ID = _GetNextID();
+        this.editingAccount = account;
+        this.editingIP = ip;
+        this.editingStartTime = new Date();
+        this.editingLastHeartBeatTime = new Date().getTime();
     }
 
     GetLastHeartBeatTime() {
-        return this.#editingLastHeartBeatTime;
+        return this.editingLastHeartBeatTime;
     }
 
     TryUpdateHeartBeatTime(acc, ip) {
         if (this._Validate(acc, ip)) {
-            this.#editingLastHeartBeatTime = new Date().getTime();
+            this.editingLastHeartBeatTime = new Date().getTime();
             return true;
         }
         return false;
     }
 
     GetID() {
-        return this.#ID;
+        return this.ID;
     }
 };
 
 class EditSession extends ClientSession {
 
-    #m_articleConfig;
     constructor(acc, ip, fileName) {
         super(acc, ip);
 
-        this.#m_articleConfig = ArticleHandler.GetConfig(fileName);
-        if (!this.#m_articleConfig) {
-            this.#m_articleConfig = ArticleHandler.CreateConfig(fileName);
+        this.m_articleConfig = ArticleHandler.GetConfig(fileName);
+        if (!this.m_articleConfig) {
+            this.m_articleConfig = ArticleHandler.CreateConfig(fileName);
         }
     };
 
     Delete() {
-        ArticleHandler.Delete(this.#m_articleConfig);
+        ArticleHandler.Delete(this.m_articleConfig);
     }
 
     Save(content) {
-        if (!ArticleHandler.Add(this.#m_articleConfig, content)) {
-            ArticleHandler.Modify(this.#m_articleConfig, content);
+        if (!ArticleHandler.Add(this.m_articleConfig, content)) {
+            ArticleHandler.Modify(this.m_articleConfig, content);
         }
     }
 
-    GetFileName() { return this.#m_articleConfig.GetFileName(); }
-    GetTitle() { return this.#m_articleConfig.GetTitle(); }
-    GetAuthor() { return this.#m_articleConfig.GetAuthor(); }
-    GetCategory() { return this.#m_articleConfig.GetCategory(); }
-    GetLayout() { return this.#m_articleConfig.GetLayout(); }
-    GetAllowHistory() { return this.#m_articleConfig.GetAllowHistory(); }
-    GetSecret() { return this.#m_articleConfig.GetSecret(); }
+    GetFileName() { return this.m_articleConfig.GetFileName(); }
+    GetTitle() { return this.m_articleConfig.GetTitle(); }
+    GetAuthor() { return this.m_articleConfig.GetAuthor(); }
+    GetCategory() { return this.m_articleConfig.GetCategory(); }
+    GetLayout() { return this.m_articleConfig.GetLayout(); }
+    GetAllowHistory() { return this.m_articleConfig.GetAllowHistory(); }
+    GetSecret() { return this.m_articleConfig.GetSecret(); }
     GetContent() {
-        const _fileURL = pathes.pathArticle + this.#m_articleConfig.GetFileName();
+        const _fileURL = pathes.pathArticle + this.m_articleConfig.GetFileName();
         let _c = IOSystem.ReadFileUTF8(_fileURL);
         return _c == null ? "" : _c;
     }
 
-    SetTitle(v) { this.#m_articleConfig.SetTitle(v);}
-    SetAuthor(v) { this.#m_articleConfig.SetAuthor(v);}
-    SetCategory(v) { this.#m_articleConfig.SetCategory(v);}
-    SetLayout(v) { this.#m_articleConfig.SetLayout(v);}
-    SetAllowHistory(b) { this.#m_articleConfig.SetAllowHistory(b);}
-    SetSecret(b) { this.#m_articleConfig.SetSecret(b);}
+    SetTitle(v) { this.m_articleConfig.SetTitle(v);}
+    SetAuthor(v) { this.m_articleConfig.SetAuthor(v);}
+    SetCategory(v) { this.m_articleConfig.SetCategory(v);}
+    SetLayout(v) { this.m_articleConfig.SetLayout(v);}
+    SetAllowHistory(b) { this.m_articleConfig.SetAllowHistory(b);}
+    SetSecret(b) { this.m_articleConfig.SetSecret(b);}
 
     GetID() {
-        return this.#m_articleConfig.GetFileName();
+        return this.m_articleConfig.GetFileName();
     }
 }
 
