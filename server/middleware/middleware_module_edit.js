@@ -10,7 +10,7 @@ const SessionMgr = require(pathes.pathCore + "client_session");
 
 
 class ModuleEdit extends Base {
-    _GetTemplateList = function (firstEle) {
+    _GetTemplateList(firstEle) {
         let _list = [];
         _list.push(firstEle);
         constant.M_TEMPLATE_LIST.forEach(template => {
