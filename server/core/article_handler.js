@@ -117,14 +117,11 @@ class ArticleConfig {
 };
 
 class ArticleHandler {
-    #m_MapFileNameToArticleConfig;
-    #m_MapCategoryToFileName;
-    #m_ArrayHistoryConfig;
     constructor() {
         LOG.Info("[CONSTRUCT] article organizer...");
-        this.#m_MapFileNameToArticleConfig = new Map();
-        this.#m_MapCategoryToFileName = new Map();
-        this.#m_ArrayHistoryConfig = [];
+        this.m_MapFileNameToArticleConfig = new Map();
+        this.m_MapCategoryToFileName = new Map();
+        this.m_ArrayHistoryConfig = [];
 
         if (IOSystem.FileExist(pathes.urlArticleConfig)) {
             LOG.Info("read and parse article config...");
@@ -135,7 +132,7 @@ class ArticleHandler {
             const N = _arr.length;
             for (let i = 0; i < N; ++i) {
                 let _ac = new ArticleConfig(_arr[i], "<no-file-name>");
-                this.#m_MapFileNameToArticleConfig.set(_ac.GetFileName(), _ac);
+                this.m_MapFileNameToArticleConfig.set(_ac.GetFileName(), _ac);
                 this._AppendToCategory(_ac.GetCategory(), _ac.GetFileName());
             }
         }
@@ -149,31 +146,31 @@ class ArticleHandler {
             const N = _arr.length;
             for (let i = 0; i < N; ++i) {
                 let _hc = new HistoryConfig(_arr[i]);
-                this.#m_ArrayHistoryConfig.push(_hc);
+                this.m_ArrayHistoryConfig.push(_hc);
             }
         }
     };
 
     _RemoveFromCategory(category, fileName) {
-        let _arr = this.#m_MapCategoryToFileName.get(category);
+        let _arr = this.m_MapCategoryToFileName.get(category);
         if (_arr) {
             Utils.DeleteFromArray(_arr, fileName);
-            if (_arr.length <= 0) this.#m_MapCategoryToFileName.delete(category);
+            if (_arr.length <= 0) this.m_MapCategoryToFileName.delete(category);
         }
     };
 
     _AppendToCategory(category, fileName) {
-        let _arr = this.#m_MapCategoryToFileName.get(category);
+        let _arr = this.m_MapCategoryToFileName.get(category);
         if (!_arr) {
             _arr = [];
-            this.#m_MapCategoryToFileName.set(category, _arr);
+            this.m_MapCategoryToFileName.set(category, _arr);
         }
         _arr.push(fileName);
     }
 
     _AppendToHistory(ac, action) {
-        if (this.#m_ArrayHistoryConfig.length > 0) {
-            let _topElem = this.#m_ArrayHistoryConfig[0];
+        if (this.m_ArrayHistoryConfig.length > 0) {
+            let _topElem = this.m_ArrayHistoryConfig[0];
             if (ac.GetFileName() == _topElem.GetFileName()) {
                 if (action == _topElem.GetAction()) {
                     _topElem.SetTime(new Date().toISOString());
@@ -186,9 +183,9 @@ class ArticleHandler {
         _elem.SetFileName(ac.GetFileName());
         _elem.SetTitle(ac.GetTitle());
         _elem.SetAction(action);
-        this.#m_ArrayHistoryConfig.unshift(_elem);
-        if (this.#m_ArrayHistoryConfig.length > 50) {
-            this.#m_ArrayHistoryConfig.pop();
+        this.m_ArrayHistoryConfig.unshift(_elem);
+        if (this.m_ArrayHistoryConfig.length > 50) {
+            this.m_ArrayHistoryConfig.pop();
         }
         return true;
     }
@@ -196,7 +193,7 @@ class ArticleHandler {
     _SaveHistoryToDisk() {
         let _config = JSON.parse(JSON.stringify(default_history_json));// copy
         let _configArticles = _config[constant.M_HISTORY];
-        this.#m_ArrayHistoryConfig.forEach((hc, i, arr) => {
+        this.m_ArrayHistoryConfig.forEach((hc, i, arr) => {
             _configArticles.push(hc.ToObject());
         });
 
@@ -231,7 +228,7 @@ class ArticleHandler {
     _SaveConfigToDisk() {
         let _config = JSON.parse(JSON.stringify(default_summary_json));// copy
         let _configArticles = _config[constant.M_ARTICLES];
-        this.#m_MapFileNameToArticleConfig.forEach((ac, k, m) => {
+        this.m_MapFileNameToArticleConfig.forEach((ac, k, m) => {
             _configArticles.push(ac.ToObject());
         });
 
@@ -252,7 +249,7 @@ class ArticleHandler {
         if (this.HasConfig(fileName)) return false;
 
         let _articleConfig = ac.Clone();
-        this.#m_MapFileNameToArticleConfig.set(fileName, _articleConfig);
+        this.m_MapFileNameToArticleConfig.set(fileName, _articleConfig);
         this._AppendToCategory(_articleConfig.GetCategory(), fileName);
 
         this._SaveConfigToDisk();
@@ -272,7 +269,7 @@ class ArticleHandler {
         if (!this.HasConfig(fileName)) return false;
 
         this._RemoveFromCategory(ac.GetCategory(), fileName);
-        this.#m_MapFileNameToArticleConfig.delete(fileName);
+        this.m_MapFileNameToArticleConfig.delete(fileName);
         this._SaveConfigToDisk();
         this._DeleteArticleFromDisk(fileName);
         this._AppendToHistory(ac, constant.M_ACTION_DELETE);
@@ -287,7 +284,7 @@ class ArticleHandler {
         const fileName = ac.GetFileName();
         if(!this.HasConfig(fileName))return false;
 
-        let _targetAc = this.#m_MapFileNameToArticleConfig.get(fileName);
+        let _targetAc = this.m_MapFileNameToArticleConfig.get(fileName);
         const currentCategory = ac.GetCategory();
         const lastCategory = _targetAc.GetCategory();
         if (lastCategory != currentCategory) {
@@ -332,7 +329,7 @@ class ArticleHandler {
             return true;
         }
 
-        this.#m_MapFileNameToArticleConfig.forEach((_obj, k, m) => {
+        this.m_MapFileNameToArticleConfig.forEach((_obj, k, m) => {
             let _range = [];
 
             if (_test(_obj.GetFileName(), _range)) {
@@ -348,12 +345,12 @@ class ArticleHandler {
     }
 
     HasConfig(fileName) {
-        let _ac = this.#m_MapFileNameToArticleConfig.get(fileName);
+        let _ac = this.m_MapFileNameToArticleConfig.get(fileName);
         return _ac != null;
     }
 
     GetConfig(fileName) {
-        let _ac = this.#m_MapFileNameToArticleConfig.get(fileName);
+        let _ac = this.m_MapFileNameToArticleConfig.get(fileName);
         if (_ac) {
             return _ac.Clone();
         } else {
@@ -365,14 +362,14 @@ class ArticleHandler {
 
     GetCategory(category) {
         if (typeof category != "string") return null;
-        return this.#m_MapCategoryToFileName.get(category);
+        return this.m_MapCategoryToFileName.get(category);
     }
-    GetHistoryArray() { return this.#m_ArrayHistoryConfig; }
+    GetHistoryArray() { return this.m_ArrayHistoryConfig; }
 
     /*
     GetArticleCount() {
         let _n = 0;
-        for (let fileName in this.#m_MapFileNameToArticleConfig) {
+        for (let fileName in this.m_MapFileNameToArticleConfig) {
             ++_n;
         }
         return _n;
