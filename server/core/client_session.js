@@ -107,11 +107,11 @@ const s_heartBeatInternal = 20000;
 class SessionManager {
 
     _StartHearBeatCheck() {
-        if (this.#m_connectionCheck != null) return false;
+        if (this.m_connectionCheck != null) return false;
 
         let _removeArray = [];
-        let _map = this.#m_mapEditSession;
-        this.#m_connectionCheck = setInterval(() => {
+        let _map = this.m_mapEditSession;
+        this.m_connectionCheck = setInterval(() => {
             _map.forEach((value, key, _map) => {
                 let _delta = new Date().getTime() - value.GetLastHeartBeatTime();
                 LOG.Info("delta:%d", _delta);
@@ -127,39 +127,36 @@ class SessionManager {
             _removeArray.length = 0;
 
             if (_map.size <= 0) {
-                if (this.#m_connectionCheck != null) {
-                    clearInterval(this.#m_connectionCheck);
-                    this.#m_connectionCheck = null;
+                if (this.m_connectionCheck != null) {
+                    clearInterval(this.m_connectionCheck);
+                    this.m_connectionCheck = null;
                 }
             }
         }, s_heartBeatInternal);
         return true;
     }
 
-    #m_mapEditSession;
-    #m_connectionCheck;
-
     constructor() {
-        this.#m_mapEditSession = new Map();
-        this.#m_connectionCheck = null;
+        this.m_mapEditSession = new Map();
+        this.m_connectionCheck = null;
     }
 
     CreateEditSession(req, res) {
         /// TODO:create session instance according to user's rights;
         let _es = new EditSession(Utils.GetUserAccount(req), Utils.GetClientIP(req), req.query.n);
-        this.#m_mapEditSession.set(_es.GetID(), _es);
+        this.m_mapEditSession.set(_es.GetID(), _es);
         this._StartHearBeatCheck();
         return _es;
     }
 
     Delete(session) {
         if (session) {
-            this.#m_mapEditSession.delete(session.GetID());
+            this.m_mapEditSession.delete(session.GetID());
         }
     }
 
     Get(sessionID) {
-        let _es = this.#m_mapEditSession.get(sessionID);
+        let _es = this.m_mapEditSession.get(sessionID);
         return _es ? _es : null;
     }
 }
