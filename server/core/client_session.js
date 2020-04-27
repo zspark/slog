@@ -8,9 +8,9 @@ const ArticleHandler = require(pathes.pathCore + "article_handler");
 const UserManager = require(pathes.pathCore + "user_manager");
 
 class ClientSession {
-    static #s_nextID = 0;
+    static s_nextID = 0;
     static GetNextID() {
-        return ClientSession.#s_nextID++;
+        return ClientSession.s_nextID++;
     };
 
 
