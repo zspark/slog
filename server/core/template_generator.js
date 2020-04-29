@@ -197,7 +197,7 @@ var GenerateHTMLHistory = function (arrList) {
     return _GenerateHTML(_HTMLhead, _HTMLbody);
 }
 
-var GenerateHTMLEdit = function (content, title, author, category, allowHistory, templateOptions) {
+var GenerateHTMLEdit = function (content, title, author, categoryName, allowHistory, templateOptions) {
     let _GenrateHeader_edit = function (arr) {
         let _out1 =
             `<div id="float_buttons">
@@ -209,7 +209,7 @@ var GenerateHTMLEdit = function (content, title, author, category, allowHistory,
 
         <span><input type="text" id="inputTitle" style="width:300px;" placeholder="<title>" value="${title}" /></span>
         <span><input type="text" id="inputAuthor" style="width:100px;" placeholder="<author>" value="${author}" /></span>
-        <span><input type="text" id="inputCategory" style="width:100px;" placeholder="<category>" value="${category}" /></span>
+        <span><input type="text" id="inputCategory" style="width:100px;" placeholder="<category name>" value="${categoryName}" /></span>
         <span><input type="text" id="inputUploadFolder" style="width:100px;" placeholder="<image>" value="uploadFolder" /></span>
 
         <select id="slcTemplate">`;

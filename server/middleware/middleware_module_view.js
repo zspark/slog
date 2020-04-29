@@ -75,7 +75,7 @@ class ModuleView extends Base {
         const _list = ArticleHandler.GetCategory(req.query.c);
         if (_list) {
             let _arrObj = [];
-            _list.map(_fileName => {
+            _list.ForEachFileName( _fileName => {
                 const _ac = ArticleHandler.GetConfig(_fileName);
                 _arrObj.push({
                     fileName: _ac.GetFileName(),

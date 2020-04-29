@@ -37,6 +37,7 @@ const constant = {
   M_LAYOUT: "layout",
   M_ALLOW_HISTORY: "allowHistory",
   M_SECRET: "secret",
+  M_PARSER: "parser",
   M_STYLE: "style",
   M_TITLE: "title",
   M_TIME: "time",
@@ -47,6 +48,8 @@ const constant = {
   M_DEFAULT_TITLE: "no-title",
   M_DEFAULT_AUTHOR: "anonymous",
   M_DEFAULT_CATEGORY: "default",
+  M_DEFAULT_CATEGORY_NAME: "default",
+  M_DEFAULT_PARSER: "marked",
 
   M_COMMAND: "command",
   M_COMMAND_REBUILD_SUMMARY: "rebuildSummary",
@@ -67,6 +70,7 @@ const constant = {
   M_HISTORY: "history",
 
   M_CATEGORY: "category",
+  M_CATEGORY_NAME: "categoryName",
   M_CATEGORY_DEFAULT: "default",
   M_CATEGORY_CG: "CG",
   M_CATEGORY_PHILOSOPHY: "philosophy",

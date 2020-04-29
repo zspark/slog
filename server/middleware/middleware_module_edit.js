@@ -46,7 +46,7 @@ class ModuleEdit extends Base {
             _es.GetContent(),
             _es.GetTitle(),
             _es.GetAuthor(),
-            _es.GetCategory(),
+            _es.GetCategoryName(),
             _es.GetAllowHistory(),
             this._GetTemplateList(_es.GetLayout())
         );
@@ -81,7 +81,7 @@ class ModuleEdit extends Base {
         let _Save = function () {
             _es.SetTitle(_jsonObj.title);
             _es.SetAuthor(_jsonObj.author);
-            _es.SetCategory(_jsonObj.category);
+            _es.SetCategoryName(_jsonObj.categoryName);
             _es.SetLayout(_jsonObj.template);
             _es.SetAllowHistory(_jsonObj.allowHistory);
             _es.Save(_jsonObj.content);

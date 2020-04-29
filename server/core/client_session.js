@@ -68,7 +68,7 @@ class EditSession extends ClientSession {
     GetFileName() { return this.m_articleConfig.GetFileName(); }
     GetTitle() { return this.m_articleConfig.GetTitle(); }
     GetAuthor() { return this.m_articleConfig.GetAuthor(); }
-    GetCategory() { return this.m_articleConfig.GetCategory(); }
+    GetCategoryName() { return this.m_articleConfig.GetCategoryName(); }
     GetLayout() { return this.m_articleConfig.GetLayout(); }
     GetAllowHistory() { return this.m_articleConfig.GetAllowHistory(); }
     GetSecret() { return this.m_articleConfig.GetSecret(); }
@@ -80,7 +80,7 @@ class EditSession extends ClientSession {
 
     SetTitle(v) { this.m_articleConfig.SetTitle(v);}
     SetAuthor(v) { this.m_articleConfig.SetAuthor(v);}
-    SetCategory(v) { this.m_articleConfig.SetCategory(v);}
+    SetCategoryName(v) { this.m_articleConfig.SetCategoryName(v);}
     SetLayout(v) { this.m_articleConfig.SetLayout(v);}
     SetAllowHistory(b) { this.m_articleConfig.SetAllowHistory(b);}
     SetSecret(b) { this.m_articleConfig.SetSecret(b);}
