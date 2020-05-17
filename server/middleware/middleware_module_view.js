@@ -3,12 +3,12 @@ const MARKED = require("marked");
 const common = require("../core/common");
 const pathes = common.pathes;
 const constant = common.constant;
-var Base = require(pathes.pathMW + "middleware_module_base");
 const LOG = require(pathes.pathCore + 'logger');
 const Utils = require(pathes.pathCore + "utils");
 const ArticleHandler = require(pathes.pathCore + "article_handler");
 const IOSystem = require(pathes.pathCore + "io_system");
 const TPLGEN = require(pathes.pathCore + "template_generator");
+var Base = require(pathes.pathMW + "middleware_module_base");
 
 class ModuleView extends Base {
     constructor() {
@@ -42,22 +42,18 @@ class ModuleView extends Base {
         return fileName.substring(_li + 1);
     }
 
-    ComposeFile404(req, res) {
-        this.ComposeInfoboard(req, res, `This file is NOT exist,click to <a href="/edit?n=${req.query.n}">create.</a>`);
-    };
-
     ComposeArticle(req, res) {
         const _fileName = req.query.n;
-        let _content = IOSystem.ReadFileUTF8(pathes.pathArticle + _fileName);
-        if (_content == null) { _content = ""; }
+        if (!ArticleHandler.HasConfig(_fileName)) return false;
 
+        const _ac = ArticleHandler.GetConfig(_fileName);
+        const _content = _ac.GetContent();
         MARKED(_content, (err, HTMLcontent) => {
             if (err) {
                 const _info = `marked parse error! file name: ${_fileName}`;
                 LOG.Error(_info);
                 this.ComposeInfoboard(req, res, _info);
             } else {
-                const _ac = ArticleHandler.GetConfig(_fileName);
                 let _html = TPLGEN.GenerateHTMLArticle(
                     _ac.GetLayout(),
                     _fileName,
@@ -86,7 +82,7 @@ class ModuleView extends Base {
             let _html = TPLGEN.GenerateHTMLArticleList(_arrObj);
             res.end(_html);
         } else {
-            this.ComposeInfoboard(req, res, `There is NO such category name. go back <a href="/">home.</a>`);
+            this.ComposeInfoboard(req, res, `There is NO such category name:${req.query.c}. go back <a href="/">home.</a>`);
         }
     };
 
@@ -128,6 +124,7 @@ class ModuleView extends Base {
 
 
 /**
+ * this is a bridge pattern;
  * this middleware handles URLs such as:
  * /view?c=<category>&n=<file name>&f=[true|false]
  */
@@ -137,7 +134,7 @@ function Init() {
     let get = function (req, res) {
         const _fileName = req.query.n;
         if (_fileName) {
-            if (ArticleHandler.GetConfig(_fileName)) {
+            if (ArticleHandler.HasConfig(_fileName)) {
                 mw.ComposeArticle(req, res);
             } else {
                 mw.ComposeFile404(req, res);
@@ -145,8 +142,8 @@ function Init() {
             return;
         }
 
-        const _category = req.query.c;
-        if (_category) {
+        const _categoryName = req.query.c;
+        if (_categoryName) {
             mw.ComposeArticleList(req, res);
         } else {
             mw.ComposeURLFormatError(req, res);
@@ -154,7 +151,7 @@ function Init() {
     };
 
     let getFrontPage = function (req, res) {
-        let _url = Utils.MakeArticleURL(constant.M_HOME);
+        let _url = Utils.MakeArticleURL("home");
         res.redirect(_url);
     };
 

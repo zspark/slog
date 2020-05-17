@@ -36,11 +36,11 @@ var GetQueryValues = function (req) {
   const url = URL.parse(req.url);
   if (url.query) {
     const _q = QUERYSTRING.parse(url.query);
-    _obj[constant.M_FILE_NAME]=_q['n'];
-    _obj[constant.M_COMMAND]=_q['cmd'];
-    _obj[constant.M_CATEGORY]=_q['c'];
-    _obj[constant.M_MODULE]=_q['m'];
-    _obj[constant.M_ACTION]=_q['a'];
+    _obj.fileName=_q['n'];
+    _obj.command=_q['cmd'];
+    _obj.category=_q['c'];
+    _obj.module=_q['m'];
+    _obj.action=_q['a'];
   }
   return _obj;
 };

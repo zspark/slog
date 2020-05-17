@@ -5,19 +5,14 @@ const LOG = require(pathes.pathCore + 'logger');
 const Utils = require(pathes.pathCore + "utils");
 const IOSystem = require(pathes.pathCore + 'io_system');
 
-const default_summary_json = {
+const default_config_json = {
     "version": "1.0.0",
-    "articles": [],
-}
-
-const default_history_json = {
-    "version": "1.0.0",
-    "history": [],
+    "content": [],
 }
 
 class Category {
     constructor(name) {
-        this._categoryName = name;
+        this.categoryName = name;
         this._vecFileNames = [];
     }
 
@@ -25,7 +20,7 @@ class Category {
         if (typeof fileName != "string") return false;
         let idx = this._vecFileNames.indexOf(fileName);
         if (idx >= 0) return false;
-        this._vecFileNames.push(fileName);
+        this._vecFileNames.unshift(fileName);/// need to set at top for recent display.
         return true;
     }
 
@@ -37,12 +32,10 @@ class Category {
         return true;
     }
 
-    Size() {
-        return this._vecFileNames.length;
-    }
+    Size() { return this._vecFileNames.length; }
 
-    ForEachFileName(fn){
-        if(fn instanceof Function){
+    ForEachFileName(fn) {
+        if (fn instanceof Function) {
             this._vecFileNames.forEach((e, i, v) => {
                 fn(e);
             });
@@ -52,111 +45,101 @@ class Category {
     }
 };
 
-class HistoryConfig {
-    constructor(obj) {
-        this._fileName = obj ? obj.fileName : constant.M_DEFAULT_FILE_NAME;
-        this._title = obj ? obj.title : constant.M_DEFAULT_TITLE;
-        this._action = obj ? obj.action : "";
-        this._time = obj ? obj.time : new Date().toISOString();
-    }
-
-    ToObject() {
-        let _obj = {
-            fileName: this._fileName,
-            title: this._title,
-            action: this._action,
-            time: this._time,
-        };
-        return _obj;
-    }
-
-    GetFileName() { return this._fileName; }
-    SetFileName(v) { this._fileName = v; }
-    GetTitle() { return this._title; }
-    SetTitle(v) { this._title = v; }
-    GetAction() { return this._action; }
-    SetAction(v) { this._action = v; }
-    GetTime() { return this._time; }
-    GetTimeString() { return new Date(this._time).toISOString(); }
-    SetTime(v) { this._time = v; }
-};
-
-class ArticleConfig {
-    constructor(obj, fileName) {
-        if (obj instanceof ArticleConfig) {
-            this.CopyFrom(obj);
-        } else {
-            this._fileName = obj ? obj[constant.M_FILE_NAME] : fileName;
-            this._title = obj ? obj[constant.M_TITLE] : constant.M_DEFAULT_TITLE;
-            this._createTime = obj ? obj[constant.M_CREATE_TIME] : new Date().toISOString();
-            this._modifyTime = obj ? obj[constant.M_MODIFY_TIME] : new Date().toISOString();
-            this._author = obj ? obj[constant.M_AUTHOR] : constant.M_DEFAULT_AUTHOR;
-            this._categoryName = obj ? obj[constant.M_CATEGORY] : constant.M_DEFAULT_CATEGORY_NAME;
-            this._layout = obj ? obj[constant.M_LAYOUT] : constant.M_TEMPLATE_DEFAULT;
-            this._allowHistory = obj ? obj[constant.M_ALLOW_HISTORY] : true;
-            this._secret = obj ? obj[constant.M_SECRET] : false;
-            this._parser = obj ? obj[constant.M_PARSER] : constant.M_DEFAULT_PARSER;
+/**
+ * we save using toISOString,
+ * we display using toDateString,
+ */
+class History {
+    constructor(v) {
+        if (typeof v == "string") {
+            this.fileName = v;
+            this.title = constant.M_DEFAULT_TITLE;
+            this.action = constant.action_string.UNKNOWN;
+            this.time = new Date();
+        } else if (v instanceof Object) {
+            this.fileName = v.fileName;
+            this.title = v.title;
+            this.action = v.action;
+            this.time = new Date(v.time);
+        }else{ 
+            LOG.Error(`Wrong constructor parameter!`);
         }
     }
 
     ToObject() {
-        let _obj = {
-            fileName: this._fileName,
-            title: this._title,
-            createTime: this._createTime,
-            modifyTime: this._modifyTime,
-            author: this._author,
-            category: this._categoryName,
-            layout: this._layout,
-            allowHistory: this._allowHistory,
-            secret: this._secret,
-            parser: this._parser,
-        };
-        return _obj;
+        return JSON.parse(JSON.stringify(this));
+    }
+
+    GetFileName() { return this.fileName; }
+    GetTitle() { return this.title; }
+    SetTitle(v) { this.title = v; }
+    GetAction() { return this.action; }
+    SetAction(v) { this.action = v; }
+    GetTime() { return this.time; }
+    GetTimeString() { return this.time.toDateString(); }
+    UpdateTime() {
+        this.time = new Date(v);
+    }
+};
+
+class Article {
+    constructor(v, creatorAccount) {
+        if (typeof v == "string" && typeof creatorAccount == "string") {
+            this.FromObject(null);
+            this.fileName = v;
+            this.creatorAccount = creatorAccount;
+        } else if (v instanceof Object) {
+            this.FromObject(v);
+        } else {
+            LOG.Error(`Wrong constructor parameter!`);
+        }
     }
 
     Clone() {
-        let _ac = new ArticleConfig(this);
-        return _ac;
+        let _tmp = new Article(this);
+        return _tmp;
     }
 
-    CopyFrom(ac) {
-        if (ac instanceof ArticleConfig) {
-            this._fileName = ac._fileName;
-            this._title = ac._title;
-            this._createTime = ac._createTime;
-            this._modifyTime = ac._modifyTime;
-            this._author = ac._author;
-            this._categoryName = ac._categoryName;
-            this._layout = ac._layout;
-            this._allowHistory = ac._allowHistory;
-            this._secret = ac._secret;
-            this._parser = ac._parser;
-        }
+    ToObject() {
+        return JSON.parse(JSON.stringify(this));
     }
 
-    GetFileName() { return this._fileName; }
-    GetTitle() { return this._title; }
-    GetAuthor() { return this._author; }
-    GetCategoryName() { return this._categoryName; }
-    GetLayout() { return this._layout; }
-    GetAllowHistory() { return this._allowHistory; }
-    GetSecret() { return this._secret; }
-    GetCreateTime() { return this._createTime; }
-    GetCreateTimeString() { return new Date(this._createTime).toDateString(); }
-    GetModifyTime() { return this._modifyTime; }
-    GetModifyTimeString() { return new Date(this._modifyTime).toDateString(); }
-    GetParser() { return this._parser; }
+    FromObject(v) {
+        this.fileName = v ? v.fileName : "";
+        this.creatorAccount = v ? v.creatorAccount : "";
+        this.title = v ? v.title : constant.M_DEFAULT_TITLE;
+        this.createTime = v ? new Date(v.createTime) : new Date();
+        this.modifyTime = v ? new Date(v.modifyTime) : new Date();
+        this.author = v ? v.author : constant.M_DEFAULT_AUTHOR;
+        this.category= v ? v.category : constant.M_DEFAULT_CATEGORY_NAME;
+        this.layout = v ? v.layout : constant.M_TEMPLATE_DEFAULT;
+        this.allowHistory = v ? v.allowHistory : true;
+        this.secret = v ? v.secret : false;
+        this.parser = null;
+    }
 
-    SetTitle(t) { this._title = t; }
-    SetAuthor(v) { this._author = v; }
-    SetCategoryName(v) { this._categoryName = v; }
-    SetLayout(layout) { this._layout = layout; }
-    SetAllowHistory(b) { this._allowHistory = b; }
-    SetSecret(b) { this._secret = b; }
-    SetModifyTime(v) { this._modifyTime = v; }
-    SetModifyTime(v) { this._modifyTime = v; }
-
+    GetFileName() { return this.fileName; }
+    GetTitle() { return this.title; }
+    SetTitle(v) { this.title = v; }
+    GetAuthor() { return this.author; }
+    SetAuthor(v) { this.author = v; }
+    GetCreatorAccount() { return this.creatorAccount; }
+    GetCategoryName() { return this.category; }
+    SetCategoryName(v) { this.category= v; }
+    GetLayout() { return this.layout; }
+    SetLayout(v) { this.layout = v; }
+    GetAllowHistory() { return this.allowHistory; }
+    SetAllowHistory(v) { this.allowHistory = v; }
+    GetSecret() { return this.secret; }
+    SetSecret(v) { this.secret = v; }
+    GetCreateTime() { return this.createTime; }
+    GetCreateTimeString() { return this.createTime.toDateString(); }
+    GetModifyTime() { return this.modifyTime; }
+    GetModifyTimeString() { return this.modifyTime.toDateString(); }
+    GetContent() {
+        let _content = IOSystem.ReadFileUTF8(pathes.pathArticle + this.fileName);
+        return _content == null ? "" : _content;
+    }
 };
 
 class ArticleHandler {
@@ -168,13 +151,12 @@ class ArticleHandler {
 
         if (IOSystem.FileExist(pathes.urlArticleConfig)) {
             LOG.Info("read and parse article config...");
-            const _data = IOSystem.ReadFileUTF8(pathes.urlArticleConfig);
-            let _configJson = JSON.parse(_data);
-            let _arr = _configJson[constant.M_ARTICLES];
+            let _configJson = JSON.parse(IOSystem.ReadFileUTF8(pathes.urlArticleConfig));
+            let _arr = _configJson.content;
 
             const N = _arr.length;
             for (let i = 0; i < N; ++i) {
-                let _ac = new ArticleConfig(_arr[i], "<no-file-name>");
+                let _ac = new Article(_arr[i]);
                 this.m_mapArticle.set(_ac.GetFileName(), _ac);
                 this._AppendToCategory(_ac.GetCategoryName(), _ac.GetFileName());
             }
@@ -182,25 +164,25 @@ class ArticleHandler {
 
         if (IOSystem.FileExist(pathes.urlHistoryConfig)) {
             LOG.Info("read and parse history config...");
-            const _data = IOSystem.ReadFileUTF8(pathes.urlHistoryConfig);
-            let _configJson = JSON.parse(_data);
-            let _arr = _configJson[constant.M_HISTORY];
+            let _configJson = JSON.parse(IOSystem.ReadFileUTF8(pathes.urlHistoryConfig));
+            let _arr = _configJson.content;
 
             const N = _arr.length;
             for (let i = 0; i < N; ++i) {
-                let _hc = new HistoryConfig(_arr[i]);
-                this.m_arrayHistory.push(_hc);
+                let _h = new History(_arr[i]);
+                this.m_arrayHistory.push(_h);
             }
         }
     };
 
     _RemoveFromCategory(categoryName, fileName) {
         let _category = this.m_mapCategory.get(categoryName);
-        if (_category) {
-            if(_category.Remove(fileName)){
-                if (_category.Size() <= 0) this.m_mapCategory.delete(categoryName);
-            }
+        if (!_category) return false;
+        let _b=_category.Remove(fileName);
+        if (_b){
+            if (_category.Size() <= 0) this.m_mapCategory.delete(categoryName);
         }
+        return _b;
     };
 
     _AppendToCategory(categoryName, fileName) {
@@ -209,85 +191,72 @@ class ArticleHandler {
             _category = new Category(categoryName);
             this.m_mapCategory.set(categoryName, _category);
         }
-        _category.Add(fileName);
+        return _category.Add(fileName);
     }
 
     _AppendToHistory(ac, action) {
+        /// check last history
         if (this.m_arrayHistory.length > 0) {
             let _topElem = this.m_arrayHistory[0];
             if (ac.GetFileName() == _topElem.GetFileName()) {
                 if (action == _topElem.GetAction()) {
-                    _topElem.SetTime(new Date().toISOString());
-                    return false;
+                    _topElem.SetTime(new Date());
+                    return true;
                 }
             }
         }
 
-        let _elem = new HistoryConfig(null);
-        _elem.SetFileName(ac.GetFileName());
-        _elem.SetTitle(ac.GetTitle());
-        _elem.SetAction(action);
-        this.m_arrayHistory.unshift(_elem);
+        let _h = new History(ac.GetFileName());
+        _h.SetTitle(ac.GetTitle());
+        _h.SetAction(action);
+        this.m_arrayHistory.unshift(_h);
         if (this.m_arrayHistory.length > 50) {
             this.m_arrayHistory.pop();
         }
         return true;
     }
 
-    _SaveHistoryToDisk() {
-        let _config = JSON.parse(JSON.stringify(default_history_json));// copy
-        let _configArticles = _config[constant.M_HISTORY];
-        this.m_arrayHistory.forEach((hc, i, arr) => {
-            _configArticles.push(hc.ToObject());
+    _SaveConfigToDisk(configs, url) {
+        let _config = JSON.parse(JSON.stringify(default_config_json));// copy
+        let _content = _config.content;
+        configs.forEach((hc, i, arr) => {
+            _content.push(hc.ToObject());
         });
 
-        let configStr = JSON.stringify(_config);
-        var b = IOSystem.WriteFileUTF8(pathes.urlHistoryConfig, configStr);
-        if (b) {
-            LOG.Info("save history config to disk successfully.");
+        let _configStr = JSON.stringify(_config);
+        var _b = IOSystem.WriteFileUTF8(url, _configStr);
+        if (_b) {
+            LOG.Info("save config to disk successfully.");
         } else {
-            LOG.Error("save history config to disk failed!");
+            LOG.Error("save config to disk failed!");
         }
+        return _b;
     }
 
     _DeleteArticleFromDisk(fileName) {
-        let b = IOSystem.DeleteFile(pathes.pathArticle + fileName);
-        if (b) {
+        let _b = IOSystem.DeleteFile(pathes.pathArticle + fileName);
+        if (_b) {
             LOG.Info("article deleted, file name:%s", fileName);
         } else {
             LOG.Error("article deleting failed! file name:%s", fileName);
         }
+        return _b;
     }
 
     _SaveArticleToDisk(fileName, content, cb) {
-        var b = IOSystem.WriteFileUTF8(pathes.pathArticle + fileName, content);
-        if (b) {
+        var _b = IOSystem.WriteFileUTF8(pathes.pathArticle + fileName, content);
+        if (_b) {
             LOG.Info("article saved successfully. file name:%s", fileName);
         } else {
             LOG.Error("article saving failure! file name:%s", fileName);
         }
-        if (cb) cb(b);
+        if (cb) cb(_b);
+        return _b;
     }
-
-    _SaveConfigToDisk() {
-        let _config = JSON.parse(JSON.stringify(default_summary_json));// copy
-        let _configArticles = _config[constant.M_ARTICLES];
-        this.m_mapArticle.forEach((ac, k, m) => {
-            _configArticles.push(ac.ToObject());
-        });
-
-        let configStr = JSON.stringify(_config);
-        var b = IOSystem.WriteFileUTF8(pathes.urlArticleConfig, configStr);
-        if (b) {
-            LOG.Info("save article config content to disk successfully.");
-        } else {
-            LOG.Error("save article config content to disk failed!");
-        }
-    };
 
     Add(ac, content) {
         if (!ac) return false;
-        if (!ac instanceof ArticleConfig) return false;
+        if (!ac instanceof Article) return false;
 
         const fileName = ac.GetFileName();
         if (this.HasConfig(fileName)) return false;
@@ -296,37 +265,37 @@ class ArticleHandler {
         this.m_mapArticle.set(fileName, _articleConfig);
         this._AppendToCategory(_articleConfig.GetCategoryName(), fileName);
 
-        this._SaveConfigToDisk();
+        this._SaveConfigToDisk(this.m_mapArticle,pathes.urlArticleConfig);
         this._SaveArticleToDisk(fileName, content);
         if (_articleConfig.GetAllowHistory()) {
-            this._AppendToHistory(_articleConfig, constant.M_ACTION_NEW);
-            this._SaveHistoryToDisk();
+            this._AppendToHistory(_articleConfig, constant.action_string.NEW);
+            this._SaveConfigToDisk(this.m_arrayHistory,pathes.urlHistoryConfig);
         }
         return true;
     };
 
     Delete(ac) {
         if (!ac) return false;
-        if (!ac instanceof ArticleConfig) return false;
+        if (!ac instanceof Article) return false;
 
         const fileName = ac.GetFileName();
         if (!this.HasConfig(fileName)) return false;
 
         this._RemoveFromCategory(ac.GetCategoryName(), fileName);
         this.m_mapArticle.delete(fileName);
-        this._SaveConfigToDisk();
+        this._SaveConfigToDisk(this.m_mapArticle,pathes.urlArticleConfig);
         this._DeleteArticleFromDisk(fileName);
-        this._AppendToHistory(ac, constant.M_ACTION_DELETE);
-        this._SaveHistoryToDisk();
+        this._AppendToHistory(ac, constant.action_string.DELETE);
+        this._SaveConfigToDisk(this.m_arrayHistory, pathes.urlHistoryConfig);
         return true;
     };
 
     Modify(ac, content) {
         if (!ac) return false;
-        if (!ac instanceof ArticleConfig) return false;
+        if (!ac instanceof Article) return false;
 
         const fileName = ac.GetFileName();
-        if(!this.HasConfig(fileName))return false;
+        if (!this.HasConfig(fileName)) return false;
 
         let _targetAc = this.m_mapArticle.get(fileName);
         const currentCategory = ac.GetCategoryName();
@@ -335,14 +304,14 @@ class ArticleHandler {
             this._RemoveFromCategory(lastCategory, fileName);
             this._AppendToCategory(currentCategory, fileName);
         }
-        _targetAc.CopyFrom(ac);
+        _targetAc.FromObject(ac);
 
 
-        this._SaveConfigToDisk();
+        this._SaveConfigToDisk(this.m_mapArticle,pathes.urlArticleConfig);
         this._SaveArticleToDisk(fileName, content);
         if (_targetAc.GetAllowHistory()) {
-            this._AppendToHistory(ac, constant.M_ACTION_MODIFIED);
-            this._SaveHistoryToDisk();
+            this._AppendToHistory(ac, constant.action_string.MODIFIED);
+            this._SaveConfigToDisk(this.m_arrayHistory, pathes.urlHistoryConfig);
         }
         LOG.Info("article modified. file name:%s", fileName);
         return true;
@@ -389,37 +358,39 @@ class ArticleHandler {
     }
 
     HasConfig(fileName) {
-        let _ac = this.m_mapArticle.get(fileName);
-        return _ac != null;
+        return this.m_mapArticle.has(fileName);
     }
 
     GetConfig(fileName) {
+        if (typeof fileName != "string") return null;
         let _ac = this.m_mapArticle.get(fileName);
-        if (_ac) {
-            return _ac.Clone();
+        return _ac ? _ac.Clone() : null;
+    }
+
+    CreateArticleProxy(fileName, creatorAccount) {
+        if (typeof fileName != "string") return null;
+        if (typeof creatorAccount != "string") return null;
+        return new Article(fileName, creatorAccount);
+    }
+
+    GetCategory(categoryName) {
+        if (typeof categoryName != "string") return null;
+        if (this.m_mapCategory.has(categoryName)) {
+            return this.m_mapCategory.get(categoryName);
         } else {
             return null;
         }
     }
-
-    CreateConfig(fileName) { return new ArticleConfig(null, fileName); }
-
-    GetCategory(categoryName) {
-        if (typeof categoryName != "string") return null;
-        return this.m_mapCategory.get(categoryName);
-    }
     GetHistoryArray() { return this.m_arrayHistory; }
-
-    /*
-    GetArticleCount() {
-        let _n = 0;
-        for (let fileName in this.m_mapArticle) {
-            ++_n;
-        }
-        return _n;
-    }
-    */
 };
 
 let h = new ArticleHandler();
-module.exports = h;
+module.exports.HasConfig = function(fileName){ return h.HasConfig(fileName); }
+module.exports.GetConfig = function(fileName){return h.GetConfig(fileName);}
+module.exports.CreateArticleProxy = function (fileName, creatorAccount) { return h.CreateArticleProxy(fileName, creatorAccount); }
+module.exports.GetCategory = function (categoryName) { return h.GetCategory(categoryName); }
+module.exports.GetHistoryArray = function () { return h.GetHistoryArray(); }
+module.exports.Search = function (searchValue, out) { return h.Search(searchValue, out); }
+module.exports.Modify = function (ac, content) { return h.Modify(ac, content); }
+module.exports.Delete = function (ac) { return h.Delete(ac); }
+module.exports.Add = function (fileName) { return h.Add(fileName); }

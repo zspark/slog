@@ -1,16 +1,26 @@
 [
-  {
-    "account": "jerry-chaos@outlook.com",
-    "password": "c4ca4238a0b923820dcc509a6f75849b",
-    "displayName": "Jerry Chaos",
-    "joinedTime": "2015-10-18T19:24:00.000Z",
-    "lastLoginTime": "2019-10-18T19:24:00.000Z"
-  },
-  {
-    "account": "438808192@qq.com",
-    "password": "c4ca4238a0b923820dcc509a6f75849b",
-    "displayName": "Nancy Chaos",
-    "joinedTime": "2015-10-18T19:24:00.000Z",
-    "lastLoginTime": "2019-10-18T19:24:00.000Z"
-  }
+    {
+        "account": "jerry-chaos@outlook.com",
+        "password": "c4ca4238a0b923820dcc509a6f75849b",
+        "displayName": "Jerry Chaos",
+        "joinedTime": "2015-10-18T19:24:00.000Z",
+        "lastLoginTime": "2019-10-18T19:24:00.000Z",
+        "authorization": 1
+    },
+    {
+        "account": "438808192@qq.com",
+        "password": "c4ca4238a0b923820dcc509a6f75849b",
+        "displayName": "Nancy Chaos",
+        "joinedTime": "2015-10-18T19:24:00.000Z",
+        "lastLoginTime": "2019-10-18T19:24:00.000Z",
+        "authorization": 1
+    },
+    {
+        "account": "wangyi@qq.com",
+        "password": "c4ca4238a0b923820dcc509a6f75849b",
+        "displayName": "Wang Yi",
+        "joinedTime": "2015-10-18T19:24:00.000Z",
+        "lastLoginTime": "2019-10-18T19:24:00.000Z",
+        "authorization": 2
+    }
 ]

@@ -39,6 +39,11 @@ class ModuleBase {
         let _html = TPLGEN.GenerateHTMLInfoBoard(info);
         res.end(_html);
     }
+
+    ComposeFile404(req, res) {
+        this.ComposeInfoboard(req, res, `This file is NOT exist,click to <a href="/edit?n=${req.query.n}">create.</a>`);
+    };
+
 };
 
 module.exports = ModuleBase;

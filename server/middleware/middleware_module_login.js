@@ -36,7 +36,7 @@ class ModuleLogin extends Base {
                 res.cookie("account", _userInfo.account, { signed: true });//read cookies:(req.signedCookies.bwf) 
                 _obj.code = constant.action_code.ACTION_CONFIRMED;
                 const _q = Utils.GetQueryValues(req);
-                const _fileName = _q[constant.M_FILE_NAME];
+                const _fileName = _q.fileName;
                 if (_fileName) {
                     _obj.redirectURL = Utils.MakeEditURL(_fileName);
                 }

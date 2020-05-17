@@ -1,12 +1,13 @@
 const common = require("../core/common");
 const pathes = common.pathes;
 const constant = common.constant;
-var Base = require(pathes.pathMW + "middleware_module_base");
+const ArticleHandler = require(pathes.pathCore + "article_handler");
 const LOG = require(pathes.pathCore + 'logger');
 const Utils = require(pathes.pathCore + "utils");
 const UserManager = require(pathes.pathCore + "user_manager");
 const TPLGEN = require(pathes.pathCore + "template_generator");
 const SessionMgr = require(pathes.pathCore + "client_session");
+var Base = require(pathes.pathMW + "middleware_module_base");
 
 
 class ModuleEdit extends Base {
@@ -36,19 +37,25 @@ class ModuleEdit extends Base {
 
         let _es = SessionMgr.Get(_fileName);
         if (_es) {
-            this.ComposeInfoboard(req, res, `This file is currently editing by someone!`);
+            this.ComposeInfoboard(req, res, `This article is currently editing by someone!`);
             return true;
         } 
 
-        _es = SessionMgr.CreateEditSession(req, res);
+        let _s = SessionMgr.Create(req);
+        if (!_s.Open(_fileName)) {
+            this.ComposeInfoboard(req, res, `You have NO rights to edit this article!`);
+            /// let _s instance alone ,it will be gced for a moment!
+            return true;
+        }
+        SessionMgr.Push(_s);
 
         let _html = TPLGEN.GenerateHTMLEdit(
-            _es.GetContent(),
-            _es.GetTitle(),
-            _es.GetAuthor(),
-            _es.GetCategoryName(),
-            _es.GetAllowHistory(),
-            this._GetTemplateList(_es.GetLayout())
+            _s.GetContent(),
+            _s.GetTitle(),
+            _s.GetAuthor(),
+            _s.GetCategoryName(),
+            _s.GetAllowHistory(),
+            this._GetTemplateList(_s.GetLayout())
         );
         res.end(_html);
 
@@ -58,67 +65,67 @@ class ModuleEdit extends Base {
     HandlePostArticle(req, res) {
         let _obj = this.CreateDefaultResponseObject();
 
-        const _fileName = req.query.n;
-        if (!this.CheckFileName(_fileName, _obj)) {
-            res.send(JSON.stringify(_obj));
-            return true;
-        }
+        do {
+            const _fileName = req.query.n;
+            if (!_fileName){
+                obj.code = constant.error_code.NO_FILE_NAME;
+                break;
+            }
 
-        let _es = SessionMgr.Get(_fileName);
-        if (!_es) {
-            _obj.code = constant.error_code.SERVER_SHUT_DOWN;
-            res.send(JSON.stringify(_obj));
-            return true;
-        }
+            let _es = SessionMgr.Get(_fileName);
+            if (!_es) {
+                _obj.code = constant.error_code.SERVER_SHUT_DOWN;
+                break;
+            }
 
-        let _jsonObj = req.body;
-        if (!_jsonObj) {
-            _obj.code = constant.error_code.REQUESTING_FORMAT_ERROR;
-            res.send(JSON.stringify(_obj));
-            return true;
-        }
+            let _jsonObj = req.body;
+            if (!_jsonObj) {
+                _obj.code = constant.error_code.REQUESTING_FORMAT_ERROR;
+                break;
+            }
 
-        let _Save = function () {
-            _es.SetTitle(_jsonObj.title);
-            _es.SetAuthor(_jsonObj.author);
-            _es.SetCategoryName(_jsonObj.categoryName);
-            _es.SetLayout(_jsonObj.template);
-            _es.SetAllowHistory(_jsonObj.allowHistory);
-            _es.Save(_jsonObj.content);
-        }
+            let _Save = function () {
+                _es.SetTitle(_jsonObj.title);
+                _es.SetAuthor(_jsonObj.author);
+                _es.SetCategoryName(_jsonObj.category);
+                _es.SetLayout(_jsonObj.template);
+                _es.SetAllowHistory(_jsonObj.allowHistory);
+                _es.Save(_jsonObj.content);
+            }
 
-        const action_code = constant.action_code;
-        const error_code = constant.error_code;
-        switch (_jsonObj[constant.M_ACTION]) {
-            case action_code.HEART_BEAT:
-                if (_es.TryUpdateHeartBeatTime(Utils.GetUserAccount(req), Utils.GetClientIP(req))) {
-                    LOG.Info("heart beat");
-                } else {
-                    _obj.code = error_code.SERVER_SHUT_DOWN;
-                    SessionMgr.Delete(_es);
-                }
-                break;
-            case action_code.DELETE:
-                _es.Delete();
-                SessionMgr.Delete(_es);
-                _obj.redirectURL = "/";
-                break;
-            case action_code.SAVE:
-                _Save();
-                break;
-            case action_code.SAVE_AND_EXIT:
-                _Save();
-                _obj.redirectURL = "view?n=" + _fileName;
-                SessionMgr.Delete(_es);
-                break;
-            case action_code.CANCEL:
-                SessionMgr.Delete(_es);
-                _obj.redirectURL = "view?n=" + _fileName;
-                break;
-            default:
-                break;
-        }
+            const action_code = constant.action_code;
+            const error_code = constant.error_code;
+            switch (_jsonObj[constant.M_ACTION]) {
+                case action_code.HEART_BEAT:
+                    if (_es.TryUpdateHeartBeatTime(req)){
+                        LOG.Info("heart beat");
+                    } else {
+                        _obj.code = error_code.SERVER_SHUT_DOWN;
+                        SessionMgr.Pop(_es);
+                    }
+                    break;
+                case action_code.DELETE:
+                    _es.Delete();
+                    SessionMgr.Pop(_es);
+                    _obj.redirectURL = "/";
+                    break;
+                case action_code.SAVE:
+                    _Save();
+                    break;
+                case action_code.SAVE_AND_EXIT:
+                    _Save();
+                    SessionMgr.Pop(_es);
+                    _obj.redirectURL = `view?n=${_fileName}`;
+                    break;
+                case action_code.CANCEL:
+                    SessionMgr.Pop(_es);
+                    _obj.redirectURL = `view?n=${_fileName}`;
+                    break;
+                default:
+                    break;
+            }
 
+        } while (false)
         res.send(JSON.stringify(_obj));
         return true;
     };
