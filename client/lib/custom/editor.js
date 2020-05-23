@@ -15,116 +15,123 @@ var heartbeatIntervalID = null;
 var inputDirty = true;
 var needSubmit = false;
 var editor = null;
+var alertModal = null;
+var propertyModal = null;
 
 
 function OnBodyLoad() {
-  console.log("editor body loaded!");
+    console.log("editor body loaded!");
 
-  titleElem = document.getElementById("inputTitle");
-  authorElem = document.getElementById("inputAuthor");
-  categoryElem = document.getElementById("inputCategory");
-  uploadFolderElem = document.getElementById("inputUploadFolder");
-  cbTypeMapElem = document.getElementById("cbTypeMap");
-  cbAllowHistoryElem = document.getElementById("cbAllowHistory");
-  slcTemplateElem = document.getElementById("slcTemplate");
-  let _tmp = document.getElementById('preview');
-  iframeWnd = _tmp.contentWindow;
-  previewElem = iframeWnd.document.getElementById("basic_outer_div_preview");
-  markdownElem = document.getElementById('markdown');
-  floatDiv = document.getElementById('float_buttons');
-  changeTimeout = null;
-  inputDirty = true;
+    titleElem = document.getElementById("inputTitle");
+    authorElem = document.getElementById("inputAuthor");
+    categoryElem = document.getElementById("inputCategory");
+    uploadFolderElem = document.getElementById("inputUploadFolder");
+    cbTypeMapElem = document.getElementById("cbTypeMap");
+    cbAllowHistoryElem = document.getElementById("cbAllowHistory");
+    slcTemplateElem = document.getElementById("slcTemplate");
+    let _tmp = document.getElementById('preview');
+    iframeWnd = _tmp.contentWindow;
+    previewElem = iframeWnd.document.getElementsByClassName("div-preview")[0];
+    markdownElem = document.getElementById('markdown');
+    floatDiv = document.getElementById('float_buttons');
+    alertModal = $('#alertModal');
+    propertyModal = $('#propertyModal');
 
-  editor = CodeMirror.fromTextArea(markdownElem, {
-    lineNumbers: true,
-    mode: "markdown",
-    keyMap: "default",
-    //keyMap: "vim",
-    matchBrackets: true,
-    showCursorWhenSelecting: true,
-    viewportMargin: Infinity,
-    lineWrapping: true,
-    theme: "default",
-    styleActiveLine: true, // 当前行背景高亮
-    nonEmpty:true,
-    inputStyle: "contenteditable"
-  });
-  editor.on("change", function (ins, obj) {
-    editor.save();
+
+
+    changeTimeout = null;
     inputDirty = true;
-    needSubmit = true;
-  });
 
-  _TryRenderToHTML();
+    editor = CodeMirror.fromTextArea(markdownElem, {
+        lineNumbers: true,
+        mode: "markdown",
+        keyMap: "default",
+        //keyMap: "vim",
+        matchBrackets: true,
+        showCursorWhenSelecting: true,
+        viewportMargin: Infinity,
+        lineWrapping: true,
+        theme: "default",
+        styleActiveLine: true, // 当前行背景高亮
+        nonEmpty: true,
+        inputStyle: "contenteditable"
+    });
+    editor.on("change", function (ins, obj) {
+        editor.save();
+        inputDirty = true;
+        needSubmit = true;
+    });
 
-  heartbeatIntervalID = setInterval(() => {
-    _PostXHRAction(_CreatePostData(0), null);
-  }, 10000);
+    _TryRenderToHTML();
 
-  /// upload
-  document.ondragenter = function (e) {
-    e.preventDefault();
-  }
+    heartbeatIntervalID = setInterval(() => {
+        //_PostXHRAction(_CreatePostData(0), null);
+    }, 10000);
 
-  document.ondragover = function (e) {
-    e.preventDefault();
-    //document.innerHTML = '请松开';
-  }
-
-  document.ondragleave = function (e) {
-    e.preventDefault();
-    //document.innerHTML = '请拖入要上传的文件';
-  }
-
-  document.ondrop = function (e) {
-    e.preventDefault();
-    if (_CheckConnection()) {
-      var upfile = e.dataTransfer.files[0]; //获取要上传的文件对象(可以上传多个)  
-      var formdata = new FormData();
-      formdata.append('upfile', upfile); //设置服务器端接收的name为upfile  
-      let _q = `/upload?f=${uploadFolderElem.value}&n=${upfile.name}`;
-      _PostXHR(formdata, _q, 'json', null, (json) => {
-      //_PostXHR(formdata, _q, 'json', "application/x-www-form-urlencoded", (json) => {
-        console.log("successfully");
-      });
+    /// upload
+    document.ondragenter = function (e) {
+        e.preventDefault();
     }
-  }
+
+    document.ondragover = function (e) {
+        e.preventDefault();
+        //document.innerHTML = '请松开';
+    }
+
+    document.ondragleave = function (e) {
+        e.preventDefault();
+        //document.innerHTML = '请拖入要上传的文件';
+    }
+
+    document.ondrop = function (e) {
+        e.preventDefault();
+        if (_CheckConnection()) {
+            var upfile = e.dataTransfer.files[0]; //获取要上传的文件对象(可以上传多个)  
+            var formdata = new FormData();
+            formdata.append('upfile', upfile); //设置服务器端接收的name为upfile  
+            let _q = `/upload?f=${uploadFolderElem.value}&n=${upfile.name}`;
+            _PostXHR(formdata, _q, 'json', null, (json) => {
+                //_PostXHR(formdata, _q, 'json', "application/x-www-form-urlencoded", (json) => {
+                console.log("successfully");
+            });
+        }
+    }
 };
 
 function _StopHeartBeat(msg) {
-  if (heartbeatIntervalID != null) {
-    clearInterval(heartbeatIntervalID);
-    heartbeatIntervalID = null;
-    floatDiv.id = "float_buttons_error";
-    console.error(msg);
-  }
+    if (heartbeatIntervalID != null) {
+        clearInterval(heartbeatIntervalID);
+        heartbeatIntervalID = null;
+        floatDiv.id = "float_buttons_error";
+        console.error(msg);
+    }
 }
 
 function _TryRenderToHTML() {
-  let _delayTime = 400;
-  if (inputDirty) {
-    inputDirty = false;
-    let _startTime = new Date();
+    let _delayTime = 400;
+    if (inputDirty) {
+        inputDirty = false;
+        let _startTime = new Date();
 
-    marked(markdownElem.value, (err, content) => {
-      if (err) {
-        previewElem.innerHTML = "marked parse error!"
-      } else {
-        previewElem.innerHTML = content;
-      }
-    });
+        marked(markdownElem.value, (err, content) => {
+            if (err) {
+                previewElem.innerHTML = "marked parse error!"
+            } else {
+                previewElem.innerHTML = content;
+            }
+        });
 
-    try {
-      iframeWnd.Prism.highlightAll()
-      iframeWnd.MathJax.typeset()
-    } catch (e) {
-      console.error(e);
+        try {
+            iframeWnd.Prism.highlightAll()
+            iframeWnd.MathJax.typeset()
+        } catch (e) {
+            console.error(e);
+        }
+
+        _delayTime = Math.max(400, new Date() - _startTime);
     }
 
-    _delayTime = Math.max(400, new Date() - _startTime);
-  }
-
-  changeTimeout = window.setTimeout(_TryRenderToHTML, _delayTime);
+    changeTimeout = window.setTimeout(_TryRenderToHTML, _delayTime);
 };
 
 /**
@@ -136,125 +143,141 @@ function _TryRenderToHTML() {
  *  20 ->cancel
  */
 function _CreatePostData(action) {
-  let _obj = {
-    "time": new Date(),
-    "action": action,
-    "title": titleElem.value,
-    "author": authorElem.value,
-    "category": categoryElem.value,
-    "uploadFolder": uploadFolderElem.value,
-    "template": slcTemplateElem.selectedOptions[0].text,
-    "allowHistory": cbAllowHistoryElem.checked,
-  };
-  if (action == 1 || action == 2) {
-    _obj["content"] = markdownElem.value;
-  }
-  return _obj;
+    let _obj = {
+        "time": new Date(),
+        "action": action,
+        "title": titleElem.value,
+        "author": authorElem.value,
+        "category": categoryElem.value,
+        "uploadFolder": "",
+        "template": slcTemplateElem.selectedOptions[0].text,
+        "allowHistory": cbAllowHistoryElem.checked,
+    };
+    if (action == 1 || action == 2) {
+        _obj["content"] = markdownElem.value;
+    }
+    return _obj;
 }
 
 function _Redirect(json) {
-  window.location.href = json.redirectURL;
+    window.location.href = json.redirectURL;
 }
 
 function ChangeTypeMode() {
-  if (cbTypeMapElem.checked) {
-    editor.setOption("keyMap", "vim");
-  } else {
-    editor.setOption("keyMap", "default");
-  }
+    if (cbTypeMapElem.checked) {
+        editor.setOption("keyMap", "vim");
+    } else {
+        editor.setOption("keyMap", "default");
+    }
 }
 
+function Property() {
+    propertyModal.modal("toggle");
+};
+
 function Delete() {
-  let _r = confirm("Are your sure to delete this article?");
-  if (_r) {
-    _PostXHRAction(_CreatePostData(10), _Redirect);
-  }
+    _ShowAlertModal("Are your sure to delete this article?", (e) => {
+        alertModal.modal("hide");
+        _PostXHRAction(_CreatePostData(10), _Redirect);
+    });
 };
 
 function _CheckConnection() {
-  if (heartbeatIntervalID == null) {
-    alert("you has dis-connected with server, copy your article and try reopen to edit!");
-    return false;
-  } else { return true; }
+    $('.alert').alert()
+    if (heartbeatIntervalID == null) {
+        alert("you has dis-connected with server, copy your article and try reopen to edit!");
+        return false;
+    } else { return true; }
+}
+
+function _ShowAlertModal(info, cbFn) {
+    alertModal.find('#alertContent').text(info);
+    alertModal.find('#btn-continue').click((e) => {
+        alertModal.modal("hide");
+        if (cbFn) cbFn();
+    });
+    alertModal.modal("toggle");
 }
 
 function Cancel() {
-  if (_CheckConnection()) {
-    let _r = true;
-    if (needSubmit) {
-      _r = confirm("You have changes which are NOT saved. Do you really want to cancel editing?");
+    if (_CheckConnection()) {
+        if (needSubmit) {
+            _ShowAlertModal("You have changes which are NOT saved. Do you really want to cancel editing?",
+                () => {
+                    _PostXHRAction(_CreatePostData(20), _Redirect);
+                }
+            );
+        } else {
+            _PostXHRAction(_CreatePostData(20), _Redirect);
+        }
     }
-    if (_r) {
-      _PostXHRAction(_CreatePostData(20), _Redirect);
-    }
-  }
 };
 
 function Save() {
-  if (_CheckConnection()) {
-    if (_CheckCompletion()) {
-      _PostXHRAction(_CreatePostData(1), null);
+    if (_CheckConnection()) {
+        if (_CheckCompletion()) {
+            _PostXHRAction(_CreatePostData(1), null);
+        }
     }
-  }
 };
 
 function SaveAndExit() {
-  if (_CheckConnection()) {
-    if (_CheckCompletion()) {
-      _PostXHRAction(_CreatePostData(2), _Redirect);
+    if (_CheckConnection()) {
+        if (_CheckCompletion()) {
+            _PostXHRAction(_CreatePostData(2), _Redirect);
+        }
     }
-  }
 };
 
-function _PostXHRAction(obj,fn){
-  let _jsonString = JSON.stringify(obj);
-  _PostXHR(_jsonString, '/edit' + window.location.search, 'json', "application/json", fn);
+function _PostXHRAction(obj, fn) {
+    let _jsonString = JSON.stringify(obj);
+    _PostXHR(_jsonString, '/edit' + window.location.search, 'json', "application/json", fn);
 }
 
 function _PostXHR(obj, url, responseType, contentType, fn) {
-  let xhr = new XMLHttpRequest();
-  xhr.open('POST', url, true);
-  xhr.responseType = responseType;
-  if (contentType) xhr.setRequestHeader("Content-Type", contentType);
-  xhr.onload = function () {
-    if (xhr.readyState === xhr.DONE) {
-      if (xhr.status === 200) {
-        let _json = xhr.response;
-        if (_json.code >= 5000) {
-          if (fn) fn(_json);
-        }else{
-          _StopHeartBeat(_json.msg);
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.responseType = responseType;
+    if (contentType) xhr.setRequestHeader("Content-Type", contentType);
+    xhr.onload = function () {
+        if (xhr.readyState === xhr.DONE) {
+            if (xhr.status === 200) {
+                let _json = xhr.response;
+                if (_json.code >= 5000) {
+                    if (fn) fn(_json);
+                } else {
+                    _StopHeartBeat(_json.msg);
+                }
+                return;
+            }
         }
-        return;
-      }
+        _StopHeartBeat("error");
     }
-    _StopHeartBeat("error");
-  }
-  let _fn = function () {
-    if (xhr.status != 200) {
-      _StopHeartBeat("error");
+    let _fn = function () {
+        if (xhr.status != 200) {
+            _StopHeartBeat("error");
+        }
     }
-  }
-  xhr.onreadystatechange = _fn;
-  xhr.onprogress = _fn;
-  xhr.onerror = function () { _StopHeartBeat("error"); }
-  xhr.onabort = function () { _StopHeartBeat("error"); }
+    xhr.onreadystatechange = _fn;
+    xhr.onprogress = _fn;
+    xhr.onerror = function () { _StopHeartBeat("error"); }
+    xhr.onabort = function () { _StopHeartBeat("error"); }
 
-  xhr.send(obj);
+    xhr.send(obj);
 };
 
 function _CheckCompletion() {
-  if (categoryElem.value == '') {
-    alert("enter category.");
-    return false;
-  }
-  if (titleElem.value == '') {
-    alert("enter title.");
-    return false;
-  }
-  if (authorElem.value == '') {
-    alert("enter author.");
-    return false;
-  }
-  return true;
+    if (categoryElem.value == '') {
+        alert("enter category.");
+        return false;
+    }
+    if (titleElem.value == '') {
+        alert("enter title.");
+        return false;
+    }
+    if (authorElem.value == '') {
+        alert("enter author.");
+        return false;
+    }
+    return true;
 }

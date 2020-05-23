@@ -1,11 +1,12 @@
 :root {
   --default-view-width:60rem;
   --default-edit-width:55rem;
-  --body-bg-color: #DCE2F1;
+  --body-bg-color: #FEFEFE;
   --header-bg-color: #f5f2f0;
   --outer-bg-color: #fafafa;
   --body-font-color: #333;
   --title-font-color: rgb(161, 85, 0);
+  --title-background-color: rgb(161, 85, 0,0.1);
   --author-font-color: rgb(200,200,200);
   --quote-left-color: rgb(200,200,200);
   --quote-background-color: rgb(200,200,200,0.1);
@@ -17,87 +18,101 @@
   --warn-background-color: rgb(80,80,170,0.1);
   --error-left-color: rgb(240,80,80);
   --error-background-color: rgb(240,80,80,0.1);
-  --padding-left-right:3rem;
+  --width-min:300px;
 }
 
 body {
   font-family: -apple-system,"Arial","Microsoft YaHei","黑体","宋体",sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.7;
   color: var(--body-font-color);
   background-color:var(--body-bg-color);
   /*background-image: url("/lib/custom/bg.jpg");*/
   font-weight: normal;
   width: 100%;
+  min-width: var(--body-min);
   margin: 0;
   border: 0;
   padding: 0;
 }
 
-header {
-  font-size: 1.4em;
-  width:var(--default-view-width);
-  margin-left: calc((100vw - var(--default-view-width))/2); 
+main#editor{
+    padding: 2.1rem 0 0 0;
 }
-header a{
-  text-decoration: none;
+
+main#div-body-middle{
+    padding: 5rem 0 0 0;
+}
+
+table,table tr th, table tr td { border:1px solid var(--author-font-color);}
+table {
+    /*border-collapse: collapse;*/
+    width: 100%;
+    padding: 0.2em 0.2em;
+    margin: 0.5em 0;
+    border-spacing: 0;/*去掉单元格间隙*/
+}
+thead tr{
+  background-color:var(--title-background-color);
   font-weight: bold;
+}
+/*tr:nth-child(even) {background-color: var(--tip-background-color)}*/
+
+div#login{
+  width: 50%;
+  max-width: 420px;
+  min-width: var(--body-min);
+  padding: 15px;
+  margin: auto;
+}
+
+.div-preview {
+  width: 100%;
+}
+
+iframe#preview{
+  width: 100%;
+  height: 100%;
+  float: left;
+  margin: 0px;
+  border: 0px;
+}
+
+div#div-article-info{
+  margin: 0 0 1em;
+}
+
+p#p-title{
+  font-size: 2.2em;
+  margin: 0;
+  padding: 0;
+  font-weight: bold;
+  color: var(--title-font-color);
+}
+
+p#p-author,#p-author a{
+  margin: 0;
+  padding: 0;
+  color:var(--author-font-color);
+}
+#p-author a{
+  padding: 0;
+}
+
+span.CSS_search_highlight{
+  color:var(--title-font-color);
+  font-weight:bold;
+}
+
+span.CSS_search_author{
+  color:var(--author-font-color);
 }
 
 footer {
-  margin: 1em 0 0;
-  padding: 1em 0 0;
+  margin: 1em 0 2em;
+  padding: 1em 0 2em;
   text-align: center;
   color: var(--author-font-color);
-}
-
-table {
-  /*border-collapse: collapse;*/
-  width: 90%;
-  padding: 0.2em 0.2em;
-  margin: 0.5em 2em 0.5em 2em;
-}
-/*
-table, th, td {
-  border: 1px solid var(--author-font-color);
-}
-*/
-thead tr{
-  background-color:var(--tip-background-color);
-  font-weight: bold;
-}
-tr:nth-child(even) {background-color: var(--tip-background-color)}
-
-a {
-  color: #003dbf;
-  text-decoration: none;
-  font-weight: normal;
-}
-
-h1 {
-  font-size: 1.5em;
-  margin: 1em 0 0 0;
-  padding: 0 2rem;
-}
-/*
-#basic_outer_div h1{
-  border-bottom: 1px solid #eaecef;
-}
-*/
-h2 {
-  font-size: 1.35em;
-  margin: 0.9em 0 0 0;
-  padding: 0 2rem;
-}
-h3 {
-  font-size: 1.2em;
-  margin: 0.8em 0 0 0;
-  padding: 0 2rem;
-}
-p {
-  font-size: 1em;
-  margin: 0.8em 0 0 0;
-  padding: 0 var(--padding-left-right);
 }
 
 blockquote {
@@ -132,164 +147,4 @@ blockquote.error {
 blockquote p{
   margin: 0em 0 0 0;
   padding: 0 0 0 1rem;
-}
-
-#basic_outer_div{
-  background-color:var(--outer-bg-color);
-  display: block;
-  width: var(--default-view-width);
-  margin: 0 calc((100vw - var(--default-view-width) )/2);
-  padding: 1rem 0rem 3rem;
-  box-shadow: 1px 1px 4px rgba(0,0,0,0.065);
-  border-radius: 3px;
-}
-
-#basic_outer_div_preview{
-  background-color:var(--outer-bg-color);
-  display: block;
-  width: var(--default-edit-width);
-  margin: 0;
-  margin-left: calc((100vw - var(--default-edit-width) - 2em)/2); 
-  padding: 1em 1em;
-  box-shadow: 1px 1px 4px rgba(0,0,0,0.065);
-  border-radius: 3px;
-}
-
-#basic_outer_div_project{
-  display: block;
-  margin: 0 0 0 0;
-  padding: 0 3em 1em;
-}
-
-#basic_outer_div_code{
-  display: block;
-  margin: 0 0 0 0;
-  border: 0;
-  padding: 0 0 0 0;
-}
-
-#basic_outer_div_edit{
-  display: block;
-  margin: 0 0 0 0;
-  border: 0;
-  padding: 0 0 0 0;
-}
-
-#menu {
-  margin: 0.8em 0;
-  padding: 0;
-}
-#menu li {
-  list-style-type: none;
-  display: inline;
-}
-#menu li:not(:first-child):before {
-  padding: 0.5em;
-  content: " | ";
-}
-
-#editor{
-  position: relative;
-  z-index: 10;
-  padding-top:2em;
-}
-
-#editor .containers {
-  display: flex;
-}
-
-.containers .container {
-  flex-basis: 50%;
-  padding: 1px;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-#float_buttons{
-  position: fixed;
-  z-index: 20;
-  background-color: #a6a6a6;
-  width: 100%;
-  height: auto;
-  padding: 1px;
-  box-shadow: 1px 1px 4px rgba(0,0,0,0.065);
-  border-radius: 3px;
-}
-
-#float_buttons_error{
-  position: fixed;
-  z-index: 20;
-  background-color: #FF4444;
-  width: 100%;
-  height: auto;
-  padding: 1px;
-}
-
-#title{
-  font-size: 2.2em;
-  margin: 0.2em 0 0 0;
-  padding: 0 2rem;
-  font-weight: bold;
-  color: var(--title-font-color);
-}
-
-#author,#author a{
-  margin: 0;
-  padding: 0 2rem;
-  color:var(--author-font-color);
-}
-#author a{
-  padding: 0;
-}
-
-ul,ol{
-  margin: 1rem;
-  padding: 0 var(--padding-left-right);
-}
-ol p {
-  padding: 0;
-}
-ul.articles {
-  font-size: 1.2em;
-}
-ul.articles li {
-  list-style-type: none;
-}
-ul.articles .date,ol.history .date{
-  color:var(--author-font-color);
-  font-size:smaller;
-  font-style: italic;
-  margin:0 0 0 1em;
-}
-ul.articles a {
-  color: var(--title-font-color);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-iframe#preview{
-  width: 100%;
-  height: 100%;
-  float: left;
-  margin: 0px;
-  border: 0px;
-  background-color:var(--body-bg-color);
-}
-
-input#searchInput{
-  width: 70%;
-  text-align: center;
-  border-width: 2px;
-  border-style: inset;
-  border-color: rgb(118, 118, 118);
-  padding: 0.3rem 1rem 0.3rem 1rem;
-}
-
-span.CSS_search_highlight{
-  color:var(--title-font-color);
-  font-weight:bold;
-}
-
-span.CSS_search_author{
-  color:var(--author-font-color);
 }

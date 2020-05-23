@@ -1,69 +1,114 @@
 const common = require("./common");
 const constant = common.constant;
 
-const _HTMLhead =
-    `<head>
+var _GenerateHTMLhead = function (c) {
+    let ret = `<head>
     <meta charset="utf-8">
-    <title>Spark Notes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="This is a developing blog site.">
-    <link rel="icon" href="/lib/custom/favicon.ico" type="image/x-icon">
-    <link href="/lib/custom/style.css" rel="stylesheet">
-    <!--link rel="stylesheet" href="/lib/prismjs/prism.css" data-noprefix /-->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css" rel="stylesheet" />
-</head>`;
+    <meta name="author" content="Jerry Chaos">
+    <title>Jerry Notes</title>
 
-const _HTMLhead_edit = _HTMLhead +
-    `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.0/codemirror.min.css">
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="/lib/custom/style.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css" rel="stylesheet" />
+    ${c}
+
+    <!-- Favicons -->
+    <link rel="icon" href="/lib/custom/favicon.ico" type="image/x-icon">
+
+    </head>`;
+    return ret;
+}
+
+
+const _HTMLhead = _GenerateHTMLhead("");
+
+const _HTMLhead_edit = _GenerateHTMLhead(`<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.0/codemirror.min.css">
 <style>
     .CodeMirror {
     border: 1px solid #eee;
     height: auto;
     font-size: 0.9em;
   }
-</style>`
+</style>`);
 
-const _HTMLhead_gallery = _HTMLhead + `<link type="text/css" href="lib/lightgallery/css/lightgallery.min.css" rel="stylesheet" />`;
+const _HTMLhead_gallery = _GenerateHTMLhead(`<link type="text/css" href="lib/lightgallery/css/lightgallery.min.css" rel="stylesheet" />`);
 
-const _HTMLbody_top =
-    `<header>
-    <center>
-        <h1><a href="/"><span style="color:rgb(161, 85, 0);">Jerry</span>Chaos</a></h1>
-        <ul id="menu">
-        <li><a href="/">🏠Home</a></li>
-        <li><a href="/view?c=basic">Basic</a></li>
-        <li><a href="/view?c=major">Major</a></li>
-        <li><a href="/view?c=philosophy">Philosophy</a></li>
-        <li><a href="/view?c=math">Math</a></li>
-        <li><a href="/view?c=default">Default</a></li>
-        <li><a href="/search">🔍Search</a></li>
-        <li><a href="/history">⏳History</a></li>
+const _body_top =
+    `<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+    <a class="navbar-brand" href="/">Navbar</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
+        aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="dropdown01" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">Computer Science</a>
+                <div class="dropdown-menu" aria-labelledby="dropdown01">
+                    <a class="dropdown-item" href="/view?c=basic">basic</a>
+                    <a class="dropdown-item" href="/view?c=major">graphics</a>
+                    <a class="dropdown-item" href="/view?c=default">default</a>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/view?c=philosophy">Philosophy</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/view?c=math">Math</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/search">Search</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/history">History</a>
+            </li>
         </ul>
-    </center>
-</header>`;
+    </div>
+</nav>`;
 
-const _HTMLbody_bottom = `<footer> &copy; 2011&ndash;2020 Jerry Chaos </footer>`;
+const _body_bottom = `<center><footer> &copy; 2011&ndash;2020 Jerry Chaos </footer></center>`;
 
-const _HTMLbody_script =
-    `<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/prism.min.js"></script>
+var _GenerateHTMLscript = function (c) {
+    let ret =
+        `<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous">
+</script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous">
+</script>
+
+<!-- custom -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/prism.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/plugins/autoloader/prism-autoloader.js"></script>
 <script>
     Prism.plugins.autoloader.languages_path = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/components/'
     function OnBodyLoad() {}
 </script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>`;
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+${c}`;
+    return ret;
+}
 
-const _HTMLbody_script_search = `<script src="/lib/custom/search.js" defer></script>`;
+const _body_script = _GenerateHTMLscript("");
 
-const _HTMLbody_script_edit =
-    `<script src="/lib/custom/editor.js" defer></script>
+const _body_script_search = _GenerateHTMLscript(`<script src="/lib/custom/search.js" defer></script>`);
+
+const _body_script_edit = _GenerateHTMLscript(`<script src="/lib/custom/editor.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.8.1/marked.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.0/codemirror.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.0/mode/markdown/markdown.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/addon/selection/active-line.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/keymap/vim.min.js" defer></script>`;
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/keymap/vim.min.js" defer></script>`);
 
-const _HTMLbody_script_gallery =
-    `<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.min.js"></script>
+const _body_script_gallery = _GenerateHTMLscript(`<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.min.js"></script>
 <script src="lib/lightgallery/js/lightgallery.min.js"></script>
 
 <script type="text/javascript">
@@ -74,22 +119,24 @@ $(document).ready(function () {
     showThumbByDefault: false
     });
 });
-</script>`;
+</script>`);
 
-
-var _GenerateHTMLTitle = function (fileName, title, author, createTime) {
-    let _HTMLtitle =
-        `<p id="title"> ${title} </p><p id="author"> ${author} | ${createTime} | <a href="/edit?n=${fileName}">edit</a> </p>`;
-    return _HTMLtitle;
+var _GenerateArticleInfo = function (fileName, title, author, createTime) {
+    let _tmp =
+        `<div id="div-article-info">
+    <p id="p-title"> ${title} </p>
+    <p id="p-author"> ${author} | 📅 ${createTime} | <a href="/edit?n=${fileName}">edit</a> </p>
+</div>`;
+    return _tmp;
 }
 
-var _GenerateHTMLbodyMiddle = function (outerDivID, HTMLtitle, HTMLcontent) {
-    let _HTMLbody = 
-        `<div id="${outerDivID}">
-    ${HTMLtitle}
-    ${HTMLcontent}
-</div>`;
-    return _HTMLbody;
+var _GenerateBodyMiddle = function (className, id, top, bottom) {
+    let _tmp =
+        `<main role="main" ${id ? "id=" + id : ""} ${className ? "class=" + className : ""}>
+    ${top}
+    ${bottom}
+</main>`;
+    return _tmp;
 }
 
 var _GenerateHTMLbody = function (HTMLbodyTop, HTMLbodyMiddle, HTMLbodyBottom, HTMLbodyScript) {
@@ -119,28 +166,28 @@ var GenerateHTMLArticle = function (template, fileName, content, title, author, 
     switch (template) {
         case constant.M_TEMPLATE_DEFAULT:
             {
-                let _HTMLtitle = _GenerateHTMLTitle(fileName, title, author, createTime);
-                let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div", _HTMLtitle, content);
-                _HTMLbody = _GenerateHTMLbody(_HTMLbody_top, _HTMLbodyMiddle, _HTMLbody_bottom, _HTMLbody_script);
+                let _HTMLtitle = _GenerateArticleInfo(fileName, title, author, createTime);
+                let _HTMLbodyMiddle = _GenerateBodyMiddle("container", "div-body-middle", _HTMLtitle, content);
+                _HTMLbody = _GenerateHTMLbody(_body_top, _HTMLbodyMiddle, _body_bottom, _body_script);
             }
             break;
         case constant.M_TEMPLATE_DEFAULT_NO_TITLE:
             {
-                let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div", "", content);
-                _HTMLbody = _GenerateHTMLbody(_HTMLbody_top, _HTMLbodyMiddle, _HTMLbody_bottom, _HTMLbody_script);
+                let _HTMLbodyMiddle = _GenerateBodyMiddle("container", "div-body-middle", "", content);
+                _HTMLbody = _GenerateHTMLbody(_body_top, _HTMLbodyMiddle, _body_bottom, _body_script);
             }
             break;
         case constant.M_TEMPLATE_FULLSCREEN:
             {
-                let _HTMLtitle = _GenerateHTMLTitle(fileName, title, author, createTime);
-                let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div_code", _HTMLtitle, content);
-                _HTMLbody = _GenerateHTMLbody("", _HTMLbodyMiddle, "", _HTMLbody_script);
+                let _HTMLtitle = _GenerateArticleInfo(fileName, title, author, createTime);
+                let _HTMLbodyMiddle = _GenerateBodyMiddle("container", "div-body-middle", _HTMLtitle, content);
+                _HTMLbody = _GenerateHTMLbody("", _HTMLbodyMiddle, "", _body_script);
             }
             break;
         case constant.M_TEMPLATE_FULLSCREEN_NO_TITLE:
             {
-                let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div_code", "", content);
-                _HTMLbody = _GenerateHTMLbody("", _HTMLbodyMiddle, "", _HTMLbody_script);
+                let _HTMLbodyMiddle = _GenerateBodyMiddle("container", "div-body-middle", "", content);
+                _HTMLbody = _GenerateHTMLbody("", _HTMLbodyMiddle, "", _body_script);
             }
             break;
         default:
@@ -150,7 +197,7 @@ var GenerateHTMLArticle = function (template, fileName, content, title, author, 
     return _GenerateHTML(_HTMLhead, _HTMLbody);
 };
 
-var GenerateHTMLArticleList = function (arrList) {
+var GenerateHTMLArticleList = function (category, arrList) {
     let _HTMLlist = "";
     arrList.forEach(function (item) {
         _HTMLlist += `<li>
@@ -159,21 +206,21 @@ var GenerateHTMLArticleList = function (arrList) {
 </li>`;
     });
 
-    let _content = `<h1>article list:</h1>
+    let _content = `<h1>${category}</h1>
 <ul class="articles">
     ${_HTMLlist}
 </ul>`;
 
-    let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div", "", _content);
-    let _HTMLbody = _GenerateHTMLbody(_HTMLbody_top, _HTMLbodyMiddle, _HTMLbody_bottom, _HTMLbody_script);
+    let _HTMLbodyMiddle = _GenerateBodyMiddle("container", "div-body-middle", "", _content);
+    let _HTMLbody = _GenerateHTMLbody(_body_top, _HTMLbodyMiddle, _body_bottom, _body_script);
     return _GenerateHTML(_HTMLhead, _HTMLbody);
 }
 
 var GenerateHTMLInfoBoard = function (info) {
     let _content = `<h1> 😈 Oops!!</h1> <p>${info}</p>`;
 
-    let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div", "", _content);
-    let _HTMLbody = _GenerateHTMLbody(_HTMLbody_top, _HTMLbodyMiddle, _HTMLbody_bottom, _HTMLbody_script);
+    let _HTMLbodyMiddle = _GenerateBodyMiddle("container", "div-body-middle", "", _content);
+    let _HTMLbody = _GenerateHTMLbody(_body_top, _HTMLbodyMiddle, _body_bottom, _body_script);
     return _GenerateHTML(_HTMLhead, _HTMLbody);
 }
 
@@ -192,83 +239,130 @@ var GenerateHTMLHistory = function (arrList) {
     ${_HTMLlist}
 </ol>`;
 
-    let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div", "", _content);
-    let _HTMLbody = _GenerateHTMLbody(_HTMLbody_top, _HTMLbodyMiddle, _HTMLbody_bottom, _HTMLbody_script);
+    let _HTMLbodyMiddle = _GenerateBodyMiddle("container", "div-body-middle", "", _content);
+    let _HTMLbody = _GenerateHTMLbody(_body_top, _HTMLbodyMiddle, _body_bottom, _body_script);
     return _GenerateHTML(_HTMLhead, _HTMLbody);
 }
 
+var _GenerateInput = function (caption, id, value) {
+    return `<div class="input-group mb-3">
+    <div class="input-group-prepend">
+        <span class="input-group-text" id="basic-addon3">${caption}</span>
+    </div>
+    <input type="text" id=${id} class="form-control" aria-describedby="basic-addon3" value="${value}" />
+</div>`;
+}
+
+var _GenerateCheckbox = function (caption, id, checked) {
+    return `<div class="form-group form-check">
+    <input type="checkbox" class="form-check-input" id=${id} ${checked ? "checked" : ""}>
+    <label class="form-check-label" for="exampleCheck1">${caption}</label>
+</div>`;
+}
+
 var GenerateHTMLEdit = function (content, title, author, categoryName, allowHistory, templateOptions) {
-    let _GenrateHeader_edit = function (arr) {
-        let _out1 =
-            `<div id="float_buttons">
-    <center>
-        <span><button type="button" id="Delete" onclick='Delete()'>Delete</button></span>
-        <span><button type="button" id="Cancel" onclick='Cancel()'>Cancel</button></span>
-        <span><button type="button" id="Save" onclick='Save()'>Save</button></span>
-        <span><button type="button" id="SaveAndExit" onclick='SaveAndExit()'>SaveAndExit</button></span>
+    let _out =
+            `<div class="bg-dark fixed-top">
+    <button type="button" id="Delete" onclick="Delete()" class="btn btn-danger btn-sm">Delete</button>
+    <button type="button" id="Cancel" onclick="Cancel()" class="btn btn-primary btn-sm">Cancel</button> 
+    <button type="button" id="Save" onclick="Save()" class="btn btn-secondary btn-sm">Save</button> 
+    <button type="button" id="SaveAndExit" onclick="SaveAndExit()" class="btn btn-secondary btn-sm">SaveAndExit</button> 
+    <button type="button" id="Property" onclick="Property()" class="btn btn-primary btn-sm">Property ...</button>
+</div>
 
-        <span><input type="text" id="inputTitle" style="width:300px;" placeholder="<title>" value="${title}" /></span>
-        <span><input type="text" id="inputAuthor" style="width:100px;" placeholder="<author>" value="${author}" /></span>
-        <span><input type="text" id="inputCategory" style="width:100px;" placeholder="<category name>" value="${categoryName}" /></span>
-        <span><input type="text" id="inputUploadFolder" style="width:100px;" placeholder="<image>" value="uploadFolder" /></span>
-
-        <select id="slcTemplate">`;
-
-        let _out2 = "";
-        arr.forEach(function (item) {
-            _out2 += `<option>${item}</option>`;
-        });
-
-        let _out3 = `</select>
-        <span><input type="checkbox" id="cbTypeMap" onchange="ChangeTypeMode()" />vim mode</span>
-        <span><input type="checkbox" id="cbAllowHistory" ${allowHistory ? "checked" : ""} />allow history</span>
-    </center>
-</div>`
-        return _out1 + _out2 + _out3;
-    }
-
-    let _content = `<div id="editor">
-    <div class="containers">
-        <div class="container">
-            <textarea id="markdown" class="inputPane" form="myform" name="content">${content}</textarea>
+<div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Alert</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="alertContent"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-continue">Continue</button>
+            </div>
         </div>
-        <div class="container">
-            <iframe id="preview" src="/edit/previewHtml"></iframe>
+    </div>
+</div>
+
+<div class="modal fade" id="propertyModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Property</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ${_GenerateInput("title", "inputTitle", title)}
+                ${_GenerateInput("author", "inputAuthor", author)}
+                ${_GenerateInput("category", "inputCategory", categoryName)}
+
+                <label for="message-text" class="col-form-label">layout:</label>
+                <div class="input-group">
+                    <select class="custom-select" id="slcTemplate" aria-label="Example select with button addon">
+                        <option value="1">default</option>
+                        <option value="2">default_no_title</option>
+                        <option value="3">fullscreen</option>
+                        <option value="4">fullscreen_no_title</option>
+                    </select>
+                </div>
+
+                ${_GenerateCheckbox("allow history","cbAllowHistory",allowHistory)}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-save">Save</button>
+            </div>
         </div>
     </div>
 </div>`;
 
-    let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div_edit", "", _content);
-    let _HTMLbody = _GenerateHTMLbody(_GenrateHeader_edit(templateOptions), _HTMLbodyMiddle, "", _HTMLbody_script_edit);
+    let _content =
+        `<div class="row">
+    <div class="col">
+        <textarea id="markdown" class="inputPane" form="myform" name="content">${content}</textarea>
+    </div>
+    <div class="col">
+        <iframe id="preview" src="/edit/previewHtml"></iframe>
+    </div>
+</div>`;
+
+    let _HTMLbodyMiddle = _GenerateBodyMiddle("", "editor", "", _content);
+    let _HTMLbody = _GenerateHTMLbody(_out, _HTMLbodyMiddle, "", _body_script_edit);
     return _GenerateHTML(_HTMLhead_edit, _HTMLbody);
 }
 
 var GenerateHTMLLogin = function (fileName) {
-    let _content = `<div>
-    <div id="msg"></div>
-    <div>
-        <span>account:</span>
-        <span><input type="email" name="account" id="inputAccount" placeholder="Email address"></span>
+    let _content = `<div id='login'>
+    <div class="text-center mb-4">
+        <h1 class="h3 mb-3 font-weight-normal">Login</h1>
+        <p id="msg">Build form controls with floating labels via the <code>:placeholder-shown</code> pseudo-element. <a href="https://caniuse.com/#feat=css-placeholder-shown">Works in latest Chrome, Safari, and Firefox.</a></p>
     </div>
 
-    <div>
-        <span>password:</span>
-        <span><input type="password" name="password" id="inputPassword" placeholder="Password"></span>
-    </div>
-
-    <button type="button" id="submit" onclick='post()'>Sign in</button>
+    <input type="email" name="account" id="inputAccount" class="form-control" placeholder="Email address" required autofocus>
+    <br>
+    <input type="password" name="password" id="inputPassword" class="form-control" placeholder="Password" required>
+    <br>
+    <button class="btn btn-lg btn-primary btn-block" type="submit" id="submit" onclick='post()'>Sign in</button>
 
     <script src="/lib/custom/login.js" defer></script>
     <script src="/lib/md5/md5.min.js" defer></script>
 </div>`
-    let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div", "", _content);
-    let _HTMLbody = _GenerateHTMLbody(_HTMLbody_top, _HTMLbodyMiddle, _HTMLbody_bottom, _HTMLbody_script);
+    let _HTMLbodyMiddle = _GenerateBodyMiddle("container", "div-body-middle", "", _content);
+    let _HTMLbody = _GenerateHTMLbody(_body_top, _HTMLbodyMiddle, _body_bottom, _body_script);
     return _GenerateHTML(_HTMLhead, _HTMLbody);
 };
 
 var GenerateHTMLPreview = function () {
-    let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div_preview", "", "");
-    let _HTMLbody = _GenerateHTMLbody("", _HTMLbodyMiddle, "", _HTMLbody_script);
+    let _HTMLbodyMiddle = _GenerateBodyMiddle("div-preview", "div-body-middle", "", "");
+    let _HTMLbody = _GenerateHTMLbody("", _HTMLbodyMiddle, "", _body_script);
     return _GenerateHTML(_HTMLhead, _HTMLbody);
 };
 
@@ -283,8 +377,8 @@ var GenerateHTMLGallery = function (arrList) {
     ${_out}
 </div>`
 
-    let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div_code", "", _content);
-    let _HTMLbody = _GenerateHTMLbody(_HTMLbody_top, _HTMLbodyMiddle, _HTMLbody_bottom, _HTMLbody_script_gallery);
+    let _HTMLbodyMiddle = _GenerateBodyMiddle("basic_outer_div_code", "div-body-middle", "", _content);
+    let _HTMLbody = _GenerateHTMLbody(_body_top, _HTMLbodyMiddle, _body_bottom, _body_script_gallery);
     return _GenerateHTML(_HTMLhead_gallery, _HTMLbody);
 };
 
@@ -296,8 +390,8 @@ var GenerateHTMLManage = function () {
 <p>list all category names:</p>
 <p><a href="/manage?cmd=listCategories">/manage?cmd=listCategories</a></p>`;
 
-    let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div", "", _content);
-    let _HTMLbody = _GenerateHTMLbody(_HTMLbody_top, _HTMLbodyMiddle, _HTMLbody_bottom, _HTMLbody_script);
+    let _HTMLbodyMiddle = _GenerateBodyMiddle("container", "div-body-middle", "", _content);
+    let _HTMLbody = _GenerateHTMLbody(_body_top, _HTMLbodyMiddle, _body_bottom, _body_script);
     return _GenerateHTML(_HTMLhead, _HTMLbody);
 };
 
@@ -313,8 +407,8 @@ var GenerateHTMLRebuildSummay = function (countBefore, contentBefore, countAfter
 <span>articles:</span> <span> ${countAfter} </span>
 <p> ${contentAfter} </p>`;
 
-    let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div", "", _content);
-    let _HTMLbody = _GenerateHTMLbody(_HTMLbody_top, _HTMLbodyMiddle, _HTMLbody_bottom, _HTMLbody_script);
+    let _HTMLbodyMiddle = _GenerateBodyMiddle("container", "div-body-middle", "", _content);
+    let _HTMLbody = _GenerateHTMLbody(_body_top, _HTMLbodyMiddle, _body_bottom, _body_script);
     return _GenerateHTML(_HTMLhead, _HTMLbody);
 };
 
@@ -329,18 +423,22 @@ var GenerateHTMLListCategory = function (arrList) {
     ${_out}
 </ul>`;
 
-    let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div", "", _content);
-    let _HTMLbody = _GenerateHTMLbody(_HTMLbody_top, _HTMLbodyMiddle, _HTMLbody_bottom, _HTMLbody_script);
+    let _HTMLbodyMiddle = _GenerateBodyMiddle("container", "div-body-middle", "", _content);
+    let _HTMLbody = _GenerateHTMLbody(_body_top, _HTMLbodyMiddle, _body_bottom, _body_script);
     return _GenerateHTML(_HTMLhead, _HTMLbody);
 };
 
 var GenerateHTMLSearch = function () {
-    let _content = `<h1> 🔍 Search</h1>
-<center><input type="search" id="searchInput" placeholder="input your searching content." autofocus="autofocus"/></center>
+    let _content = `<div class="input-group mb-3">
+    <div class="input-group-prepend">
+        <span class="input-group-text" id="basic-addon1">🔍</span>
+    </div>
+    <input type="search" class="form-control" id="searchInput" placeholder="input your searching content." autofocus="autofocus" aria-label="Username" aria-describedby="basic-addon1">
+</div>
 <div id=searchContent>nothing found</div>`;
 
-    let _HTMLbodyMiddle = _GenerateHTMLbodyMiddle("basic_outer_div", "", _content);
-    let _HTMLbody = _GenerateHTMLbody(_HTMLbody_top, _HTMLbodyMiddle, _HTMLbody_bottom, _HTMLbody_script_search);
+    let _HTMLbodyMiddle = _GenerateBodyMiddle("container", "div-body-middle", "", _content);
+    let _HTMLbody = _GenerateHTMLbody(_body_top, _HTMLbodyMiddle, _body_bottom, _body_script_search);
     return _GenerateHTML(_HTMLhead, _HTMLbody);
 };
 

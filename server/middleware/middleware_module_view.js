@@ -79,7 +79,7 @@ class ModuleView extends Base {
                     createTime: _ac.GetCreateTimeString(),
                 });
             });
-            let _html = TPLGEN.GenerateHTMLArticleList(_arrObj);
+            let _html = TPLGEN.GenerateHTMLArticleList(req.query.c, _arrObj);
             res.end(_html);
         } else {
             this.ComposeInfoboard(req, res, `There is NO such category name:${req.query.c}. go back <a href="/">home.</a>`);
