@@ -18,6 +18,7 @@ const pathes = {
     pathUser: ROOT_SERVER + "user/",
     pathCore: ROOT_SERVER + "core/",
     pathMW: ROOT_SERVER + "middleware/",
+    pathLayout: ROOT_SERVER + "layout/",
     urlUsersConfig: ROOT_SERVER + "users.json",
 
     pathTemplate: ROOT_TEMPLATE,

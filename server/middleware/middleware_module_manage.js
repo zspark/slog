@@ -7,7 +7,7 @@ const Utils = require(pathes.pathCore+"utils");
 const UserManager = require(pathes.pathCore+"user_manager");
 const IOSystem = require(pathes.pathCore+'io_system');
 const ArticleHandler = require(pathes.pathCore + "article_handler");
-const TPLGEN = require(pathes.pathCore + "template_generator");
+const TPLGEN = require(pathes.pathLayout + "template_generator");
 
 class ModuleManage extends Base {
   constructor() {

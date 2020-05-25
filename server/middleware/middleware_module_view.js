@@ -7,7 +7,7 @@ const LOG = require(pathes.pathCore + 'logger');
 const Utils = require(pathes.pathCore + "utils");
 const ArticleHandler = require(pathes.pathCore + "article_handler");
 const IOSystem = require(pathes.pathCore + "io_system");
-const TPLGEN = require(pathes.pathCore + "template_generator");
+const TPLGEN = require(pathes.pathLayout + "template_generator");
 var Base = require(pathes.pathMW + "middleware_module_base");
 
 class ModuleView extends Base {

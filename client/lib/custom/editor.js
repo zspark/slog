@@ -8,7 +8,6 @@ var cbTypeMapElem = null;
 var cbAllowHistoryElem = null;
 var slcTemplateElem = null;
 var floatDiv = null;
-var iframeWnd = null;
 
 var changeTimeout = null;
 var heartbeatIntervalID = null;
@@ -29,9 +28,7 @@ function OnBodyLoad() {
     cbTypeMapElem = document.getElementById("cbTypeMap");
     cbAllowHistoryElem = document.getElementById("cbAllowHistory");
     slcTemplateElem = document.getElementById("slcTemplate");
-    let _tmp = document.getElementById('preview');
-    iframeWnd = _tmp.contentWindow;
-    previewElem = iframeWnd.document.getElementsByClassName("div-preview")[0];
+    previewElem = document.getElementById("div-preview");
     markdownElem = document.getElementById('markdown');
     floatDiv = document.getElementById('float_buttons');
     alertModal = $('#alertModal');
@@ -122,8 +119,8 @@ function _TryRenderToHTML() {
         });
 
         try {
-            iframeWnd.Prism.highlightAll()
-            iframeWnd.MathJax.typeset()
+            window.Prism.highlightAll()
+            window.MathJax.typeset()
         } catch (e) {
             console.error(e);
         }

@@ -5,7 +5,7 @@ const ArticleHandler = require(pathes.pathCore + "article_handler");
 const LOG = require(pathes.pathCore + 'logger');
 const Utils = require(pathes.pathCore + "utils");
 const UserManager = require(pathes.pathCore + "user_manager");
-const TPLGEN = require(pathes.pathCore + "template_generator");
+const TPLGEN = require(pathes.pathLayout + "template_generator");
 const SessionMgr = require(pathes.pathCore + "client_session");
 var Base = require(pathes.pathMW + "middleware_module_base");
 

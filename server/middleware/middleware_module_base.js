@@ -2,7 +2,7 @@ const common = require("../core/common");
 const pathes = common.pathes;
 const constant = common.constant;
 const LOG = require(pathes.pathCore + 'logger');
-const TPLGEN = require(pathes.pathCore + "template_generator");
+const TPLGEN = require(pathes.pathLayout + "template_generator");
 
 class ModuleBase {
     constructor() {
