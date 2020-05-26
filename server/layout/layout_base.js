@@ -92,7 +92,7 @@ ${script ? script : ""}`;
 
     GenerateInfoBoard(info) {
         let content = `<h1> 😈 Oops!!</h1> <p>${info}</p>`;
-        return this.GenerateHtml(null, this.GenerateHtmlBody(null, this.GenerateBodyMiddle(null, content, null), null, null));
+        return this.GenerateHtml(null, this.GenerateHtmlBody(null, this.GenerateBodyMiddle(null, content, null,"container top-offset-70"), null, null));
     }
 
     _GenerateInput(caption, id, value) {

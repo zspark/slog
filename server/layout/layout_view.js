@@ -42,6 +42,33 @@ class LayoutView extends base {
         return this.GenerateHtml(null, this.GenerateHtmlBody(null, this.GenerateBodyMiddle("", content, null, "container top-offset-70"), null, null));
     }
 
+    GenerateGallery(arrList) {
+        let _out = "";
+        arrList.forEach(function (item) {
+            _out += `<a href="${item.imagePath}"> <img src="${item.thumbnailPath}"> </a>`;
+        });
+
+        let content =
+            `<div id="lightgallery" style=" margin-top: 20px; ">
+    ${_out}
+</div>`
+
+        let head = this.GenerateHtmlHead(`<link type="text/css" href="lib/lightgallery/css/lightgallery.min.css" rel="stylesheet" />`);
+
+        let script = this.GenerateBodyScript(`<script src="lib/lightgallery/js/lightgallery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function () {
+    lightGallery(document.getElementById('lightgallery'), {
+    thumbnail: true,
+    animateThumb: false,
+    showThumbByDefault: false
+    });
+});
+</script>`);
+
+        return this.GenerateHtml(head, this.GenerateHtmlBody(null, this.GenerateBodyMiddle("", content, null, "container top-offset-70"), "", script));
+    };
+
     _GenerateArticleInfo(fileName, title, author, createTime) {
         return `<div id="div-article-info">
     <p id="p-title"> ${title} </p>

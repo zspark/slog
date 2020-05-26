@@ -9,8 +9,6 @@ var Login = require(common.pathes.pathLayout + "layout_login")
 
 
 /*
-module.exports.GenerateHTMLPreview = GenerateHTMLPreview;
-module.exports.GenerateHTMLGallery = GenerateHTMLGallery;
 module.exports.GenerateHTMLManage = GenerateHTMLManage;
 module.exports.GenerateHTMLRebuildSummay = GenerateHTMLRebuildSummay;
 module.exports.GenerateHTMLListCategory = GenerateHTMLListCategory;
@@ -45,4 +43,7 @@ module.exports.GenerateHTMLHistory = function (arrList) {
 }
 module.exports.GenerateHTMLLogin = function (fileName) {
     return layoutLogin.Generate(fileName);
+}
+module.exports.GenerateHTMLGallery = function(arrList){
+    return layoutView.GenerateGallery(arrList);
 }
