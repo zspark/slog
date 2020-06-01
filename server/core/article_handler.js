@@ -393,4 +393,4 @@ module.exports.GetHistoryArray = function () { return h.GetHistoryArray(); }
 module.exports.Search = function (searchValue, out) { return h.Search(searchValue, out); }
 module.exports.Modify = function (ac, content) { return h.Modify(ac, content); }
 module.exports.Delete = function (ac) { return h.Delete(ac); }
-module.exports.Add = function (fileName) { return h.Add(fileName); }
+module.exports.Add = function (fileName, content) { return h.Add(fileName, content); }
