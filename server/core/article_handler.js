@@ -78,7 +78,7 @@ class History {
     GetTime() { return this.time; }
     GetTimeString() { return this.time.toDateString(); }
     UpdateTime() {
-        this.time = new Date(v);
+        this.time = new Date();
     }
 };
 
@@ -200,7 +200,7 @@ class ArticleHandler {
             let _topElem = this.m_arrayHistory[0];
             if (ac.GetFileName() == _topElem.GetFileName()) {
                 if (action == _topElem.GetAction()) {
-                    _topElem.SetTime(new Date());
+                    _topElem.UpdateTime();
                     return true;
                 }
             }

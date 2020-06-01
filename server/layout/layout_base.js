@@ -46,7 +46,7 @@ ${css ? css : ""}
                 <div class="dropdown-menu" aria-labelledby="dropdown01">
                     <a class="dropdown-item" href="/view?c=basic">basic</a>
                     <a class="dropdown-item" href="/view?c=major">graphics</a>
-                    <a class="dropdown-item" href="/view?c=default">default</a>
+                    <a class="dropdown-item" href="/view?c=linux">linux</a>
                 </div>
             </li>
             <li class="nav-item">
@@ -54,6 +54,9 @@ ${css ? css : ""}
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/view?c=math">Math</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/view?c=default">default</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/search">Search</a>

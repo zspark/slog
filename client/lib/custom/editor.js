@@ -3,11 +3,9 @@ var markdownElem = null;
 var titleElem = null;
 var authorElem = null;
 var categoryElem = null;
-var uploadFolderElem = null;
 var cbTypeMapElem = null;
 var cbAllowHistoryElem = null;
 var slcTemplateElem = null;
-var floatDiv = null;
 
 var changeTimeout = null;
 var heartbeatIntervalID = null;
@@ -21,16 +19,15 @@ var propertyModal = null;
 function OnBodyLoad() {
     console.log("editor body loaded!");
 
-    titleElem = document.getElementById("inputTitle");
-    authorElem = document.getElementById("inputAuthor");
-    categoryElem = document.getElementById("inputCategory");
-    uploadFolderElem = document.getElementById("inputUploadFolder");
+    titleElem = $('#inputTitle');
+    authorElem = $('#inputAuthor');
+    categoryElem = $('#inputCategory');
+    slcTemplateElem = $("#slcTemplate");
+    cbAllowHistoryElem = $("#cbAllowHistory");
+
     cbTypeMapElem = document.getElementById("cbTypeMap");
-    cbAllowHistoryElem = document.getElementById("cbAllowHistory");
-    slcTemplateElem = document.getElementById("slcTemplate");
     previewElem = document.getElementById("div-preview");
     markdownElem = document.getElementById('markdown');
-    floatDiv = document.getElementById('float_buttons');
     alertModal = $('#alertModal');
     propertyModal = $('#propertyModal');
 
@@ -62,44 +59,14 @@ function OnBodyLoad() {
     _TryRenderToHTML();
 
     heartbeatIntervalID = setInterval(() => {
-        //_PostXHRAction(_CreatePostData(0), null);
+        _PostXHRAction(_CreatePostData(0), null);
     }, 10000);
-
-    /// upload
-    document.ondragenter = function (e) {
-        e.preventDefault();
-    }
-
-    document.ondragover = function (e) {
-        e.preventDefault();
-        //document.innerHTML = '请松开';
-    }
-
-    document.ondragleave = function (e) {
-        e.preventDefault();
-        //document.innerHTML = '请拖入要上传的文件';
-    }
-
-    document.ondrop = function (e) {
-        e.preventDefault();
-        if (_CheckConnection()) {
-            var upfile = e.dataTransfer.files[0]; //获取要上传的文件对象(可以上传多个)  
-            var formdata = new FormData();
-            formdata.append('upfile', upfile); //设置服务器端接收的name为upfile  
-            let _q = `/upload?f=${uploadFolderElem.value}&n=${upfile.name}`;
-            _PostXHR(formdata, _q, 'json', null, (json) => {
-                //_PostXHR(formdata, _q, 'json', "application/x-www-form-urlencoded", (json) => {
-                console.log("successfully");
-            });
-        }
-    }
 };
 
 function _StopHeartBeat(msg) {
     if (heartbeatIntervalID != null) {
         clearInterval(heartbeatIntervalID);
         heartbeatIntervalID = null;
-        floatDiv.id = "float_buttons_error";
         console.error(msg);
     }
 }
@@ -143,12 +110,11 @@ function _CreatePostData(action) {
     let _obj = {
         "time": new Date(),
         "action": action,
-        "title": titleElem.value,
-        "author": authorElem.value,
-        "category": categoryElem.value,
-        "uploadFolder": "",
-        "template": slcTemplateElem.selectedOptions[0].text,
-        "allowHistory": cbAllowHistoryElem.checked,
+        "title": titleElem.val(),
+        "author": authorElem.val(),
+        "category": categoryElem.val(),
+        "template": slcTemplateElem.find("option:selected").text(),
+        "allowHistory": cbAllowHistoryElem.is(':checked'),
     };
     if (action == 1 || action == 2) {
         _obj["content"] = markdownElem.value;
@@ -168,8 +134,38 @@ function ChangeTypeMode() {
     }
 }
 
-function Property() {
+var alertionShowed = false;
+function ShowProperty(alertInfo) {
+    if(alertionShowed){
+        alertionShowed = false;
+        $('.alert').alert('close')
+    }
+    if (alertInfo) {
+        $("#alertion").append(`<div class="alert alert-warning alert-dismissible fade show" role="alert">
+  ${alertInfo}
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>`);
+        alertionShowed = true;
+    }
+    let title = titleElem.val();
+    let author = authorElem.val();
+    let category = categoryElem.val();
+    $('#btn-cancel').click((e) => {
+        propertyModal.modal("hide");
+        titleElem.val(title);
+        authorElem.val(author);
+        categoryElem.val(category);
+    });
+    $('#btn-save').click((e) => {
+        propertyModal.modal("hide");
+    });
     propertyModal.modal("toggle");
+}
+
+function Property() {
+    ShowProperty(null);
 };
 
 function Delete() {
@@ -180,7 +176,6 @@ function Delete() {
 };
 
 function _CheckConnection() {
-    $('.alert').alert()
     if (heartbeatIntervalID == null) {
         alert("you has dis-connected with server, copy your article and try reopen to edit!");
         return false;
@@ -188,8 +183,8 @@ function _CheckConnection() {
 }
 
 function _ShowAlertModal(info, cbFn) {
-    alertModal.find('#alertContent').text(info);
-    alertModal.find('#btn-continue').click((e) => {
+    $('#alertContent').text(info);
+    $('#btn-continue').click((e) => {
         alertModal.modal("hide");
         if (cbFn) cbFn();
     });
@@ -264,16 +259,16 @@ function _PostXHR(obj, url, responseType, contentType, fn) {
 };
 
 function _CheckCompletion() {
-    if (categoryElem.value == '') {
-        alert("enter category.");
+    if (categoryElem.val() == '') {
+        ShowProperty("enter category");
         return false;
     }
-    if (titleElem.value == '') {
-        alert("enter title.");
+    if (titleElem.val() == '') {
+        ShowProperty("enter title");
         return false;
     }
-    if (authorElem.value == '') {
-        alert("enter author.");
+    if (authorElem.val() == '') {
+        ShowProperty("enter author");
         return false;
     }
     return true;
