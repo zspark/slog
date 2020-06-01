@@ -107,6 +107,18 @@ ${script ? script : ""}`;
 </div>`;
     }
 
+    _GenerateSelect(caption, id, group, showName) {
+        let _tmp=`<label for="message-text" class="col-form-label">${caption}</label>
+<div class="input-group">
+    <select class="custom-select" id="${id}" aria-label="Example select with button addon" value=${showName}>`
+        group.map((name, idx) => {
+            _tmp += `<option value="${name}">${name}</option>`;
+        });
+        _tmp +=`</select>
+</div>`;
+        return _tmp;
+    }
+
     _GenerateCheckbox(caption, id, checked) {
         return `<div class="form-group form-check">
     <input type="checkbox" class="form-check-input" id=${id} ${checked ? "checked" : ""}>

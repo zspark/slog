@@ -29,7 +29,7 @@ return `<div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria
 </div>`;
     }
 
-    _GenerateModalProperty(title, author, categoryName, allowHistory) {
+    _GenerateModalProperty(title, author, categoryName, allowHistory, group) {
 return `<div class="modal fade" id="propertyModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -41,17 +41,7 @@ return `<div class="modal fade" id="propertyModal" tabindex="-1" role="dialog" a
                 ${this._GenerateInput("title", "inputTitle", title)}
                 ${this._GenerateInput("author", "inputAuthor", author)}
                 ${this._GenerateInput("category", "inputCategory", categoryName)}
-
-                <label for="message-text" class="col-form-label">layout:</label>
-                <div class="input-group">
-                    <select class="custom-select" id="slcTemplate" aria-label="Example select with button addon">
-                        <option value="1">default</option>
-                        <option value="2">default_no_title</option>
-                        <option value="3">fullscreen</option>
-                        <option value="4">fullscreen_no_title</option>
-                    </select>
-                </div>
-
+                ${this._GenerateSelect("layout", "slcTemplate", group, group[0])}
                 ${this._GenerateCheckbox("allow history","cbAllowHistory",allowHistory)}
             </div>
             <div class="modal-footer">
@@ -63,8 +53,7 @@ return `<div class="modal fade" id="propertyModal" tabindex="-1" role="dialog" a
 </div>`;
     }
 
-
-    Generate(content, title, author, categoryName, allowHistory, templateOptions) {
+    Generate(content, title, author, categoryName, allowHistory, group) {
         let middleMiddle = `<div class="row--1">
     <div class="col--2">
         <textarea id="markdown" form="myform" name="content">${content}</textarea>
@@ -75,7 +64,7 @@ return `<div class="modal fade" id="propertyModal" tabindex="-1" role="dialog" a
     </div>
 </div>`;
         let middleBottom = this._GenerateModalAlert();
-        middleBottom += this._GenerateModalProperty(title, author, categoryName, allowHistory);
+        middleBottom += this._GenerateModalProperty(title, author, categoryName, allowHistory, group);
 
         let head = this.GenerateHtmlHead(`<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.0/codemirror.min.css">
 <style>
