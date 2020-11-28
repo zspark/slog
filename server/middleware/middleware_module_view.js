@@ -67,11 +67,10 @@ class ModuleView extends Base {
         });
     };
 
-    ComposeArticleList(req, res) {
-        const _list = ArticleHandler.GetCategory(req.query.c);
-        if (_list) {
+    ComposeArticleList(req, res, list, n) {
+        if (list && list.Size()>0) {
             let _arrObj = [];
-            _list.ForEachFileName( _fileName => {
+            list.ForEachFileName( _fileName => {
                 const _ac = ArticleHandler.GetConfig(_fileName);
                 _arrObj.push({
                     fileName: _ac.GetFileName(),
@@ -79,10 +78,10 @@ class ModuleView extends Base {
                     createTime: _ac.GetCreateTimeString(),
                 });
             });
-            let _html = TPLGEN.GenerateHTMLArticleList(req.query.c, _arrObj);
+            let _html = TPLGEN.GenerateHTMLArticleList(n, _arrObj);
             res.end(_html);
         } else {
-            this.ComposeInfoboard(req, res, `There is NO such category name:${req.query.c}. go back <a href="/">home.</a>`);
+            this.ComposeInfoboard(req, res, `can NOT find anything about ${n}. go back <a href="/">home.</a>`);
         }
     };
 
@@ -144,10 +143,19 @@ function Init() {
 
         const _categoryName = req.query.c;
         if (_categoryName) {
-            mw.ComposeArticleList(req, res);
-        } else {
-            mw.ComposeURLFormatError(req, res);
+            const _list = ArticleHandler.GetCategory(_categoryName);
+            mw.ComposeArticleList(req, res,_list,_categoryName);
+            return;
         }
+
+        const _authorName = req.query.a;
+        if (_authorName) {
+            const _list = ArticleHandler.GetAuthor(_authorName);
+            mw.ComposeArticleList(req, res,_list,_authorName);
+            return;
+        } 
+
+        mw.ComposeURLFormatError(req, res);
     };
 
     let getFrontPage = function (req, res) {

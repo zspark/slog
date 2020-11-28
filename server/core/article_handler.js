@@ -10,17 +10,22 @@ const default_config_json = {
     "content": [],
 }
 
-class Category {
-    constructor(name) {
-        this.categoryName = name;
-        this._vecFileNames = [];
-    }
+class FileGroup{
+  constructor(name){
+    this.name=name;
+    this._vecFileNames=[];
+  }
 
-    Add(fileName) {
+    Add(fileName,atTop) {
         if (typeof fileName != "string") return false;
         let idx = this._vecFileNames.indexOf(fileName);
         if (idx >= 0) return false;
-        this._vecFileNames.unshift(fileName);/// need to set at top for recent display.
+
+        if(atTop){
+          this._vecFileNames.unshift(fileName);
+        }else{
+          this._vecFileNames.push(fileName);
+        }
         return true;
     }
 
@@ -43,7 +48,20 @@ class Category {
         }
         return false;
     }
-};
+}
+
+class Author extends FileGroup {
+  constructor(name){
+        super(name);
+  }
+
+}
+
+class Category extends FileGroup {
+    constructor(name) {
+        super(name);
+    }
+}
 
 /**
  * we save using toISOString,
@@ -144,21 +162,24 @@ class Article {
 
 class ArticleHandler {
     constructor() {
-        LOG.Info("[CONSTRUCT] article organizer...");
+        LOG.Info("[CONSTRUCTOR] article organizer...");
         this.m_mapArticle = new Map();
         this.m_mapCategory = new Map();
+        this.m_mapAuthor=new Map();
         this.m_arrayHistory = [];
 
         if (IOSystem.FileExist(pathes.urlArticleConfig)) {
             LOG.Info("read and parse article config...");
             let _configJson = JSON.parse(IOSystem.ReadFileUTF8(pathes.urlArticleConfig));
             let _arr = _configJson.content;
-
+          
+//{"fileName":"my_programming_philosophy_2019","title":"my programming philosophy 2019","createTime":"2020-03-01T14:58:04.850Z","modifyTime":"2020-04-25T14:22:22.159Z","author":"Jerry Chaos","category":"philosophy","layout":"default","allowHistory":true,"secret":false,"parser":null}
             const N = _arr.length;
             for (let i = 0; i < N; ++i) {
                 let _ac = new Article(_arr[i]);
                 this.m_mapArticle.set(_ac.GetFileName(), _ac);
                 this._AppendToCategory(_ac.GetCategoryName(), _ac.GetFileName());
+                this._AppendToAuthor(_ac.GetAuthor(), _ac.GetFileName());
             }
         }
 
@@ -174,6 +195,25 @@ class ArticleHandler {
             }
         }
     };
+
+    _RemoveFromAuthor(authorName, fileName) {
+        let _author = this.m_mapAuthor.get(authorName);
+        if (!_author) return false;
+        let _b=_author.Remove(fileName);
+        if (_b){
+            if (_author.Size() <= 0) this.m_mapCategory.delete(categoryName);
+        }
+        return _b;
+    }
+
+    _AppendToAuthor(authorName, fileName) {
+        let _author = this.m_mapAuthor.get(authorName);
+        if (!_author) {
+            _author = new Author(authorName);
+            this.m_mapAuthor.set(authorName, _author);
+        }
+        return _author.Add(fileName,true);
+    }
 
     _RemoveFromCategory(categoryName, fileName) {
         let _category = this.m_mapCategory.get(categoryName);
@@ -191,7 +231,7 @@ class ArticleHandler {
             _category = new Category(categoryName);
             this.m_mapCategory.set(categoryName, _category);
         }
-        return _category.Add(fileName);
+        return _category.Add(fileName,true);
     }
 
     _AppendToHistory(ac, action) {
@@ -264,6 +304,7 @@ class ArticleHandler {
         let _articleConfig = ac.Clone();
         this.m_mapArticle.set(fileName, _articleConfig);
         this._AppendToCategory(_articleConfig.GetCategoryName(), fileName);
+        this._AppendToAuthor(_articleConfig.GetAuthor(), fileName);
 
         this._SaveConfigToDisk(this.m_mapArticle,pathes.urlArticleConfig);
         this._SaveArticleToDisk(fileName, content);
@@ -282,6 +323,7 @@ class ArticleHandler {
         if (!this.HasConfig(fileName)) return false;
 
         this._RemoveFromCategory(ac.GetCategoryName(), fileName);
+        this._RemoveFromAuthor(ac.GetAuthor(), fileName);
         this.m_mapArticle.delete(fileName);
         this._SaveConfigToDisk(this.m_mapArticle,pathes.urlArticleConfig);
         this._DeleteArticleFromDisk(fileName);
@@ -381,6 +423,16 @@ class ArticleHandler {
             return null;
         }
     }
+
+    GetAuthor(authorName){
+        if (typeof authorName != "string") return null;
+        if (this.m_mapAuthor.has(authorName)) {
+            return this.m_mapAuthor.get(authorName);
+        } else {
+            return null;
+        }
+    }
+
     GetHistoryArray() { return this.m_arrayHistory; }
 };
 
@@ -389,6 +441,7 @@ module.exports.HasConfig = function(fileName){ return h.HasConfig(fileName); }
 module.exports.GetConfig = function(fileName){return h.GetConfig(fileName);}
 module.exports.CreateArticleProxy = function (fileName, creatorAccount) { return h.CreateArticleProxy(fileName, creatorAccount); }
 module.exports.GetCategory = function (categoryName) { return h.GetCategory(categoryName); }
+module.exports.GetAuthor = function (authorName) { return h.GetAuthor(authorName); }
 module.exports.GetHistoryArray = function () { return h.GetHistoryArray(); }
 module.exports.Search = function (searchValue, out) { return h.Search(searchValue, out); }
 module.exports.Modify = function (ac, content) { return h.Modify(ac, content); }
