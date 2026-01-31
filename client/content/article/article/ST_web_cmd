@@ -1,0 +1,443 @@
+## 打印106关键点
+```cpp
+#if 1
+                //std::cout << "hand_cout:" <<  human_action.hand_count<<std::endl;
+            if (human_action.face_count > 0)
+            {
+                std::cout << "face cout>0\tnumber" <<  human_action.face_count<<std::endl;
+                //int a = human_action.p_hands[0].key_points_count;
+                //int c = human_action.p_hands[0].key_points_count;
+                //int d = human_action.p_hands[0].key_points_count;
+                //cv::rectangle(frame, cv::Rect(a, c, b - a, d - c), cv::Scalar(1.f));
+                for (int i = 0; i < 106; ++i)
+                {
+                    const st_pointf_t &p = human_action.p_faces[0].face106.points_array[i];
+                    cv::circle(frame, cv::Point((int)p.x, (int)p.y), 2, cv::Scalar(1.f));
+                }
+                //std::cout << "b-a" <<  a << ",d-c:" <<  a << std::endl;
+            }
+#endif
+```
+
+
+## rotho相机
+```cpp
+
+#if 1
+    for(int i = 0; i < NUM; i++)
+    {
+        Vector2f tmp = toOrthViewportCoord(mFacePoseCalc.GetFilteredPoint(i, faceId), rotateType, viewportWidth, viewportHeight);
+        landmarks[i].x = tmp.x();
+        landmarks[i].y = tmp.y();
+    }
+#else
+    /// TEST: zw: file `test_pose.106` located at gitlab/pose_est repo.
+    static bool s_b = true;
+    static FILE *fis = nullptr;
+    if (s_b)
+    {
+        fis = fopen("./cc.106", "r");
+        s_b = false;
+    }
+    float *_tmp = (float *)landmarks.data();
+    for (int i = 0; i < 212; ++i)
+    {
+        fscanf(fis, "%f", _tmp + i);
+    }
+#endif
+
+    const float SCALE_M_CM = 0.01f; // meter to centimeter
+    affine_pose_t result;
+
+#if 1
+    pose_estimation(m_PoseHandle, landmarks.data(), landmarks.size(), &result);
+#else
+    static bool s_b = true;
+    static FILE *fis = nullptr;
+    if (s_b)
+    {
+        fis = fopen("./gtest.pose", "r");
+        s_b = false;
+    }
+    float *_tmp = (float *)&result.s;
+    for (int i = 0; i < 13; ++i)
+    {
+        fscanf(fis, "%f", _tmp + i);
+    }
+#endif
+```
+
+
+## shader encrypt
+```bash
+./englsl -encrypt '/home/SENSETIME/zhaowei1/workspace/code/st_mobile/englsl/rawdata/pose_model.bin' '/home/SENSETIME/zhaowei1/workspace/code/st_mobile/src/models/endata/en_pose_model.model' 
+```
+
+
+## android工程安装32位app
+```json
+// 在STMobileJNI与app目录下的build.gradle中添加：
+ndk {
+     abiFilters 'armeabi-v7a'
+}
+        
+// 在app下的build.gradle中添加（或修改）：        
+packagingOptions {
+     exclude 'lib/arm64-v8a/*.so'
+}
+```
+
+
+## android debug
+```bash
+# ndk dump code
+/usr/local/toolchains/__android-ndk-r14b/gcc/android-21/android-aarch64/bin/ndk-stack -sym . -dump 'your-path-to-a-tombstone-file' 
+
+
+# 控制台显示app内存;
+## 首先得到要查看app的pid：
+adb shell ps -A |grep (pkg)
+## 输出内存占用：
+adb shell dumpsys meminfo (pkg|pid)
+```
+
+
+
+
+
+## draw debug line
+```cpp
+if(human_action.body_count>0){
+            std::vector<cv::KeyPoint> kp;
+            for(int i=0;i<human_action.p_bodys[0].key_points_count;++i){
+                float x=human_action.p_bodys[0].p_key_points[i].x;
+                float y=human_action.p_bodys[0].p_key_points[i].y;
+                //cv::line(frame, cv::Point(x, y), cv::Scalar(1.f));
+                kp.emplace_back(cv::KeyPoint(x, y, 1));
+            }
+            cv::drawKeypoints(frame, kp, frame);
+        }
+```
+
+
+
+## android安装失败
+```java
+android.injected.testOnly = false
+```
+
+
+## debug human action output
+```cpp
+        if(human_action.face_count>0){
+            std::cout << "frame size:" << frame.cols << "," << frame.rows << std::endl;
+            std::cout << human_action.p_faces[0].face106.rect.top << "," << human_action.p_faces[0].face106.rect.bottom << "," << human_action.p_faces[0].face106.rect.left << "," << human_action.p_faces[0].face106.rect.right << std::endl;
+        }
+```
+
+
+## opencv convert color
+```cpp
+cv::Mat _f;
+cv::cvtColor(frame,_f,cv::COLOR_BGR2BGRA);
+st_mobile_gen_avatar_genface(h_gen_avatar, _f.data, ST_PIX_FMT_BGRA8888, _f.cols, _f.rows, _f.cols * 4, ST_CLOCKWISE_ROTATE_0, &human_action, true, -1);        
+```
+
+
+
+-0.0170611
+-0.0166206
+ -0.144673
+ 0.0521557
+ 0.0217815
+  0.741614
+ -0.124674
+-0.0719717
+ 0.0971964
+ 0.0481092
+-0.0322452
+ 0.0497978
+-0.0124409
+  0.121754
+ 0.0747594
+-0.0230568
+ 0.0409098
+ 0.0300633
+ 0.0582912
+  0.106883
+
+
+## gen bmp
+```cpp
+unsigned char p_rgb_buffer[128*128*3];
+for(int roww=0;roww<128;++roww){
+    for(int coll=0;coll<128;++coll){
+        const imgbase::Pixel_BGR_888& a = model_dst.Pixel(coll,roww);
+        p_rgb_buffer[(roww*128+coll)*3+0]=a.r;
+        p_rgb_buffer[(roww*128+coll)*3+1]=a.g;
+        p_rgb_buffer[(roww*128+coll)*3+2]=a.b;
+    }
+}
+save_rgb_to_bmp(128,128, p_rgb_buffer, "./tmmmmmmp.bmp");
+
+st_image_t tmp;
+tmp.width=Img_Gray.width;
+tmp.height=Img_Gray.height;
+tmp.data=Img_Gray.data;
+tmp.pixel_format=ST_PIX_FMT_GRAY8;
+tmp.stride=Img_Gray.stride;
+save_image_to_bmp(&tmp,"./AAA.bmp");
+
+#if 1
+            st_image_t tmp;
+            tmp.width=model_dst.Width();
+            tmp.height=model_dst.Height();
+            tmp.data=(unsigned char*)model_dst.RawData();
+            tmp.pixel_format=ST_PIX_FMT_RGB888;
+            tmp.stride=model_dst.Stride();
+            save_image_to_bmp(&tmp, "./AAA.bmp");
+#endif
+```
+
+```cpp
+int t = face->face106.rect.top;
+        int b = face->face106.rect.bottom;
+        int r = face->face106.rect.right;
+        int l = face->face106.rect.left;
+        std::cout << "top:" << t << ",bottom:" << b << ",right:" << r << ",left:" << l << std::endl;
+        std::cout<<face->face106.points_array[0].x<<","<<face->face106.points_array[0].y<<std::endl;
+
+        
+            imgbase::Pixel_BGR_888 *_tt = bgr_src.RawData();
+            std::cout<<"byte perpixel:"<<bgr_src.BytePerPixel()<<",height:"<<bgr_src.Height()<<",width:"<<bgr_src.Width()<<",format:"<<(int)bgr_src.Format()
+            <<"(0,0):"<<(int)_tt[0].r<<","<<(int)_tt[0].g<<","<<(int)_tt[0].b
+            <<"(100,100):"<<(int)_tt[100].r<<","<<(int)_tt[100].g<<","<<(int)_tt[100].b
+            <<std::endl;
+```
+
+
+
+## debug code
+```cpp
+if(human_action.face_count>0){
+  std::cout<<frame.cols<<","<<frame.rows<<std::endl;
+  int t=human_action.p_faces[0].face106.rect.top;
+  int b=human_action.p_faces[0].face106.rect.bottom;
+  int r=human_action.p_faces[0].face106.rect.right;
+  int l=human_action.p_faces[0].face106.rect.left;
+  std::cout<<"top:"<<t<<",bottom:"<<b<<",right:"<<r<<",left:"<<l<<std::endl;
+}
+```
+
+
+## pinch-face-v2.2 bone names
+``
+        "name": "head_all_p_N",
+        "name": "nose_up_p_N",
+        "name": "nose_p_N",
+        "name": "nose_d_02_p_N",
+        "name": "nose_01_p_R",
+        "name": "Cheek_03_p_R",
+        "name": "eye_01_p_R",
+        "name": "eye_02_p_R",
+        "name": "eye_04_p_R",
+        "name": "Cheek_02_p_R",
+        "name": "eye_03_p_R",
+        "name": "Cheek_01_p_R",
+        "name": "eyebrow_01_p_R",
+        "name": "eyebrow_02_p_R",
+        "name": "eyebrow_03_p_R",
+        "name": "jaw_02_p_R",
+        "name": "jaw_01_p_R",
+        "name": "mouth_01_p_R",
+        "name": "jaw_03_p_N",
+        "name": "jaw_02_p_L",
+        "name": "head_up_p_N",
+        "name": "jaw_01_p_L",
+        "name": "mouth_up_01_p_L",
+        "name": "mouth_up_01_p_R",
+        "name": "mouth_up_01_p_N",
+        "name": "mouth_low_03_p_N",
+        "name": "mouth_low_03_p_L",
+        "name": "mouth_low_03_p_R",
+        "name": "mouth_m_02_p_N",
+        "name": "mouth_m_02_p_R",
+        "name": "mouth_m_02_p_L",
+        "name": "nose_01_p_L",
+        "name": "Cheek_03_p_L",
+        "name": "eye_01_p_L",
+        "name": "eye_02_p_L",
+        "name": "eye_04_p_L",
+        "name": "eye_03_p_L",
+        "name": "Cheek_02_p_L",
+        "name": "Cheek_01_p_L",
+        "name": "eyebrow_01_p_L",
+        "name": "eyebrow_02_p_L",
+        "name": "eyebrow_03_p_L",
+        "name": "mouth_01_p_L",
+        "name": "eyeball_p_L",
+        "name": "eyeball_p_R",
+``
+
+
+
+## LOG
+```cpp
+LOGE("aaa,%s,%d", __FILE__, __LINE__);
+std::cout << "\taaa:\t" << __FILE__ << "," << __LINE__ << std::endl;
+            std::cout << "\t\t" << _tmp.data[0] << ", " << _tmp.data[1] << ", " << _tmp.data[2] << ", " << _tmp.data[3] << std::endl
+                      << "\t\t" << _tmp.data[4] << ", " << _tmp.data[5] << ", " << _tmp.data[6] << ", " << _tmp.data[7] << std::endl
+                      << "\t\t" << _tmp.data[8] << ", " << _tmp.data[9] << ", " << _tmp.data[10] << ", " << _tmp.data[11] << std::endl
+                      << "\t\t" << _tmp.data[12] << ", " << _tmp.data[13] << ", " << _tmp.data[14] << ", " << _tmp.data[15] << std::endl;
+                      
+#if 0
+        std::cout << "bbb:" << __FILE__ << "," << __LINE__ << std::endl;
+			std::cout << "\t\tscaling:\t" << pair.second.scale[0] << "," << pair.second.scale[1] << "," << pair.second.scale[2] << std::endl;
+			std::cout << "\t\trotation:\t" << pair.second.eulerAngle[0] << "," << pair.second.eulerAngle[1] << "," << pair.second.eulerAngle[2] << std::endl;
+			std::cout << "\t\tposition:\t" << pair.second.position[0] << "," << pair.second.position[1] << "," << pair.second.position[2] << std::endl;
+        std::cout <<std::endl<< "ccc:" << __FILE__ << "," << __LINE__ << std::endl;
+			std::cout << "\t\tscaling:\t" << m_LoadedPinchData[pair.first].scale[0] << "," << m_LoadedPinchData[pair.first].scale[1] << "," << m_LoadedPinchData[pair.first].scale[2] << std::endl;
+			std::cout << "\t\trotation:\t" << m_LoadedPinchData[pair.first].eulerAngle[0] << "," << m_LoadedPinchData[pair.first].eulerAngle[1] << "," << m_LoadedPinchData[pair.first].eulerAngle[2] << std::endl;
+			std::cout << "\t\tposition:\t" << m_LoadedPinchData[pair.first].position[0] << "," << m_LoadedPinchData[pair.first].position[1] << "," << m_LoadedPinchData[pair.first].position[2] << std::endl;
+        std::cout <<std::endl<< "ddd:" << __FILE__ << "," << __LINE__ << std::endl;
+			std::cout << "\t\tscaling:\t" << dst_trans.scale[0] << "," << dst_trans.scale[1] << "," << dst_trans.scale[2] << std::endl;
+			std::cout << "\t\trotation:\t" << dst_trans.eulerAngle[0] << "," << dst_trans.eulerAngle[1] << "," << dst_trans.eulerAngle[2] << std::endl;
+			std::cout << "\t\tposition:\t" << dst_trans.position[0] << "," << dst_trans.position[1] << "," << dst_trans.position[2] << std::endl;
+#endif
+```
+
+
+```bash
+# pack
+cppbuild pack -p android -c sticker_effects
+```
+
+```cpp
+CMeshEntity *pMeshEntity = smr->GetMeshEntity();
+                CMeshBuffer &mBuffer = pMeshEntity->GetMeshBuffer();
+                int N = mBuffer.GroupsCount();
+                for (int i = 0; i < N; ++i)
+                {
+                    CMeshGroup *pGrp = mBuffer.GroupAtIndex(i);
+                    std::cout << pGrp->GetVertices().size() << std::endl;
+                }
+```
+
+
+## mount
+```bash
+$ sudo mkdir /mnt/nfs # nfs可以替换成其他名字 
+$ sudo mount -t nfs 10.107.2.1:/shared/Ubuntu-16.04 /mnt/nfs
+```
+
+
+
+## adb
+android studio应该有adb的守护进程,如果你总是遇到"unknown device"这样的问题,不妨尝试:
+* 关闭android studio;
+* 控制台 **killall adb**;
+* **adb reboot**;
+* **adb start-server**;
+* 多次在android stduio中killall adb;
+* and then:adb reboot;
+
+
+```bash
+killall adb
+adb reboot
+netstat -ano |grep 5037
+```
+
+## render order:
+render_objects_with_content[renderobject vec] -> render_metascene_gameobject_with_content[instance] -> gameobject::render_worldspace -> gameobject::render_game_object[recursively] -> renderer::render -> render_node -> entity::render_node_mesh -> render_mesh_group
+
+update_metascenelist_with_context -> metascene::update -> metascene::updategameobject[recursively]
+
+update_renderobjectlist_with_context -> updateRenderobject -> gameobject::updatePerInstance -> upategameobject -> AnimatedMeshEntity::Update -> AnimatedMeshEntity::UpdateTransform ->animator::Calculate
+
+## code
+* 解析metascene中的gameobject -> MetaSceneParser::LoadSceneFromString(x)
+* 平滑bs，适配屏幕的逻辑 -> facefit.cpp
+
+
+## eigen x86对齐宏：
+```cpp
+public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+typedef std::vector<Eigen::Quaternionf,
+	Eigen::aligned_allocator<Eigen::Quaternionf> > EigenVecQuat;
+```
+
+
+## copy to local
+
+```bash
+# widonws
+cd F:\sensetime\workspace\st_mobile_android\Avatar\STMobileJNI\src\main\jni\prebuilt\lib\arm64-v8a
+
+scp zhaowei1@10.4.204.34:/home/SENSETIME/zhaowei1/workspace/multi_avatar/st_mobile/install/android-aarch64/release/lib/libst_mobile.so libst_mobile.so
+
+# windows async_load
+cd F:\sensetime\workspace\async_load\st_mobile_android\Avatar\STMobileJNI\src\main\jni\prebuilt\lib\arm64-v8a
+
+scp zhaowei1@10.4.204.34:/home/SENSETIME/zhaowei1/workspace/async_load /st_mobile/install/android-aarch64/release/lib/libst_mobile.so libst_mobile.so
+```
+
+```bash
+# windows multi_avatar
+cd F:\sensetime\workspace\multi_avatar\st_mobile_android\Avatar\STMobileJNI\src\main\jni\prebuilt\lib\arm64-v8a
+
+scp zhaowei1@10.4.204.34:/home/SENSETIME/zhaowei1/workspace/multi_avat ar/st_mobile/install/android-aarch64/release/lib/libst_mobile.so libst_mobile.so
+```
+
+
+```bash
+# linux
+cd /home/SENSETIME/zhaowei1/workspace_RO/st_mobile_android_RO/Avatar/STMobileJNI/src/main/jni/prebuilt/lib/arm64-v8a
+
+cp ~/workspace/multi_avatar/st_mobile/install/android-aarch64/release/lib/libst_mobile.so ./libst_mobile.so
+
+# linux async_load
+cd /home/SENSETIME/zhaowei1/workspace/async_load/st_mobile_android/Avatar/STMobileJNI/src/main/jni/prebuilt/lib/arm64-v8a
+
+cp ~/workspace/async_load/st_mobile/install/android-aarch64/release/lib/libst_mobile.so ./libst_mobile.so
+```
+
+## android libst_mobile.so path
+F:\sensetime\workspace\st_mobile_android\Avatar\STMobileJNI\src\main\jni\prebuilt\lib\arm64-v8a
+
+## license path
+F:\sensetime\workspace\st_mobile_android\Avatar\app\build\intermediates\assets\debug
+
+
+## get version
+auto vvvv=glGetString(GL_SHADING_LANGUAGE_VERSION);  
+ST3D_ERROR("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:%s",vvvv);
+
+
+---
+
+# 2020 上半年OKR
+
+## 目标（ O ）
+持续整理并优化程序结构与性能
+## 关键结果 （KR）
+* 5月前完成合并shader到统一的逻辑；
+* 将平台兼容层独立出来，抹平业务开发对平台兼容的顾虑，保证兼容层覆盖90%以上；
+* 测试SDK在性能方面的瓶颈，针对性提升性能，整体提升不低于20%；
+
+## 目标（ O ）
+SDK的功能开发
+## 关键结果 （KR）
+* 3月下旬前完成多人avatar在新的异步引擎下的测试，合并到主干分支保证与其他功能ok；
+* 4月前完成增加SSAO效果，保证主流平台兼容性；
+
+
+# OpenGL ES extensions
+GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_EGL_sync GL_OES_vertex_half_float GL_OES_framebuffer_object GL_OES_rgb8_rgba8 GL_OES_compressed_ETC1_RGB8_texture GL_AMD_compressed_ATC_texture GL_KHR_texture_compression_astc_ldr GL_KHR_texture_compression_astc_hdr GL_OES_texture_compression_astc GL_OES_texture_npot GL_EXT_texture_filter_anisotropic GL_EXT_texture_format_BGRA8888 GL_OES_texture_3D GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_QCOM_alpha_test GL_OES_depth24 GL_OES_packed_depth_stencil GL_OES_depth_texture GL_OES_depth_texture_cube_map GL_EXT_sRGB GL_OES_texture_float GL_OES_texture_float_linear GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_EXT_texture_type_2_10_10_10_REV GL_EXT_texture_sRGB_decode GL_OES_element_index_uint GL_EXT_copy_image GL_EXT_geometry_shader GL_EXT_tessellation_shader GL_OES_texture_stencil8 GL_EXT_shader_io_blocks GL_OES_shader_image_atomic GL_OES_sample_variables GL_EXT_texture_border_clamp GL_EXT_multisampled_rende
+
+
+# ip in company
+10.4.204.34
+

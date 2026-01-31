@@ -1,0 +1,19 @@
+
+
+* **求整个HDR图的平均亮度：**
+\\[L_{aver}=\frac{1}{N}exp(\Sigma_{x,y}(log(\sigma+L(x,y)))\\]
+
+其中，\\(\sigma\\)为精度可接受情况下的大于0的小数；
+
+* **求对应像素点的新颜色（非最终颜色）：**
+\\[L_{m}=\frac{\alpha}{L_{aver}}L(x,y)\\]
+
+其中\\(\alpha\\)是一个float型系数，常见为0.09,0.18,0.36,0.72等；
+
+* **求最终颜色（version A)；**
+\\[L_{final}(x,y)=\frac{L_{m}(x,y)}{1+L_{m}(x,y)}\\]
+
+* **求最终颜色（version B)；**
+\\[L_{final}(x,y)=\frac{L_{m}(x,y)(1+\frac{L_m(x,y)}{L_{white}^2})}{1+L_{m}(x,y)}\\]
+
+其中，\\(L_{white}\\)为平均灰度；

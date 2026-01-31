@@ -1,0 +1,20 @@
+# gdb
+cont
+
+[see](/codeview?fileName=test.js)
+
+break
+
+info
+
+run
+
+list
+
+next
+
+step
+
+## 技巧
+
+* 打印数组中前10个 (gdb) -> **p *array@10**

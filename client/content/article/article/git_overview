@@ -1,0 +1,8 @@
+# 添加与移除
+# 提交
+# 分支
+# 历史
+# 远程仓库
+# 杂项
+* 对称差（symmetric difference）：branchA...branchB 只包含branchA与branchB之间不共同存在的提交（注意是3个点号）
+

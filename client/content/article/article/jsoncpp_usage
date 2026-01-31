@@ -1,0 +1,25 @@
+```cpp
+json11::Json::array boneConfs;
+for (auto &pair : boneConf)
+{
+    json11::Json::object posV = json11::Json::object{
+        {"X", pair.second.position[0]},
+        {"Y", pair.second.position[1]},
+        {"Z", pair.second.position[2]}
+    };
+    json11::Json::object rotV = json11::Json::object{
+        {"X", pair.second.eulerAngle[0] * -1.f},
+        {"Y", pair.second.eulerAngle[1] * -1.f},
+        {"Z", pair.second.eulerAngle[2] * -1.f}
+    };
+    boneConfs.push_back(bone);
+}
+
+json11::Json configObj = json11::Json::object{
+    {"BoneCustomDataList", boneConfs},
+    {"BlendShapeList", BSConfs},
+    {"version", "1.2"}
+};
+
+json_buffer = configObj.dump();
+```

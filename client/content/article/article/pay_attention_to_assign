@@ -1,0 +1,31 @@
+
+
+You should always be carful when assign values to variables, especially instances that involve copy constructor.
+
+e.g.
+
+```cpp
+typedef std::map<int, MatLibrary> Matlib;
+Matlib m_Matlib;
+//...others...
+MatLibrary m;
+m.index=size;
+m.matData=m_materialTypeMap_string_Json[DEFAULT].toStyledString();
+m.matDefinitionname="NewMaterial_"+to_string(size);
+m_Matlib[0]=m;
+
+// this line should be carful, the assignment is invalide.
+m.aamatindex=materialIndexInMap;
+```
+
+The above example shows you the potential risk of using copy constructor. For this example you can switch these two lines to make it right.
+
+```cpp
+// these are right order.
+m.aamatindex=materialIndexInMap;
+m_Matlib[0]=m;
+```
+
+In my opinion, std templates are mostly used as a set of tags. Just like table of contents of a book, it has no concrete context but you can make a ful scanning of a book by reading it. and of course you can also move to right context by it's direct link (if ebook). So what I am trying to say is that you should always use templats to handle your pointers of concrete instances not themselves.
+
+

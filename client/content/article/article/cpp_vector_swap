@@ -1,0 +1,11 @@
+今天同事说vector的clear会造成内存泄漏，需要使用swap函数。经过查询专业文档与测试，发现使用swap确实有一定好处，不过依然要就需而用：
+
+swap是将两个vector对象交换，这种交换不是复杂的对象拷贝，而是简单的彼此持有的对方元素的引用，capacity也会彼此互换，这一点是同事说的重点，我们在释放成员vector元素的使用，使用一个临时vector对象（其capacity为1）与成员vector互换，临时对象在出了作用域后自动将其释放，从而既销毁了元素又回收了capacity大小的内存； 
+
+>Exchanges the contents of the container with those of other. Does not invoke any move, copy, or swap operations on individual elements. All iterators and references remain valid. The past-the-end iterator is invalidated. 
+>
+>--- cppreference
+
+不好的地方就是每次swap后capacity变为1，当有新元素加入后，会再次导致capacity的倍数增长。如果在你软件的需求中有明显的这种行为（容器时不时要清空元素，又会时不时加入新的元素，每次加入删除的元素数量差不多），自然用clear最好，免得元素调用析构与拷贝构造； 
+
+说法“用clear的会造成‘内存泄漏’”体现在成员vector由于元素的加入导致其capacity倍数增长，而如果后续元素较少，这种显然就是我所谓的“客观内存泄漏”了。 

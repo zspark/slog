@@ -1,0 +1,18 @@
+
+#  浅拷贝错误
+
+在调试程序的时候，发现一个全局变量莫名其妙的被释放掉，查了半天，发现自己犯了一个低级错误，真正是阎王好斗，小鬼难缠。错误出在直接用memcpy拷贝下面结构体到另一个实例中，导致动态长度字符串在副本被析构后原件跟着完蛋，小记一下，提醒自己。 
+
+```cplusplus
+struct SDataSavable {
+QString remoteRepoURL;
+QString localFolderPath;
+QString repoName;
+QString branchName;
+QString commitID;
+};
+```
+
+vector自动扩容导致指针失效；
+
+一个vector<SomeClass>，容量是1，此时我获取了里面唯一一个实例的指针，保存起来以便长期使用，现在该vector扩容了，由于底层申请新的内存，拷贝，释放等操作，导致我缓存起来的指针失效了，这个问题要注意； 

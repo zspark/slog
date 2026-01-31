@@ -1,0 +1,26 @@
+
+```bash
+./AStyle.exe a.h --mode=c --style=google -n -s4pk1W1xWw
+```
+
+* 不要备份文件：-n(--suffix=none)
+* --style=google
+* (-s4)--indent-spaces=4
+* (-t4)--indent-tabs=4
+* --attach-namespaces / -xn
+* --attach-classes / -xc
+* --attach-inlines / -xl
+* --attach-closing-while / -xV
+* --indent-switches / -S
+* --indent-namespaces / -N
+* --indent-preproc-block / -xW
+* --indent-preproc-define / -w
+* --indent-col1-comments / -Y
+* --break-blocks / -f
+* --pad-oper / -p 
+* --delete-empty-lines / -xe
+* --align-pointer=type   / -k1
+* --align-reference=type   / -W1
+* --add-braces / -j 
+* --close-templates / -xy
+* --mode=c

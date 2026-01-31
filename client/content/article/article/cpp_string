@@ -1,0 +1,138 @@
+**Please concentrate on containers of C++11 standard**
+
+# string类
+string类是由头文件string支持的（注意，头文件string.h和cstirng支持对C-风格字符串进行操纵的C库字符串函数，但不支持string类）。
+
+## 构造字符串
+使用构造函数时都进行了简化，即隐藏了这样一个事实：string实际上是模板具体化basic_string`<char>`的一个typedef，同时省略了内存管理相关的参数。size_type是一个依赖于实现的整型，是在头文件string中定义的。**string类将string::npos定义为字符串的最大长度，通常为unsigned int的最大值**。另外，表格中使用缩写NBTS(null-terminated string)来表示以空字符结束的字符串——传统的C字符串。
+
+
+\
+**string类的构造函数**
+
+|构造函数|描述|
+| -- | -- | 
+|string(const char *s) |将string对象初始化为s指向的NBTS |
+|string (size_type n, char c) |创建一个包含n个元素的string对象，其中每个元素都被初始化为字符c |
+|string(const string & str) |将一个string对象初始化为string对象str(复制构造函数) |
+|string() |创建一个默认的string对象，长度为0(默认构造函数) |
+|string(const char *s,size_type n)|将string对象初始化为s指向的NBTS的前n个字符，即便超过的NBTS的结尾 |
+|template`<class Iter>`<br>string(Iter begin,Iter end) |将string对象初始化为区间(begin end)内的字符，其中begin和end的行为就像指针，用于指定位置，范围包括begin在内，但不包括end |
+|string(const string &str, string size_type pos = 0,size_type_n = npos) |将一个string对象初始化为对象str中从位置pos开始到结尾的字符，或从位置pos开始的n个字符|
+|string(string &&str)noexcept|这是C++11新增的，它将一个string对象初始化为string对象str，并可能修改str(移动构造函数)|
+|string(initializer_list`<char>` il) |这是C++11新增的，它将一个string对象初始化为初始化列表il中的字符 |
+
+```cpp
+#include <iostream>
+#include<string>
+using namespace std;
+
+int main() { 
+string one("Lottery Winner");   //ctor #1
+cout << one << endl;
+
+string two(20,'$');    //ctor #2
+cout <<  two << endl;
+
+string three(one);  //ctor #3
+cout <<  three <<endl;
+
+one += " Oops! ";    // overloaded +=
+cout <<one << endl;
+
+two = "Sorry! ";
+three[0] = 'P';
+string four;    // ctor #4
+four = two + three;    // overloaded + , =
+cout << four << endl;
+
+char alls[] = "All's well that end well";
+string five(alls,20);  // ctor #5
+cout << five << "!\n";
+
+//string six(alls+6,alls+10);  // ctor 6
+//cout << six << ", ";
+
+//string seven(&five[6], &five[10]);  //ctor 6 again
+//cout << seven << "...\n";
+
+string eight(four , 7, 16);  //ctor #7
+cout << eight << "in motion!" << endl;
+
+return 0;
+}
+```
+## string类输入
+对于C-风格字符串，有3种方式：
+
+```cpp
+char info[100];
+cin >> info;              // read a word.      
+// Could be a problem if input size >9 characters
+cin.getline(info,100);    // read a line, discard \n
+// may truncate input
+cin.get(info,100);        // read a line, leave \n in queue
+```
+
+对于string对象，有两种方式：
+
+```cpp
+string stuff;
+cin >> stuff;            //read a word
+// can read a very very long word
+getline(cin, stuff);     // read a line, discard \n
+// no truncation
+```
+
+两个版本的getline()都有一个可选参数，用于指定使用哪个字符来确定输入的边界：
+
+```cpp
+cin.getline(info, 100, ’:’);   // read up to : , discard : 
+getline(stuff, ‘:’);           // read up to : ,  discard : 
+```
+
+在功能上，它们之间的主要区别在于，string版本的getline()将自动调整目标string对象的大小，使之刚好能够存储驶入的字符；
+
+在设计方面的一个区别是，读取C-风格字符串的函数是istream类的方法，而string版本是独立的函数。这就是对于C-风格字符串输入，cin是调用对象；而对于string对象输入，cin是一个函数参数的原因。
+
+然而string输入函数也存在一些限制：
+
+>第一个限制因素是string对象的最大允许长度，由敞亮string::npos指定。这通常是最大的unsigned int值，因此对于普通的交互式输入，这不会带来实际的限制；但您如果试图将整个文件的内容读取到单个string对象中，这可能成为限制因素。
+>
+>第二个限制因素是程序可以使用的内存量。
+
+
+## 使用字符串
+
+* 比较字符串。
+
+string类对全部6个运算关系符都进行了重载。如果在机器排列序列中，一个对象为与另一个对象的前面，则前者被视为小于后者。对于每种关系字符，都以三种方式被重载：
+
+```cpp
+string snake1(“cobra”);
+string snake2(“cobr1”);
+char snake3[20] = “anaconda”;
+if(snake1 < snake2)   // operator<(const string &, const string &)
+...
+if(snake1 == snake3)  // operator<(const string &, const char *)
+...
+if(snake3 != snake2)  // operator<(const char *, const string &)
+...
+```
+
+* 确定字符串长度
+
+size()和length()成员函数都返回字符串中的字符数：
+
+```cpp
+if(snak1.length() == snake2.size())
+cout << "Both strings have the same length.\n";
+```
+
+**为什么两个函数完成相同任务呢？length()成员来自较早版本的string类，而size()是为提供STL兼容性而添加的。**
+
+* 以多种不同的方式在字符串中搜索给定的子字符串或字符。
+
+例如：重载的 find()、rfind()、find_first_od()、find_last_of()、find_first_not_of()和find_last_not_of() 等方法。具体用法参照C++Primer Plus(第六版) p662
+
+

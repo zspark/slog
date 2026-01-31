@@ -1,0 +1,385 @@
+## 数组的智能指针 使用
+数组的智能指针的限制:
+* unique_ptr的数组智能指针，没有*和->操作，但支持下标操作[]
+* shared_ptr的数组智能指针，有*和->操作，但不支持下标操作[]，只能通过get()去访问数组的元素。
+* shared_ptr的数组智能指针，必须要自定义deleter
+
+```cpp
+#include <iostream>
+#include <memory>
+#include <vector>
+
+using namespace std;
+
+class test{
+public:
+  explicit test(int d = 0) : data(d){cout << "new" << data << endl;}
+  ~test(){cout << "del" << data << endl;}
+  void fun(){cout << data << endl;}
+public:
+  int data;
+};
+int main(){
+  //test* t = new test[2];                                                      
+  unique_ptr<test[]> up(new test[2]);
+  up[0].data = 1;
+  up[0].fun();
+  up[1].fun();
+  shared_ptr<test> sp(new test[2], [](test* p){delete [] p;});
+  (sp.get())->data = 2;//数组的第一个元素                                       
+  sp->data = 10;
+  test& st = *sp;
+  st.data = 20;
+  (sp.get() + 1)->data = 3;//数组的第二个元素                                   
+  return 0;
+}
+```
+
+
+
+
+## redirection cout to file
+```cpp
+ofstream outf("out.txt");
+streambuf *default_buf = nullptr;
+//获取cout默认输出
+default_buf = std::cout.rdbuf();
+
+//重定向cout输出到文件
+std::cout.rdbuf(outf.rdbuf());
+
+// revert
+std::cout.rdbuf(default_buf);
+```
+
+
+
+## tricks
+```cpp
+/// from Assimp source code
+template < typename IntegerType >
+inline
+IntegerType gcd( IntegerType a, IntegerType b ) {
+	const IntegerType zero = (IntegerType)0;
+	while ( true ) {
+		if ( a == zero )
+			return b;
+		b %= a;
+
+		if ( b == zero )
+			return a;
+		a %= b;
+	}
+}
+
+template < typename IntegerType >
+inline
+IntegerType lcm( IntegerType a, IntegerType b ) {
+	const IntegerType t = gcd (a,b);
+	if (!t)
+        return t;
+	return a / t * b;
+}
+
+template<class T>
+inline
+T getEpsilon() {
+    return std::numeric_limits<T>::epsilon();
+}
+```
+
+
+## std::setfill
+```cpp
+// setfill example
+#include <iostream>     // std::cout, std::endl
+#include <iomanip>      // std::setfill, std::setw
+
+int main () {
+  std::cout << std::setfill ('x') << std::setw (10);
+  std::cout << 77 << std::endl;
+  return 0;
+}
+
+/// =>  xxxxxxxx77
+```
+
+
+
+
+## 读取文件到memory
+```cpp
+std::ifstream is(_fileURL.c_str(), std::ios::binary | std::ios::in);
+if (!is.good()) {
+    /// error;
+}
+is.seekg(0, ios::end);
+const int L = static_cast<int>(is.tellg());
+is.seekg(0, ios::beg);
+char *buffer = new (nothrow) char[L];
+if (nullptr == buffer) {
+    /// error;
+}
+is.read(const_cast<char *>(buffer), L);
+is.close();
+```
+
+
+## 析构map中的对象
+下面代码是从Assimp源码中看到的，利用funcor析构map元素;
+```cpp
+/** helper for std::for_each to delete all heap-allocated items in a container */
+template<typename T>
+struct delete_fun
+{
+    void operator()(const volatile T* del) {
+        delete del;
+    }
+};
+
+delete_fun<aiNode> deleter;
+std::for_each(nodes.begin(), nodes.end(), deleter);
+```
+
+
+
+
+
+## 多个if-else嵌套的优化写法
+下面代码是我首次从公司同事那里学到的，很有“奇淫巧技”的味道。
+```cpp
+/// if you have such code
+void some-func{
+if(a){
+	if(b){
+    	if(c){
+        	if(d){
+            	// logic
+            }
+        }
+    }
+}
+// more logic to do
+}
+```
+
+```cpp
+/// you may write like this
+void some-func{
+do{
+	if(!a)break;
+	if(!b)break;
+	if(!c)break;
+	if(!d)break;
+    // logic
+}while(false)
+// more logic to do
+}
+```
+
+
+## remember to memset structure instance to 0 before use
+下面代码是我使用github上第三方库（cgltf）解析GLTF2.0模型时犯的错误：没有在使用结构体之前将其成员设为0，导致库逻辑误认为有合法直而使用奔溃。
+
+<blockquote class="tip">
+将结构体赋值0应该是c风格代码的必修课。
+</blockquote>
+
+```cpp
+cgltf_options options;
+memset(&options, 0, sizeof(cgltf_options));/// set mem to 0 before use;
+cgltf_result result = cgltf_parse_file(&options, m_sFileURL.c_str(), &m_gltfData);
+```
+
+
+## 2020-02-21
+size_t 类型定义在cstddef头文件中，该文件是C标准库的头文件stddef.h的C++版。**它是一个与机器相关的unsigned类型**，其大小足以保证存储内存中对象的大小。
+
+
+## 2020-02-08
+```cpp
+int a = 10;
+auto au_a = a;//自动类型推断，au_a为int类型
+cout << typeid(au_a).name() << endl;
+// -> int
+```
+
+## 2020-01-12
+```cpp
+STGenAvatarManager* manager = new(std::nothrow) STGenAvatarManager();
+```
+
+
+## 2020-01-11
+
+直接使用map[index]获取到的元素，不能在const函数中，它应该不是const类型，可以使用at函数，举例：
+
+```cpp
+std::map m;
+const int GetSize(int offset)const{
+return m[offset]->GetSize();
+};
+```
+
+the correct way is :
+
+```cpp
+std::map m;
+const int GetSize(int offset)const{
+return m.at(offset)->GetSize();
+};
+```
+
+
+
+##  2019-12-15
+自定义命名空间下不要include标准库，否则会出现好多未定义。
+
+##  chrono
+
+```cpp
+std::chrono::milliseconds ms{3}; // 3 milliseconds
+// 6000 microseconds constructed from 3 milliseconds
+std::chrono::microseconds us = 2*ms;
+// 30Hz clock using fractional ticks
+std::chrono::duration<double, std::ratio<1, 30>> hz30(3.5);
+
+std::cout <<  "3 ms duration has " << ms.count() << " ticks\n"
+<<  "6000 us duration has " << us.count() << " ticks\n"
+<<  "3.5 30Hz duration has " << hz30.count() << " ticks\n";       
+```
+
+## atomic
+```cpp
+// constructing atomics
+#include <iostream>       // std::cout
+#include <atomic>         // std::atomic, std::atomic_flag, ATOMIC_FLAG_INIT
+#include <thread>         // std::thread, std::this_thread::yield
+#include <vector>         // std::vector
+
+std::atomic<bool> ready (false);
+std::atomic_flag winner = ATOMIC_FLAG_INIT;
+
+void count1m (int id) {
+while (!ready) { std::this_thread::yield(); }      // wait for the ready signal
+for (volatile int i=0; i<1000000; ++i) {}          // go!, count to 1 million
+if (!winner.test_and_set()) { std::cout << "thread #" << id << " won!\n"; }
+};
+
+int main ()
+{
+std::vector<std::thread> threads;
+std::cout << "spawning 10 threads that count to 1 million...\n";
+for (int i=1; i<=10; ++i) threads.push_back(std::thread(count1m,i));
+ready = true;
+for (auto& th : threads) th.join();
+
+return 0;
+}
+```
+
+
+
+##  RAII
+
+这个虽然是老生常谈的事情，但实际应用起来确实很有味道，仅仅了解会使用还不够，要灵活运用。
+
+```cpp
+class Resource {
+public:
+explicit Resource(int bytes){
+glGetIntegerv(GL_UNPACK_ALIGNMENT, &m_lastAlignedBytes);
+glPixelStorei(GL_UNPACK_ALIGNMENT, bytes);
+}
+~Resource(){
+glPixelStorei(GL_UNPACK_ALIGNMENT, m_lastAlignedBytes);
+}
+
+private:
+int m_lastAlignedBytes;
+};
+```
+局部空间构造一个Resource临时实例，空间出来后实例销毁，还原gl状态，多么的优美。
+
+##  模板
+模板函数，里面要用到具体的函数，但是我希望在一个逻辑里面能简单的使用一个方法得到，可以使用下面这样的写法：
+
+```cpp
+// Example program
+#include <iostream>
+
+class Json{
+public:
+int GetInt(){
+return 1;
+};
+float GetFloat(){
+return 2.0f;
+};
+bool GetBool(){
+return true;
+};
+double GetDouble(){
+return 3.0;
+};
+};
+
+template <typename T>
+void GetValue(Json& j,T&);
+
+template<>
+void GetValue(Json& j,int& a){
+a= j.GetInt();
+}
+template<>
+void GetValue(Json& j,float& a){
+a= j.GetFloat();
+}
+template<>
+void GetValue(Json& j,bool& a){
+a= j.GetBool();
+}
+template<>
+void GetValue(Json& j,double& a){
+a= j.GetDouble();
+}
+
+int main()
+{ 
+Json j;
+int i=-1;  GetValue(j,i);
+float f=-1.0f;  GetValue(j,f);
+bool b=false;  GetValue(j,b);
+double d=-1.0;  GetValue(j,d);
+std::cout<<"Print:"<<i<<","<<f<<","<<b<<","<<d<<std::endl; //Print:1,2,1,3
+}
+```
+
+
+
+## lock_guard
+互斥类的最重要成员函数是lock()和unlock()。在进入临界区时，执行lock()加锁操作，如果这时已经被其它线程锁住，则当前线程在此排队等待。退出临界区时，执行unlock()解锁操作。更好的办法是采用”资源分配时初始化”(RAII)方法来加锁、解锁，这避免了在临界区中因为抛出异常或return等操作导致没有解锁就退出的问题。极大地简化了程序员编写mutex相关的异常处理代码。C++11的标准库中提供了std::lock_guard类模板做mutex的RAII。
+
+std::lock_guard类的构造函数禁用拷贝构造，且禁用移动构造。std::lock_guard类除了构造函数和析构函数外没有其它成员函数。
+
+在std::lock_guard对象构造时，传入的mutex对象(即它所管理的mutex对象)会被当前线程锁住。在lock_guard对象被析构时，它所管理的mutex对象会自动解锁，不需要程序员手动调用lock和unlock对mutex进行上锁和解锁操作。lock_guard对象并不负责管理mutex对象的生命周期，lock_guard对象只是简化了mutex对象的上锁和解锁操作，方便线程对互斥量上锁，即在某个lock_guard对象的生命周期内，它所管理的锁对象会一直保持上锁状态；而lock_guard的生命周期结束之后，它所管理的锁对象会被解锁。程序员可以非常方便地使用lock_guard，而不用担心异常安全问题。
+
+
+##  最大／最小宏，有意思
+
+
+```cpp
+//Solution
+#define GENERIC_MAX(x, y) ((x) > (y) ? (x) : (y))
+
+#define ENSURE_int(i)   _Generic((i), int:   (i))
+#define ENSURE_float(f) _Generic((f), float: (f))
+
+
+#define MAX(type, x, y) \
+(type)GENERIC_MAX(ENSURE_##type(x), ENSURE_##type(y))
+
+//Usage
+MAX(int, 2, 3)
+```
+

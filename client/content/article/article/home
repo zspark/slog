@@ -1,0 +1,35 @@
+🚧博客正在整理中...
+
+# About Blog
+这是一个普通的IT开发者的的Blog，我希望自己能坚持记录下我在计算机科学中的学习与思考。
+
+Blog最早使用博客网提供的博客系统，记录、转载了一些乱七八糟的东西，这应该是我使用onlineBlog的开始。后来购买了阿里云服务器搭建了[Emlog](https://github.com/emlog/emlog)小型博客系统，我现在都不记得自己为什么不用该系统了，可能PHP是世界上最好的语言吧。再后来我使用[Jekyll](http://jekyllcn.com/)系统，其操作麻烦就别提了，记得给同事开心的推荐之后，他与我折腾了好久才在他的电脑上搭建成功。再后来使用[pmwiki](https://www.pmwiki.org/)，与[tiddlywiki](https://tiddlywiki.com/)，这两者逐渐被废弃的原因诸如各自定义了自己的语法，pmwiki使用了php，tiddlywiki是在我部署到服务器后出现了一些严重的问题（编辑完依然显示编辑中、加载特慢等），然而这些原因都是一个方面，我是个有个性的人，上述系统或多或少在一些方面让我不舒服。
+
+现在你看到的Blog是我开发的一款个人博客系统，基于nodejs服务与express框架，算是可以运行了，后续会有部分改进。Blog现存放在GitHub服务器，如果你有想法可以与我一聊，感谢感谢。
+
+# About me
+很高兴你能来到我的博客，因为它没有被推广，没有主动让搜索引擎收录，而你却发现了它。你应该是位与我一样一同追求计算机科学技术的人，甚至也是青睐于计算机图形图像与软件架构方面的技术。我叫Jerry Chaos，Jerry是高中时期一位来自英国的外教所起，他的名字叫Joe，因为我汉语名字读起来挺像这个发音，Joe当时听完马上说 “Mybe your English name is Jerry”。Chaos是我自己取的，因为我实在太喜欢这个单词及其所包含的意思了，我觉得只有CHAOS的状态才是极度有序、稳定的状态。于是我便根据时间顺序有了这么个英文名字。
+
+我对计算机编程的热爱应该源自对事物的好奇以及尚未减灭的创造欲。好奇让我想要一探事物的本源，创造欲让我总觉得还有更好的办法去解决一个问题。
+
+
+## Projects involved
+* CIM/3DGis智慧城市开发平台参与开发；
+* 工业真实材质离线渲染shader开发；
+* UI编辑器、2D粒子编辑器框架设计与开发；
+* Mirage3D引擎（曾雇主公司自研）参与开发；
+* 《冒险王1》《风中奇缘》页游移植;
+* 乐一网站中的flash小游戏开发；
+
+## Personal Projects
+
+[my projects](view?n=my-projects)
+
+
+
+## Contact Info
+* Email: 	jerry-chaos@outlook.com
+* GitHub: 	github.com/zspark
+
+# Gallery
+Come [here](/gallery).

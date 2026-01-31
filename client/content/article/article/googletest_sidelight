@@ -1,0 +1,69 @@
+|Fatal assertion|	Nonfatal assertion|	Verifies|
+| :--: | :--: | :--: |
+|ASSERT_TRUE(condition)|EXPECT_TRUE(condition)|condition is true|
+|ASSERT_FALSE(condition)|EXPECT_FALSE(condition)|condition is false|
+
+|Fhatal assertion|Nonfatal assertion	|Verifies|
+| :--: | :--: | :--: |
+|ASSERT_EQ(val1,val2)|EXPECT_EQ(val1,val2)|val1 == val2|
+|ASSERT_NE(val1,val2)|EXPECT_NE(val1,val2)|val1 != val2|
+|ASSERT_LT(val1,val2)|EXPECT_LT(val1,val2)|val1 < val2|
+|ASSERT_LE(val1,val2)|EXPECT_LE(val1,val2)|val1 <= val2|
+|ASSERT_GT(val1,val2)|EXPECT_GT(val1,val2)|val1 > val2|
+|ASSERT_GE(val1,val2)|EXPECT_GE(val1,val2)|val1 >= val2|
+
+|Fatal assertion|Nonfatal assertion	|Verifies|
+| :--: | :--: | :--: |
+|ASSERT_STREQ(str1,str2)|EXPECT_STREQ(str1,str2)|the two C strings have the same content|
+|ASSERT_STRNE(str1,str2)|EXPECT_STRNE(str1,str2)|the two C strings have different content|
+|ASSERT_STRCASEEQ(str1,str2)|EXPECT_STRCASEEQ(str1,str2)|the two C strings have the same content, ignoring case|
+|ASSERT_STRCASENE(str1,str2)|EXPECT_STRCASENE(str1,str2)|the two C strings have different content, ignoring case|
+
+## googletest main function
+
+```cpp
+#include <gtest/gtest.h>
+#include <iostream>
+
+// 待测函数
+int fun(int a) {
+  return a + 1;
+}
+
+// 单元测试
+TEST(FunTest, HandlesZeroInput) {
+  EXPECT_EQ(1, fun(0));
+}
+
+int main(int argc, char **argv) {
+  // 规定的 2 行代码
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+```
+```cpp
+#include "A.h"
+#include <gtest/gtest.h>
+class A_test : public testing::Test {
+protected:
+　　A* _p_a;
+　　virtual void SetUp( ){　　　//初始化函数
+　　　　this->_p_a = new A( 1 );
+　　}
+　　virtual void TearDown( ){　 //清理函数
+　　　　delete this->_p_a;
+　　}
+};
+//第一个测试，参数A_test是上面的那个类，第二个参数FirstAdd是测试名称
+TEST_F( A_test,FirstAdd ){　　　　
+　　EXPECT_EQ( 1,_p_a->getA( ) );
+　　_p_a->add( 3 );
+　　EXPECT_EQ( 4,_p_a->getA( ) );
+}
+//第二个测试
+TEST_F( A_test,SecondAdd ){
+　　EXPECT_EQ( 1,_p_a->getA( ) );
+　　_p_a->add( 5 );
+　　EXPECT_EQ( 6,_p_a->getA( ) );
+}
+```

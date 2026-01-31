@@ -1,0 +1,46 @@
+
+
+# 什么是采样 
+
+采样就是采集样本，它是个过程，既然是个过程，就需要花时间。我不能很明确的解释在计算机图形图像领域采样的定义，但在信号处理领域，采样是将信号从连续时间域上的模拟信号转换到离散时间域上的离散信号的过程，这个解释确实可以采用，并且我觉得图形学中的采样就是来自信号处理领域。
+
+# 为什么要采样 
+
+下面内容摘自伍斯特理工学院[CS 563 Advanced Topics in Computer Graphics Sampling Techniques](http://web.cs.wpi.edu/~emmanuel/courses/cs563/S10/talks/wk3_p1_wadii_sampling_techniques.pdf)的PPT讲义内容以说明采样在图形学中存在的原因。
+
+* To avoid aliasing when sampling pixels
+* Cameras with a finite-area lens are used to show depth of field.  The lens must therefore be sampled.
+* To represent area lights and soft shadows more accurately, we must sample the light surfaces.
+* Global illumination and glossy reflection requires sampling of BRDFs and BTDFs. 
+
+
+# 什么是低偏差（Low-Discrepancy）及其低偏差采样（Low-Discrepancy Sampling） 
+
+想象这样一个场景：你去采集湖水样本，在湖边就装满了一瓶子带回实验室，得出了结果：湖水成碱性。请问可信度如何？当我告诉你在他来采集湖水之前一分钟有个小孩就在他采集的地方撒了泡尿你现在会是什么态度？所以单凭一瓶子湖水的测试结果不能构成整个湖水水质的真实属性，我们需要一些个样本。于是采集人员跑去在湖边采集了1万瓶样本，测试结果如何？依然不太可信（但至少比之前好多了）。因为他没有去湖中心（远离湖边）的地方采集样本，那里的水质可能更好。从假设的场景中我们可以看到样本的采集是需要一定的数量与合理的分布的。盲目的采样不但不能达到正确的目的而且浪费采集与测试时间。于是我们说采样的质量有好有坏，低偏差采样就是一类质量好的采样，注意这里说的是一类而不是一种或一个。
+
+那么我们如何判断一组采样数据就是质量好的采样呢？这就需要首先了解偏差的概念：
+
+\\[
+D_N(P)=sup\left|{A(B)\over N} -\lambda(B)\right|
+\\]
+
+上面公式中N就是N个采样，B是统计的一片区域，A(B)是这块区域中采样点的数量，$\lambda(B)$是这块区域在所有区域中的体积（3D）比值，双竖线就是绝对值，sup表示集合中的上界，也就是最大值。整体而言就是将整个采样区域分成几个小区域（我认为可以相交），每个区域都计算差的绝对值，然后绝对值最大的那个数就是偏差值。顾名思义，低偏差就是偏差值比较低的偏差，至于多少算低，我读书少没的看到哪里有写，显然这个“低”不是绝对的（或者真是没有看到8-O）。
+
+低偏差采样就是用具有低偏差性质的点集去采集样本，因为是低偏差，所以采集的样本会更客观。
+
+
+# 两个著名的低偏差采样序列 
+
+这两个序列是：
+
+* Hammersley
+* Halton
+
+它们都是基于[van der Corput 序列](/)的，
+
+>此处暂停，转去写van der Corput序列
+
+#  C++逻辑实现 
+
+
+WIP

@@ -1,0 +1,43 @@
+
+
+The following code came frome one of my colleagues, and I find it's nice for some part of rendering. e.g. orange peel.
+
+[{{:start:2017-09-15_001026.png?nolink&300|procedure orange peel. Its UV was calculated by this algorithm.}}]
+
+
+```cpp
+#define RT_FUNC_F __forceinline__ __device__ 
+
+RT_FUNC_F int rm_rand(){
+return RandomSeedMap[dLaunchIndex]=static_cast<int>(RandomSeedMap[dLaunchIndex]*35747+6701+frame_number)%RAND_MAX;
+}
+
+RT_FUNC_F float rm_frand(){
+return static_cast<float>(rm_rand())/(RAND_MAX-1);
+}
+
+RT_FUNC_F float3 GetRandomVectorWithOutUV(float3 normal,float maxAngle=90.f){
+unsigned int size=RandomVectorMap.size();
+int posx=rm_rand()%size;
+int posy=rm_rand()%size;
+int posz=rm_rand()%size;
+
+float3 vec=normalize(
+RandomVectorMap[posx]+RandomVectorMap[posy]+RandomVectorMap[posz]
+);
+float3 crossvec=cross(normal,vec);
+if(fmaxf(crossvec)<.001f&&fminf(crossvec)>-.001f){
+if(maxAngle<180.f)
+return normal;
+else
+return vec;
+}
+float3 ass=normalize(cross(crossvec,normal));
+float dotnv=dot(normal,vec);
+float angle=acos(dotnv)*maxAngle/180.f;
+vec=cos(angle)*normal+sin(angle)*ass;
+
+return vec;
+}
+```
+

@@ -1,0 +1,257 @@
+项目中学习，东拼西凑不够系统，记下来加深印象。
+
+**问题1**：我在接收主线程信号的子线程的槽中给主线程发signal会卡死。
+```cpp
+//MainWidget.cpp 中链接信号与槽部分代码
+connect(mMeshInfoThread
+    , SIGNAL(SendMsg(QString&))
+    , this, SLOT(ThreadMsg(QString&))
+    , Qt::BlockingQueuedConnection);
+connect(this, SIGNAL(OutPutSignal()),mMeshInfoThread, SLOT(OutPutSlot()));
+mMeshInfoThread->start();
+    
+//子线程.cpp 中的槽函数实现
+void MeshBox::MeshInfoThread::OutPutSlot(){
+  ...
+  emit SendMsg(QString("save accomplished"));
+}
+```
+查了半天资料，得知继承QThread类实现多线程这种方法，**只有重载的run是在新的线程里面**，mythread其他的函数还是在旧线程里。这种方法虽然简单易懂，但比较容易用错，不如继承QObject来的灵活。上述问题还与connect第五个参数的使用有关，connect用于连接qt的信号和槽，在qt编程过程中不可或缺。它其实有第五个参数，只是一般使用默认值，在满足某些特殊需求的时候可能需要手动设置。分别为：
+* **Qt::AutoConnection**： 默认值，使用这个值则连接类型会在信号发送时决定。如果接收者和发送者在同一个线程，则自动使用Qt::DirectConnection类型。如果接收者和发送者不在一个线程，则自动使用Qt::QueuedConnection类型。
+* **Qt::DirectConnection**：槽函数会在信号发送的时候直接被调用，槽函数运行于信号发送者所在线程。效果看上去就像是直接在信号发送位置调用了槽函数。这个在多线程环境下比较危险，可能会造成奔溃。
+* **Qt::QueuedConnection**：槽函数在控制回到接收者所在线程的事件循环时被调用，槽函数运行于信号接收者所在线程。发送信号之后，槽函数不会立刻被调用，等到接收者的当前函数执行完，进入事件循环之后，槽函数才会被调用。多线程环境下一般用这个。
+* **Qt::BlockingQueuedConnection**：槽函数的调用时机与Qt::QueuedConnection一致，不过发送完信号后发送者所在线程会阻塞，直到槽函数运行完。**接收者和发送者绝对不能在一个线程，否则程序会死锁**。在多线程间需要同步的场合可能需要这个。
+* **Qt::UniqueConnection**：这个flag可以通过按位或（|）与以上四个结合在一起使用。当这个flag设置时，当某个信号和槽已经连接时，再进行重复的连接就会失败。也就是避免了重复连接。
+
+
+**总结来看**，是由于我在子线程run之外的函数向主线程发送信号，实际上我发的信号和主线程是在一个线程里，而我这个信号与槽在connect的时候的第五个参数是Qt::BlockingQueuedConnection，造成了程序的死锁。
+
+最后的解决办法是继承QObject来实现多线程，保证信号的发送者和接受者不在同一个线程里，再在connect的时候把第五个参数设置为Qt::BlockingQueuedConnection，保证多线程同步。
+
+```cpp
+//MainWidget.cpp 连接信号与槽部分代码
+mMeshInfoThread = new MeshInfoThread;
+mMeshInfoThread->moveToThread(&workerThread);
+connect(&workerThread, &QThread::finished, mMeshInfoThread, &QObject::deleteLater);
+connect(this, &TriangleMesh::StartSignal, mMeshInfoThread, &MeshInfoThread::Work);
+connect(this, SIGNAL(OutPutSignal()),mMeshInfoThread, SLOT(OutPutSlot()));
+connect(mMeshInfoThread, 
+		&MeshInfoThread::SendMsg, 
+        this, 
+        &TriangleMesh::ThreadMsg,
+        Qt::BlockingQueuedConnection);
+workerThread.start();
+emit StartSignal();
+//子线程.h 部分代码
+class MeshInfoThread : public QObject {
+  Q_OBJECT
+  
+public:
+  MeshInfoThread(QObject *parent = 0);
+  ~MeshInfoThread();
+
+signals:
+  // 自定义信号
+  void SendMsg(QString&);
+  public slots:
+  void Work();
+  void OutPutSlot();
+};
+```
+**问题2：** 如何正确的退出子线程，原本是用wait()函数，它的作用是等待子线程结束之后再继续执行下面的语句
+```cpp
+workerThread->quit;
+workerThread->wait();
+...
+```
+但我的子线程耗时非常久，这样会导致我关闭窗口后，这个程序还在后台运行等待子线程结束。因此必须在子线程的工作循环中设置一个布尔标记将其跳出，才可以即时退出程序。   
+我首先试了向子线程发出信号，改变那个标记
+```cpp
+// MainWidget.h
+//定义信号
+signals:
+StopSignal();
+// MainWidget.cpp
+// 连接信号与槽
+connect(this, &TriangleMesh::StopSignal, mMeshInfoThread, &MeshInfoThread::Stop);
+// 发消息
+~MainWidget()
+{
+  emit StopSignal();
+  workerThread->quit;
+  workerThread->wait();
+}
+
+//meshInfoThread.h
+public solts:
+  Stop();
+private:
+  bool m_bRun;
+  //互斥锁
+  QMutex m_lock;
+
+//meshInfoThread.cpp
+void MeshInfoThread::Stop()
+{
+  QMutexLocker locker(&m_lock);
+  m_bRun = false;
+}
+```
+可是这样不见效果，子线程根本不响应主线程的消息，不知道如何以发消息的形式打断子线程的work函数。后来改成直接在主线程中调用子线程的Stop()，不发消息了，这样可行，但不知是否有更好的办法。   
+```cpp
+//MainWidget.h
+mMeshInfoThread->Stop();
+workerThread->quit;
+workerThread->wait();
+...
+```
+
+---
+由于要加载很多模型的信息，为了主窗口不卡死，必须要在子线程中加载，并发信号给主线程，此时主线程的mesh树中增加一新的mesh节点显示传过来的mesh信息。
+QT实现多线程的方法：
+### 1. 继承QThread
+主要步骤：
+* 写一个线程类，继承自QThread
+* 自定义信号
+* 在run()函数里面发射信号
+* 创建子线程，连接信号和槽，在槽函数更新Ui
+
+其中有几点需要注意：
+* 在主线程的构造函数中构造子线程类的实例。
+* 由于Qt的实现机制，在emit时，非Qt类型，需要注册，这样信号才能响应。（一般在主线程构造函数里面注册）
+* 连接主线程和工作线程,信号处于工作线程，槽位于当前主线程，注意保持信号和槽的参数一致！
+* connect的第五个参数必须为阻塞队列连接，这样才能保证信号传递过来的参数和槽接收的是实时的！
+
+```cpp
+//t.h
+class MeshInfoThread : public QThread {
+  Q_OBJECT
+
+public:
+  MeshInfoThread(QObject *parent = 0);
+  ~MeshInfoThread();
+  void run();
+
+signals:
+  // 自定义信号
+  void SendMeshInfo(MeshInfo*);
+};
+
+//t.cpp
+#include "stdafx.h"
+#include "MeshInfoThread.h"
+#include "QDir"
+
+namespace MeshBox {
+  MeshInfoThread::MeshInfoThread(QObject *parent) { }
+
+  MeshInfoThread::~MeshInfoThread() { }
+  
+  void MeshInfoThread::run() {
+    MeshInfo* meshInfo = ...
+    emit SendMeshInfo(meshInfo);
+  }
+}
+
+//w.h
+class TriangleMesh : public QMainWindow {
+  Q_OBJECT
+
+  public:
+    TriangleMesh(QWidget *parent = 0, Qt::WindowFlags flags = 0);
+    ~TriangleMesh();
+
+    public slots:
+    void UpdateSlot(MeshInfo*);
+};
+  
+//w.cpp
+TriangleMesh::TriangleMesh(QWidget *parent /*= 0*/, Qt::WindowFlags flags /*= 0*/)
+    : QMainWindow(parent, flags) {
+  qRegisterMetaType<MeshInfo*>("MeshInfo*");   // 注册信号类型
+  mMeshInfoThread = new MeshInfoThread;   // 实例化thread类
+  // 连接信号与槽 注意这里信号和槽的参数要一致，第五个参数是阻塞队列链接，保证实时接收信号
+  connect(mMeshInfoThread
+  , SIGNAL(SendMeshInfo(MeshInfo *))
+  , this
+  , SLOT(UpdateSlot(MeshInfo *))
+  , Qt::BlockingQueuedConnection);  
+    mMeshInfoThread->start();
+}
+    
+TriangleMesh::~TriangleMesh() {
+  mMeshInfoThread->terminate();  // 在结束主线程之前结束子线程
+}
+  
+void TriangleMesh::UpdateSlot(MeshInfo *meshInfo) {
+  if(!mMeshInfoThread->isRunning()) return;    // 防止子线程异常退出之后影响主线程
+  QTreeWidgetItem *meshItem = new QTreeWidgetItem(mTreeWidgetMeshes);
+  //...
+  // 传过来的参数直接用就好啦~~
+}
+```
+
+### 2. 继承QObject
+主要步骤：
+* 写一个继承QObject的类，对需要进行复杂耗时逻辑的入口函数声明为槽函数
+* 此类在旧线程new出来，不能给它设置任何父对象
+* 同时声明一个QThread对象，在官方例子里，QThread并没有new出来，这样在析构时就需要调用QThread::wait()，如果是堆分配的话，可以通过deleteLater来让线程自杀
+* 把obj通过moveToThread方法转移到新线程中，此时object已经是在线程中了
+* 把线程的finished信号和object的deleteLater槽连接，这个信号槽必须连接，否则会内存泄漏
+* 正常连接其他信号和槽（在连接信号槽之前调用moveToThread，一般不需要处理connect的第五个参数，或就显示声明用Qt::QueuedConnection来连接）
+* 初始化完后调用'QThread::start()'来启动线程
+* 在逻辑结束后，调用QThread::quit退出线程的事件循环
+
+```cpp
+class Worker : public QObject {    
+	Q_OBJECT
+
+	public slots:    
+	void doWork(const QString ¶meter) 
+	{        
+		QString result;        
+		/* ... here is the expensive or blocking operation ... */        
+		emit resultReady(result);    
+	}
+	signals:    
+		void resultReady(const QString &result);
+};
+
+class Controller : public QObject {    
+	Q_OBJECT    
+
+	QThread workerThread;
+
+	public:    
+	Controller()  {        
+		Worker *worker = new Worker;        
+		worker->moveToThread(&workerThread);        
+		connect(&workerThread, &QThread::finished, worker, &QObject::deleteLater);        
+		connect(this, &Controller::operate, worker, &Worker::doWork);        
+		connect(worker, &Worker::resultReady, this, &Controller::handleResults);        
+		workerThread.start();    
+	}    
+	~Controller() {        
+		workerThread.quit();        
+		workerThread.wait();    
+	}
+
+	public slots:    
+		void handleResults(const QString &);
+	signals:    
+		void operate(const QString &);
+};
+```
+
+参考：   
+https://blog.csdn.net/czyt1988/article/details/64441443   
+https://blog.csdn.net/czyt1988/article/details/71194457   
+https://blog.csdn.net/life_is_too_hard/article/details/52089723
+
+
+
+
+
+
+
+

@@ -1,0 +1,124 @@
+
+![img](/share/code.jpg)
+
+#  直接逻辑
+网上查了查，没有**直接逻辑**这个术语（或者至少不是大众随便可知的），我便拿来用于我的编程哲学。
+我们在写程序的时候，少不了判断，如果设计不精良导致判断重复、多余，那应该不是什么令人一定开心的事情，如何减少重复的逻辑判断，这也确实是门学问。举个例子：
+
+```cpp
+bool Resize(void* handler,int w,int h){
+someConcreteType* h=(someConcreteType*)handler;
+if(!h){
+return false;
+}else{
+// some logic with h;
+return true;
+}
+}
+
+void* CreateNewOne(void* oldHandler,int w,int h){
+someConcreteType* h=(someConcreteType*)oldHandler;
+if(h){
+Destroy(oldHandler);
+}
+h=new someConcreteType();
+Resize((void*)h,w,h);
+return (void*)h;
+}
+```
+
+上述代码中，很显然CreateNewOne()中新创建的someConcreteType实例是存在的，但是在调用Resize()函数后，其内部又判断了一遍，这是多余的逻辑判断，如何避免？首先需要肯定的是：这种写法没有问题，顶多一个判断而已，如果其他地方有调用Resize()函数，判断岂不是就派上用场了吗。
+
+我这里所表述的**直接逻辑**并非否认上述写法，而是思考能否在一定约束下实现一些**直接了当对面函数名表达的逻辑**的函数，比如将Resize()函数写成：
+
+```cpp
+void Resize(void* handler,int w,int h){
+someConcreteType* h=(someConcreteType*)handler;
+// some logic with h;
+}
+```
+短小而精悍，没有逻辑判断（因为函数的名字就是“重置大小”，并没有说**CheckAndResize**），这样的函数我称其为**直接逻辑**函数。判断逻辑就留给高层应用，不过函数在逻辑复杂的时候不要使用直接逻辑，而在频繁执行的逻辑内，我觉得还是**直接逻辑**好些。
+
+# 明确分层
+如果有这样一个结构的拓扑关系：user->[C->B]，我们把他们想象成库，BC全是静态库，各自都有头文件提供给上一层使用（不能跨层使用），库Ｃ提供的头文件仅仅为user服务，如果我们在C的头文件中有这样一个API函数：
+
+```cpp
+void* CreateCamera(ECameraType type);
+```
+
+而枚举值ECameraType却定义在Ｂ提供的头文件中，此时我们可以包含B中的某一文件到C的头文件中，以便user可以正确使用接口，但我们违背了设计的要求：**下一层仅仅为上一层（并非其上的各层）提供服务。**
+
+我们具体一下BC：假如B为渲染器，C为引擎，那么诸如ECameraType就压根不会出现在B中，而是在C中。如果我们有类似上面的情况，我觉得很大可能是架构设计的不漂亮，其并没有明确“层”的抽象度与边界，越是低层（被引用的越多的）库，其抽象程度势必很高，其中的概念势必尽可能的为其提供的功能而服务，无论怎样的相机，他们在渲染层无非一个矩阵而已。
+
+
+# 粗鲁式的编程
+琢磨下面的代码段：
+’
+
+
+```cpp
+SomeTypeA* pSTa=nullptr;
+SomeTypeB* pSTb=nullptr;
+void your-func(<some parameters>){
+if(!pSTa)pSTa=new SomeTypeA();
+// your logic operating on pSTa;
+if(!pSTb)pSTb=new SomeTypeB();
+// still, your logic for pSTb;
+}
+```
+
+
+
+这段程序显然是为了示例而写，其目的就是为了探讨判断存在与否，然后创建的优劣。我将这样写的函数称为**非直接逻辑**的函数，或者叫**粗鲁式的编程**。
+
+* 优点：能够快速开发，实现prototype；
+* 缺点：无结构，可读性差；
+
+#  局部作用域对阅读/理解的干扰
+
+
+
+
+```cpp
+void func(bool b){
+if(b){
+// a long long long long piece of codes
+}else return;
+```
+
+为什么不写成：
+
+```cpp
+void func(bool b){
+if(!b)return;
+// a long long long long piece of codes
+```
+
+
+# 延迟信息的覆盖/丢失
+
+我觉得在编程的时候，无论何种情况下，都需要尽可能的保留更多的信息，直到客观情况导致不能保留才清理信息，这种尽可能长时间保留信息的思想对于信息的保全/逻辑的清晰很有必要，请看下面的例子：
+
+```cpp
+void SetIndex(int a){
+if(m_lastIdx==a)return;
+m_lastIdx=a;
+// blablabla...
+}
+```
+
+逻辑显示明显是个赋值索引的的函数，但是在blablabla逻辑执行之前，上一个索引m_lastIdx被参数a覆盖，导致永久丢失上一个索引的内容，且问：如果blablabla逻辑没有成功怎么办？其次保留的上一个索引的内容，直到函数最后再赋值会很麻烦/痛苦吗？所以，我认为更好的写法应该是：
+
+```cpp
+void SetIndex(int a){
+if(m_lastIdx==a)return;
+// blablabla...
+m_lastIdx=a;  //知道客观上新索引a的内容实在保存不了了，再赋值。
+}
+```
+
+#  我对指针/智能指针/引用的使用环境
+see:[[my way to manipulate pointer/smart pointer/referance]]
+
+¶ 
+

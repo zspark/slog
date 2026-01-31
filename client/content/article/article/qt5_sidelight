@@ -1,0 +1,74 @@
+##  QAbstractItemModel
+
+如果你想自己实现针对ListView TreeView等的模型的话，可以使用官方的标准模型，好像叫做QStardardModel，不过你想深入定制，就可以直接从该抽象类开始了。官方说该抽象类不提供item之间的关系（谁是父节点，子节点都有谁等等），需要大家实现。
+
+需要实现其中的接口有：
+
+
+* QVariant data(const QModelIndex &index,int role) const override; 内核会通过此接口向高层索要对应index下的数据，保存在QVariant中返回；
+* bool setData(const QModelIndex &index, const QVariant &value,int role = Qt::EditRole) override;  通过该接口向模型写入数据，比如在你编辑完一个条目后。需要注意的是当你改变了模型的数据后，最好通关过emit dataChanged(const QModelIndex &,const QModelIndex &) 逻辑发送信号，以便关心该模块的所有对象能第一时间收到“数据改变了”的消息；
+* Qt::ItemFlags flags(const QModelIndex &index) const override; 通过该接口得知index下的数据标志，可不实现此接口，不过如果你想通过双击编辑条目的话，需要实现，主要是额外给index加上Qt::ItemIsEditable标志位。
+* QModelIndex index(int row,int column,const QModelIndex &parent=QModelIndex()) const override;  获取parent下具体行列的QModelIndex对象；
+* QModelIndex parent(const QModelIndex &index) const override;  获取给定index的父QModelIndex；
+
+
+##  注册元数据类型
+
+如果你申明了自己的一个结构体，想让该结构体的内容能写入到诸如QSetting的对象中，那么就需要注册这个自定义的结构体，用官方的话说就是：要让Qt元数据系统知道你自定的结构。为此，我们需要实现三个内容；
+
+* Q_DECLARE_METATYPE(STRUCT); 申明元数据
+* qRegisterMetaTypeStreamOperators< STRUCT>("STRUCT");  注册元数据流，需要实现下面2个操作；
+* QDataStream& operator<<(QDataStream& out,const STRUCT& obj);
+* QDataStream& operator>>(QDataStream& in,STRUCT&obj);
+
+##  扩展QOpenGLWidget
+
+当我们要在窗口上绘制图形图像的时候，如果我们用到了OpenGL图形库，那就少不了要用到QOpenGLWidget类，该类是Qt公司重新定义的，老版本是GLWidget，官方建议最好用新版本的。我们实现其子类的时候一般需要重写（override，不要与重载混淆）三个virtual函数：
+
+* void initializeGL()override;
+* void paintGL()override;
+* void resizeGL(int w,int h)override; 
+
+也会重写几个事件virtual函数；
+
+* void paintEvent(QPaintEvent *e)override;
+* void resizeEvent(QResizeEvent *e)override;
+* void mousePressEvent(QMouseEvent *event) override;
+* void mouseMoveEvent(QMouseEvent *event) override; 
+
+
+##  调用glxxx函数
+
+Qt在调用它封装的glxxxx函数时候，必须保证Qt封装的context是针对当前的，也就是说你不能随意调用glxxx函数，而是在调用时候必须设置当前上下文（context），调用以下函数即可。
+
+<blockquote class="tip">
+makeCurrent();   前提是你的子类继承自QOpenGLWidget类
+</blockquote>
+
+##  Undone与Redone
+
+Qt使用命令设计模式实现Undo与Redo框架，任何需要被撤销的操作都需要实现对应的Command子类，子类中实现Redo与Undo方法。该框架支持多个撤销栈，使用QUndoGroup来实现，当然如果你只想使用一个的话，大可不必实例化该类，而是仅仅实例化一个QUndoStack即可。此处，QUndoGroup是QUndoStack的集合，通过该集合，你可以添加、移除、激活具体的某一个Stack。如果用Group的话，整个撤销相关行为（Action）需要从Group创建，如果不用，需要从Stack创建，如下：
+
+```cpp
+// 使用Group
+QAction *undoAction = m_undoGroup->createUndoAction(this);
+QAction *redoAction = m_undoGroup->createRedoAction(this);
+
+// 只使用Stack
+QAction *undoAction = undoStack->createUndoAction(this, tr("&Undo"));
+QAction *redoAction = undoStack->createRedoAction(this, tr("&Redo"));
+```
+
+每一个Command实例都会被框架调用id()这个方法，基类实现返回-1，我们自己可随便定义唯一的值。当全新push进去一个Command A后，框架会比较A与上一次push进去的Command B两个实例的id是否相同，相同的话（注意：不包括-1）框架会调用B的mergeWith(const QUndoCommand*)方法，参数自然是A，你的逻辑需要将A合并到B，合并成功返回true，else false。返回值关系到框架是否决定丢掉Command A还是保留其在Stack中，true就是丢弃，会调用析构函数，false就会保留。
+
+##  使用QUndoGroup需要注意：
+
+* 使用setActiveStack(QUndoStack*)方法激活在Group中的某个Stack，该Stack必须事先通过addStack(QUndoStack*)方法添加到Group中；
+* 常规的Ctrl+Z与Ctrl+Shift+Z软件全局快捷键只会出发当前激活的Stack中的Command实例方法；
+* push进Stack的Command会由框架调用redo方法，这是新版本撤销框架增加的逻辑；（框架先调用redo，然后判断id，尝试合并，所以说mergeWith()只是将参数里面有用的信息刷新给旧的Command变量中，一般不做像redo，undo那样的逻辑） 
+
+##  View
+
+各种view在其指定模型加入了新的数据后，调用reset才能主动刷新界面。 
+
+

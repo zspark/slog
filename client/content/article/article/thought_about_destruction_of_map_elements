@@ -1,0 +1,32 @@
+# hi there
+
+我们在开发过程中经常会用到这样的方式：用一个std::map对象保存key与另一个结构体实例的映射。我们基本上也有一个方法是遍历map中的所有实例，然后逐一delete
+
+这其中就难免出现在遍历**过程中**改变遍历对象内容从而导致的奔溃；一个显而易见的解决方法便是先遍历删除，之后清空map。然而代码的实现上有时未必如此简单就能解决，举个例子：
+
+```cpp
+std::map<ID,A*> mapA;
+
+void DestroyAByID(ID id){
+	A* a=mapA[id];
+    delete A;
+    mapA.erase(id);
+}
+
+void DestroyAllA(){
+	for(auto& it:mapA){
+    	DestoryAByID(it.second);
+    }
+}
+```
+
+上述代码中，由于项目中处处都要用DestroyAByID这个函数，其**被依赖性**强不能轻易改动，那么我们的DestroyAllA这个函数照上面实现就是错误的。
+
+我们可以通过好多方法解决他们：
+* 安全的数据类型支持：https://github.com/KarenRei/safe-map
+* 新的数据结构支持；
+* copy-and-delete;
+
+# 对数据结构的思考
+
+我们可以将对数据结构的操作分为两种，一种是持续型的，一种是非持续型的，比如遍历便是持续型的。持续型的操作需要结构内部记录上下文已应对尚未完结的持续状态，此时如果有影响结构体本身的操作行为（插入、删除），肯定会扰乱这种状态，从而出现问题。

@@ -1,0 +1,109 @@
+
+
+This is a question asked by someone at Nvidia optix forum.
+
+Here is where its originally been:   
+https://devtalk.nvidia.com/default/topic/745098/optix/using-textures-in-device-functions/post/4221846/
+
+
+
+
+**JakubP says:**
+
+Hi,I am trying to use textures in OptiX. I have an optix RT_PROGRAM function, which calls a set of simple `__device__` `__inline__` functions. I want to pass optix rtTextureSampler to one this functions and read the texture inside this function. I don't know how to do that. It was working with buffers by using optix::buffer<...> type as an argument of a `__device__` function. However there is no something like `optix::texture_sampler` in optix_device.h and passing texture sampler as cuda texture is also prohibited (error : taking reference of texture/surface variable not allowed in `__device__`).
+
+I work witch optiX 3.0.
+
+I'll be grateful for any suggestions.
+
+
+Detlef Roettger says:
+
+You mean something like this isn't working?
+
+```cpp
+// Mind the __forceinline__!
+#define RT_FUNCTION __forceinline__ __device__
+
+RT_FUNCTION float4 sampleTexture( rtTextureSampler<float4,2>& texture, int tcidx )
+{
+const float4 tc = getTexCoord( tcidx );
+return tex2D( texture, tc.x, tc.y );
+}
+```
+
+That's from some old OptiX 2.x code implementing a COLLADA profile_COMMON shader.
+
+Which CUDA Toolkit version are you using? 
+
+OptiX 3.0.1 only supports up to CUDA 5.0.  
+
+I'm mostly using bindless textures now (Kepler GPUs) where the texture ID is just an int:
+
+```cpp
+// parDiffuseTextureId is an int in some material parameter structure.
+const float3 texColor = make_float3(rtTex2D<float4>(m->parDiffuseTextureId, tc.x, tc.y));
+```
+
+
+**JakubP says:**
+
+thank you very much Detlef!
+Yes, I am using Optix 3.0.1 and CUDA 5.0 and the first solution doesn't work: "taking reference of texture/surface variable not allowed".
+Unfortunately I have another problem with bindless textures, you suggested. Here is my code:
+
+```cpp
+Buffer cross_sec_buff  = m_context->createBuffer( RT_BUFFER_INPUT, RT_FORMAT_FLOAT,4,optixPrms.nCrossSecPoints);
+pData = ( float * ) cross_sec_buff->map();
+memcpy( pData, PRMCTRL().pCrossSections, 4 * PRMCTRL().optixPrms.nCrossSecPoints * sizeof( float ) );
+cross_sec_buff->unmap();
+
+TextureSampler cross_sects_ts = m_context->createTextureSampler();
+cross_sects_ts->setWrapMode(0,RT_WRAP_CLAMP_TO_EDGE);  
+cross_sects_ts->setWrapMode(1,RT_WRAP_CLAMP_TO_EDGE);
+cross_sects_ts->setIndexingMode(RT_TEXTURE_INDEX_ARRAY_INDEX);
+cross_sects_ts->setReadMode(RT_TEXTURE_READ_ELEMENT_TYPE);
+cross_sects_ts->setFilteringModes(RT_FILTER_LINEAR,RT_FILTER_LINEAR,RT_FILTER_NONE);
+
+cross_sects_ts->setMaxAnisotropy( 1.0f );
+cross_sects_ts->setMipLevelCount( 1u );
+cross_sects_ts->setArraySize( 1u );
+
+cross_sects_ts->setBuffer(0,0,cross_sec_buff);
+
+optixPrms.nCorssSecTexId = cross_sects_ts->getId();
+```
+
+And when I am trying to add the following line to my RT_PROGRAM:
+
+```cpp
+rtPrintf(">> %f", tex2D<float>( prms_buffer[0].nCorssSecTexId, tex_coord.x, tex_coord.y ));
+```
+
+ContextObj::compile() crashes with RT_ERROR_INVALID_CONTEXT.
+
+thank you for help!
+
+**Detlef Roettger says:**
+
+I would need to check on the texture sampler reference issue in a newer example codebase. (no time left today.)
+
+The tex2D<float> needs to be rtTex2D<float> 
+
+That's an internal OptiX function which is converted to the proper PTX code.
+
+(There is a consistent variable name typo in your code for the bindless texture ID name. ;-))
+
+If that still doesn't work, does it work without the rtPrintf()?
+
+If yes, does it work to read the data into a local variable and printing that? 
+
+I wouldn't do any complicated things in rtPrintf().
+
+
+**JakubP says:**
+
+ok, great, thank you very much, this time the problem was in tex2D instead of rtTex2d ; )
+
+best regards, Jakub
+

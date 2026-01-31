@@ -1,0 +1,174 @@
+
+类之间的继承关系 is-a
+
+```cpp
+class B : public A, public C{}
+```
+
+继承方式有：public, protected, private.如果不显示给出继承方式，默认为private继承。友元函数不能被继承， 友元函数不是成员函数。
+
+
+ * 在公有继承方式下，基类的公有成员将成为派生类的公有成员；基类的私有部分也将成为派生类的一部分，但只能通过基类的共有和保护方法访问。
+ * 在保护继承方式下，基类的公有成员将成为派生类的保护成员。
+ * 在私有继承方式下，基类的公有成员和保护成员都将成为派生类的私有成员。
+
+ 单个类的访问控制：
+
+ * public(公有成员): 在类的内部和外部都可以访问的成员。
+ * private(私有成员)： 在类的内部可以访问， 在类的外部不可以访问， 只能通过成员函数或友元函数进行访问。
+ * protected(保护成员) ： 与私有成员类似， 但在派生类中可以访问。
+   在派生类内部(成员函数或友元函数)使用基类成员时： 不受继承方式的影响， 只看该成员在基类中的访问属性。 
+
+
+例如：
+
+```cpp
+#include <iostream>
+using namespace std;
+
+class Base1
+{
+public:
+Base1()
+{
+a_private = 10;
+b_private = 11;
+};
+~Base1(){}
+int a_public{-1};
+int b_public{-1};
+
+protected:
+int a_protect{-1};
+int b_protect{-1};
+
+private:
+int a_private{-1};
+int b_private{-1};
+
+public:
+void printPublic()
+{
+cout<<"a_public = "<<a_public<<endl;
+cout<<"b_public = "<<b_public<<endl;
+}
+
+void printProtect()
+{
+cout<<"a_Protect = "<<a_protect<<endl;
+cout<<"b_Protect = "<<b_protect<<endl;
+}
+void printPrivate()
+{
+cout<<"a_Private = "<<a_private<<endl;
+cout<<"b_Private = "<<b_private<<endl;
+}
+protected:
+void testset(int a,int b)
+{
+set(a,b);
+cout<<"This is a func of Base1 "<<endl;
+
+}
+private:
+void set(int a,int b)
+{
+a_private = a;
+b_private = b;
+}
+
+};
+
+
+class Base2
+{
+public:
+Base2()
+{
+};
+~Base2(){}
+char a_public2{'A'};
+char b_public2{'B'};
+
+protected:
+char a_protect{'a'};
+char b_protect{'b'};
+
+private:
+char a_private{'a'};
+char b_private{'b'};
+
+public:
+void printPublic()
+{
+cout<<"a_public2 = "<<a_public2<<endl;
+cout<<"b_public2 = "<<b_public2<<endl;
+}
+
+void printProtect()
+{
+cout<<"a_Protect = "<<a_protect<<endl;
+cout<<"b_Protect = "<<b_protect<<endl;
+}
+void printPrivate()
+{
+cout<<"a_Private = "<<a_private<<endl;
+cout<<"b_Private = "<<b_private<<endl;
+}
+
+};
+
+class A:public Base1,public Base2
+{
+public:
+A()
+{
+test = 555;
+};
+~A(){};
+
+private:
+int test;
+
+public:
+void printA()
+{
+cout<<"my private variable test is: "<<test<<endl;
+}
+void testset(int a,int b)
+{
+//set(a,b);     //派生类内部也不可以调用基类的私有成员函数
+cout<<"This is a func of A "<<endl;
+}
+void testtest(int a,int b)
+{
+Base1::testset(a,b);    //派生类的内部可以访问基类的保护成员
+}
+};
+
+int main()
+{
+A temp;
+temp.a_public = 3;
+temp.printA();
+temp.Base2::printPublic();   //继承的两个类有同名函数，要使用作用域符::指定访问哪个基类的函数
+//temp.Base1::set(6,4);         //派生类不可调用基类的私有成员函数
+temp.testset(6,4);   //这里派生类的成员函数覆盖了基类的函数，只能调用到A的函数
+//temp.Base1::testset(6,4);  //派生类不可在外部调用基类的保护成员
+temp.testtest(6,4);
+temp.Base1::printPrivate();  //可基类的公有成员函数来访问基类的私有成员变量
+return 0;
+}
+
+/*
+输出示例
+my private variable test is: 555
+a_public2 = A
+b_public2 = B
+This is a func of A 
+This is a func of Base1 
+a_Private = 6
+b_Private = 4
+*/
+```
+

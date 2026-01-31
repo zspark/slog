@@ -1,0 +1,52 @@
+<div class="row">
+    <div class="col-sm-4">
+        <div class="card" style="width: 20rem;">
+            <img src="..." class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">WebGL testbed</h5>
+                <p class="card-text">my testing bed of computer graphics technology</p>
+                <a href="/view?n=webgl_testbed" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card" style="width: 20rem;">
+            <img src="..." class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">Duck</h5>
+                <p class="card-text">my ray tracing testing bed</p>
+                <a href="view?n=duck" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card" style="width: 20rem;">
+            <img src="..." class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">lsx</h5>
+                <p class="card-text">模拟《开心消消乐》的flash版本游戏。</p>
+                <a href="view?n=lsx" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card" style="width: 20rem;">
+            <img src="..." class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">Coper</h5>
+                <p class="card-text">定义语法的配置文件，批处理指定目录下的所有文件：拷贝、删除、过滤等等。项目的目的是简单感受编译器前端的语法解</p>
+                <a href="/view?n=coper" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card" style="width: 20rem;">
+            <img src="..." class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">tile engine</h5>
+                <p class="card-text">基于格子的物理引擎</p>
+                <a href="/view?n=tile_engine" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+    </div>
+</div>

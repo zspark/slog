@@ -1,0 +1,395 @@
+
+
+#  第五章 命令缓冲区
+
+命令缓冲区的组成：
+
+*基础命令缓冲区；
+ *  可执行二级命令缓冲区的内容；
+ * 可推送到队列；
+* 二级命令缓冲区；
+ *   被基础命令执行；
+ *不能直接推送到队列；
+
+记录的命令包括：（以下Command Buffer皆简称CB）
+
+* 绑定管线与描述集的CB；
+* 修改动态状态的CB；
+* 渲染；
+* 计算；
+* 执行二级命令；
+* 拷贝缓存内容与图像；
+* 其他命令；
+
+CB在任何时候只能出于下列三种状态的一种：
+
+* Initial state;
+* Recording state;
+* Executable state;
+
+##  5.1 命令池
+
+命令池是命令存储的地方，命令池是应用同步的，这意味着命令池必须不能同时在多线程间使用。命令池可以创建，销毁命令，同时也能销毁自己。创建一个命令池，我们执行：
+
+```cpp
+VkResult vkCreateCommandPool( VkDevice,//拥有命令池的逻辑设备； const VkCommandPoolCreateInfo*,//创建命令池的参数； const VkAllocationCallbacks*,/后面讨论/ VkCommandPool*//返回创建的指针； ); 
+
+typedef struct VkCommandPoolCreateInfo{ VkStructureType sType; const void pNext; VkCommandPoolCreateFlags flags; uint32_t queueFamilyIndex; } VkCommandPoolCreateInfo;
+
+#重置命令池的话，我们调用：
+VkResult vkResetCommandPool(VkDevice,VkCommandPool,VkCommandPoolResetFlags); 
+
+
+#销毁命令池的话，我们调用： 
+
+VkResult vkDestroyCommandPool(VkDevice,VkCommandPool,VkAllocationCallBacks*); 
+```
+
+##  5.2 命令缓冲区（CB）的内存部署与管理
+
+CB是这么创建的：创建的新的CB状态是Initial
+
+```cpp
+VkResult vkAllocateCommandBuffers( VkDevice, const VkCommandBuffersAllocateInfo*,//创建CB时候的参数； VkCommandBuffer*,//一个指向数组的指针，该数组保存创建好的CB。CB的个数必须不能少于参数中指定的数量； ); 
+
+typedef struct VkCommandBufferAllocateInfo{ VkStructureType sType;//该结构体的类型； 
+const void pNext;//NULL或者指向一个扩展定义的结构体；
+VkCommandPool;//通过VkCreateCommandPool创建的命令池的名字；
+z_Spark：不会调用复制构造函数？喂猫不是个指针？
+VkCommandBufferLevel;//说明是基础命令还是二级命令，是个结构体； 
+uint32_t;//需要创建的CB的数量；
+} VkCommandBufferAllocateInfo;
+```
+
+```cpp
+typedef enum VkCommandBufferLevel{ VK_COMMAND_BUFFER_LEVEL_PRIMARY=0; VK_COMMNAD_BUFFER_LEVEL_SECOND=1; } VkCommandBufferLevel; 
+
+VkResult vkResetCommandBuffer( VkCommandBuffer,//需要重置的CB，重置完后状态变为Initial VkCommandBufferResetFlags,//重置时候用到的掩码（位控制码），相当于调用该方法的参数，目前该值只有一个； ); 
+
+typedef enum VkCommandBufferResetFlagBits{ VK_COMMNAD_BUFFER_RESET_RELEASE_RESOURCE_BIT=0x00000001;//释放资源控制位； } VkCommandBufferResetFlagBits; 
+
+//CB是这么释放的： 
+
+VkResult vkFreeCommandBuffers( 
+VkDevice,//需要重置的CB，重置完后状态变为Initial VkCommandPool, uint32_t,//释放的CB数量 const VkCommandBuffer*,//一个包含CB引用的数组；
+); 
+```
+
+##  5.3 命令缓冲区的记录（录制）？
+
+开始记录命令的话，调用： 
+
+```cpp
+VkResult vkBeginCommandBuffer{ VkCommandBuffer,//将要开始记录的CB，调用后该CB状态变为Recording，但此前必须不是Recording状态； 
+const VkCommandBufferBeginInfo*,//一个定义了记录命令期间的参数；如果参数一是个二级命令的话，该参数中的VkCommandBufferInheritanceInfo必须要有值； //还有一些其他的说明，暂不纠结； }
+```
+
+```cpp
+typedef struct VkCommandBufferBeginInfo{ VkStructureType; const void*; VkCommandBufferUsageFlags; const VkCOmamndBufferInheritanceInfo*;//二级命令的话，该字段必须有，基础命令忽略此字段； } VkCommandBufferBeginInfo; 
+```
+
+```cpp
+typedef enum VkCommandBufferUsageFlagBits{ VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT=0X00000001,//表示这个CB在下一次提交的时候，必须重新reset，并且recording VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT=0X0000002,//表示这个二级命令全部在一个渲染管道里面，基础命令忽略此标志位； VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_BIT=0X0000004,//咱略； } VkCommandBufferUsageFlagBits; 
+
+typedef struct VkCommandBufferInheritanceInfo{ //暂略； }VkCommandBufferInheritanceInfo;
+```
+
+完成记录的话，调用下面的命令：
+
+```cpp
+VkResult vkEndCommandBuffer( VkCommandBuffer,//要停止的命令必须出于记录状态（recording），调用后处于可执行状态（executable） //如果CB是个基础命令的话，必须不能有激活的渲染管道实例存在； //所有在记录期间激活的查询相关的语句，必须设置为不活动状态； ); 
+```
+
+在录制期间发生的错误，高层应用会收到一个“不成功”的状态码，如果应用程序想要继续使用该CB的话，需要先reset该CB； 当一个命令出于可执行状态时，它就可以被提交到队列等待执行；
+
+##  5.4 命令的提交
+
+命令是这么提交给队列的：
+
+```cpp
+VkResult vkQueueSubmit( VkQueue,//要提交的队列 uint32_t,//参数三是个数组，该数组的长度； const VkSubmitInfo*,//一个数组首地址； VkFence,//可选项，暂略 ) 
+```
+
+>NOTE: The exact definition of a submission is platform-specific, but is considered a relatively expensive operation. In general, applications should attempt to batch work together into as few calls to vkQueueSubmit as possible. 精确的submission定义涉及到不同的平台，这个操作是相对耗性能的一项。普遍情况下，应用程序应该尝试合并提交的批次，从而劲量少的调用该接口。
+
+VkSubmitInfo细节的东西暂略；
+
+```cpp
+typedef struct VkSubmitInfo { VkStructureType sType; const void * pNext; uint32_t waitSemaphoreCount; const VkSemaphore * pWaitSemaphores; const VkPipelineStageFlags * pWaitDstStageMask; uint32_t commandBufferCount; const VkCommandBuffer * pCommandBuffers; uint32_t signalSemaphoreCount; const VkSemaphore * pSignalSemaphores; } VkSubmitInfo;
+```
+
+##  5.5 略
+##  5.6 二级命令的执行
+
+二级命令不能直接提交给队列，而是作为基础命令的一部分来执行的，具体是通过这个API：
+
+```cpp
+void vkCmdExecuteCommnands( 
+VkCommandBuffer,//基础命令的句柄；必须处于recording状态；
+uint32_t,//有几个二级命令将要被执行； 
+const VkCommandBuffer*,//一个数组，里面是二级命令；执行的顺序就是他们在数组中存在的顺序； )
+```
+
+>Once vkCmdExecuteCommands has been called, any prior executions of the secondary command buffers specified by pCommandBuffers in any other primary command buffer become invalidated, unless those secondary command buffers were recorded with VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT. 一旦vkCmdExecuteCommands被执行，在第三个参数里面的所有二级命令对于此前执行的基础命令将全部失效，除非他们有VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT标志位；
+
+#  Chapter 6 同步与缓存控制
+
+Vulkan在下列情况执行期间有4中不同形式的并发性：
+
+* 主机与设备之间；
+* 队列之间；
+* 队列的提交之间；
+* CB中的命令之间；
+
+四种同步的原语类型为：
+
+* Fences；
+* Semaphore；
+* Events；
+* Barriers；
+
+##  6.1 Fences
+
+{{site.b}}Fences是主机用来判断通过vkQueueSubmit或者vkQueueBindSparse函数，把要执行的推向队列的命令是否执行完毕。（好拗）Fences的状态要么是有信号的，要么是没信号的。 创建一个Fences实例的话，使用：
+
+```cpp
+VkResult vkCreateFence{ 
+VkDevice,// const VkFenceCreateInfo*,//
+const VkAllocationCallbacks*,//后期关于内存分配的章节讲述； 
+VkFence*,//
+} 
+
+typedef struct VkFenceCreateInfo{
+VkstructureType;//
+const void*;// //一个枚举类型，目前就一个枚举值：VK_FENCE_CREATE_SIGNALED_BIT=0x0000001; //如果这个枚举值设为上面的值，创建的Fence的状态就是signaled，否则是unsignaled VkFenceCreateFlags;
+}VkFenceCraeteInfo; 
+```
+
+Fences的销毁调用以下函数：
+
+```cpp
+void vkDestroyFence{ 
+VkDevice,//与下面的VkFence必须创建与同一个VkPhysicalDevice VkFence,// VkAllocationCallbacks*,//如果在Fence创建的时候，没有传入有效的allocator，那么在销毁这个Fence的时候，该值必须为NULL；
+} 
+```
+
+重置Fence，我们调用: 
+
+```cpp
+VkResult vkResetFences( 
+VkDevice, 
+uint32_t, 
+const VkFences*,//数组，里面的Fence实例必须是从同一个VkPhysicalDevice上创建的；要重置的Fence必须不能在其他队列中正在被执行；
+)
+```
+
+如果一个Fence状态为unsignaled，那么reset对其无效； 
+
+```cpp
+VkResult vkWaitFences( 
+VkDevice,// 
+uint32_t,// 
+const VkFence*,// 
+VkBool32,// 
+uint64_t,//纳秒级的延迟，依据具体的实现而定，实际上会使用较长的时间；
+)
+```
+
+##  6.2 信号量
+
+信号量主要用来操作队列之间或者一个队列内部的提交情况。应用程序必须联合信号量与资源或者资源组，以排列共享数据的所有权。信号量的状态要么是“有信号的”，要么是“无信号的”。
+
+信号量的创建如下：
+
+```cpp
+VkResult vkCreateSemaphore( VkDevice,// const VkSemaphoreCreateInfo*,// const VkAllocationCallbacks*,// VkSemaphore*,// )
+```
+
+
+信号量的销毁如下：
+
+```cpp
+void vkDestroySemaphore( VkDevice,// VkSemaphore,// const VkAllocationCallbacks*,// ) 
+```
+
+##  6.3 事件
+
+事件是Vulkan用来在一个更细的粒度下同步在队列中执行命令的进度的原语。事件初始是“无信号”状态。它会被使命令插入命令池的设备，或者主机触发为“信号”状态。同时它也可以被设备或者主机设置为“无信号”状态。主机能够查询事件的状态。一个设备可以等待一个或者多个事件的状态变为“信号”。
+
+这样创建事件 
+
+```cpp
+VkDevice, const VkEventCreateInfo*, const VkAllocationCallbacks*, 
+
+typedef struct VkEventCreateInfo { VkStructureType sType; const void * pNext; VkEventCreateFlags flags; } VkEventCreateInfo;
+
+void vkDestroyEvent( VkDevice device, VkEvent event, const VkAllocationCallbacks * pAllocator ); 
+```
+
+主机查询事件的状态，使用： 
+
+```cpp
+VkResult vkGetEventStatus( VkDevice device, VkEvent event ); 
+```
+
+返回的状态有2个，一个是“信号”:VK_EVENT_SET，一个是“无信号”:VK_EVENT_RESET，主机可以设置事件的状态，而且状态是及时生效的，所以后面调用vkGetEventStatus函数的话会返回新的状态。如果给事件设置与此前一样的状态，则无效果。这样给事件设置状态：
+
+```cpp
+#使事件的状态变为“信号”。 
+VkResult vkSetEvent( VkDevice device, VkEvent event );
+
+#使事件的状态变为“无信号”。
+{% highlight c %} VkResult vkResetEvent( VkDevice device, VkEvent event ); 
+```
+
+
+#事件的状态也可以通过插入命令缓存区的命令来改变。当函数正在执行的时候，必须不能通过vkCmdWaitEvents函数将事件等待。使事件的状态变为“信号”: 
+
+```cpp
+void vkCmdSetEvent( VkCommandBuffer commandBuffer, VkEvent event, VkPipelineStageFlags stageMask );
+
+#使事件的状态变为“无信号”。
+void vkCmdResetEvent( VkCommandBuffer commandBuffer, VkEvent event, VkPipelineStageFlags stageMask );
+```
+
+等待更多的事件进入“信号”状态的话，我们使用：函数具体说明暂略 
+
+```cpp
+void vkCmdWaitEvents( VkCommandBuffer commandBuffer, uint32_t eventCount, const VkEvent * pEvents, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, uint32_t memoryBarrierCount, const VkMemoryBarrier * pMemoryBarriers, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier * pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier * pImageMemoryBarriers ); 
+```
+
+##  6.4 执行与内存依赖
+
+{{site.b}}同步命令明确的说明了2个不同集合之间的执行与内存依赖（第二个集合的命令依赖于第一个集合的命令）。这两个集合可以是：
+
+* 集合一：在vkCmdSetEvent命令之前的命令。
+* 集合二：在同一队列中处于vkCmdWaitEvents命令之后的命令（使用同一个事件）；
+* 集合一：被小数字记录的子管线中的命令（或者处于一个渲染管线实例之前的命令）；
+* 集合二：被大数字记录的子管线中的命令（或者处于一个渲染管线实例之后的命令）, where there is a subpass dependency between the two subpasses (or between a subpass and VK_SUBPASS_EXTERNAL).
+* 集合一：在pipline barrier之前的命令；
+* 集合二：在同一个队列中的处于pipline barrier之后的命令；（可能限值于同一个管线中）；
+
+“执行依赖”是指处于流水线源与目标阶段集合之间的单方面依赖。
+
+>An execution dependency is a single dependency between a set of source and destination pipeline stages, which guarantees that all work performed by the set of pipeline stages included in srcStageMask (see Pipeline Stage Flags) of the first set of commands completes before any work performed by the set of pipeline stages included in dstStageMask of the second set of commands begins.
+
+源流水线阶段A到目标流水线阶段B之间的“执行依赖链”是指提交给队列中的，处于集合命令一与集合命令二之间的一系列有序的执行依赖；
+
+An execution dependency chain from a set of source pipeline stages A to a set of destination pipeline stages B is a sequence of execution dependencies submitted to a queue in order between a first set of commands and a second set of commands.
+
+执行依赖链满足好多条件（暂略P.92）。
+
+执行依赖链保证了集合一中的处于流水线阶段A的命令在集合二中处于流水线阶段B的命令之前执行；
+
+An execution dependency chain guarantees that the work performed by the pipeline stages A in the first set of commands completes before the work performed by pipeline stages B in the second set of commands begins.
+
+##  6.5 流水线关口（Pipline Barriers）
+
+{{site.b}}流水线关口插入一个执行依赖，并且插入一组内存依赖。这些内存依赖是指插入CB之前的命令集与之后将要插入的之间的内存依赖关系。
+
+我们这样记录流水线关口： {% highlight c %} void vkCmdPipelineBarrier( VkCommandBuffer commandBuffer, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags, uint32_t memoryBarrierCount, const VkMemoryBarrier * pMemoryBarriers, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier * pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier * pImageMemoryBarriers ); {% endhighlight %}
+
+###  6.5.1 子管线 自依赖
+###  6.5.2 流水线阶段标志
+###  6.5.3 内存关口
+###  6.5.4 全局内存关口
+###  6.5.5 缓冲区内存关口
+###  6.5.6 图像内存关口
+##  6.6 (略)
+#  Chapter 7 渲染通路
+
+{{site.b}}渲染通路表征了一组依附、子通路，子通路之间的依赖关系以及描述这些依附是如何作用在子通路的过程中的。渲染通路在CB中的使用就是渲染通路实例。
+
+>
+> A render pass represents a collection of attachments, subpasses, and dependencies between the subpasses, and describes how the attachments are used over the course of the subpasses. The use of a render pass in a command buffer is a render pass instance.
+
+> “依附描述”是指依附的属性，包括它的格式，采样数量，以及它的内容是如何被渲染实例在开始与结束被对待使用的。
+
+> An attachment description describes the properties of an attachment including its format, sample count, and how its contents are treated at the beginning and end of each render pass instance.
+
+> “子通路”是指一个或者几个依附被读或者写入渲染通路的一个阶段。渲染命令被渲染通路记录在一个特殊的子通路中。
+
+> A subpass represents a phase of rendering that reads and writes a subset of the attachments in a render pass. Rendering commands are recorded into a particular subpass of a render pass instance.
+
+> “子通路描述”是指在子通路执行期间涉及到的所有依附。
+
+> A subpass description describes the subset of attachments that is involved in the execution of a subpass.
+>
+
+每一个子通路可以从依附中读取数据作为“输入依附”，写入数据作为“颜色、深度、蒙板依附”，解决不同子通路之间的操作作为“解决依附”，。。。略
+
+##  7.1 渲染通路的创建
+
+```cpp
+VkResult vkCreateRenderPass( VkDevice device, const VkRenderPassCreateInfo * pCreateInfo, const VkAllocationCallbacks * pAllocator, VkRenderPass * pRenderPass ); 
+
+typedef struct VkRenderPassCreateInfo { VkStructureType sType; const void * pNext; VkRenderPassCreateFlags flags; uint32_t attachmentCount; const VkAttachmentDescription * pAttachments; uint32_t subpassCount; const VkSubpassDescription * pSubpasses; uint32_t dependencyCount; const VkSubpassDependency * pDependencies; } VkRenderPassCreateInfo; 
+
+void vkDestroyRenderPass( VkDevice device, VkRenderPass renderPass, const VkAllocationCallbacks * pAllocator ); 
+```
+
+##  7.1章节东西很多，暂略
+
+##  7.2 渲染通路兼容性
+
+{{site.b}}帧缓存与图像管道是有专门的渲染通路创建的。他们必须被这些渲染通路所使用，或者能兼容这些通路的。
+
+存在下面情况的两种依附是兼容的（或关系）：
+
+* 它们有符合的格式与采样数量；
+* 他们都是VK_ATTACHMENT_UNUSED；
+* 指向引用的指针为NULL；
+
+存在下面情况的两个渲染通路是兼容的（与关系）：
+
+* 都只存在一个子通路；
+* 这个子通路在颜色、输入、解决、深度、蒙板依附上都是兼容的；
+
+存在多个子通路的渲染通路兼容性略；
+
+一个帧缓存与一个渲染通路兼容的条件是：这个帧缓存是由同一个渲染通路或者与这个渲染通路兼容的通路创建；
+
+##  7.3 帧缓存
+
+{{site.b}}渲染通路的操纵总是与帧缓存有关联，帧缓存就是一个专门的内存依附的集合，这些依附是被渲染通路实例使用的。
+
+```cpp
+VkResult vkCreateFramebuffer( VkDevice device, const VkFramebufferCreateInfo * pCreateInfo, const VkAllocationCallbacks * pAllocator, VkFramebuffer * pFramebuffer); 
+
+typedef struct VkFramebufferCreateInfo { VkStructureType sType; const void * pNext; VkFramebufferCreateFlags flags; VkRenderPass renderPass; uint32_t attachmentCount; const VkImageView * pAttachments; uint32_t width; uint32_t height; uint32_t layers; } VkFramebufferCreateInfo; 
+
+void vkDestroyFramebuffer( VkDevice device, VkFramebuffer framebuffer, const VkAllocationCallbacks * pAllocator ); 
+```
+
+##  7.4 渲染通路的命令
+
+应用程序每次记录渲染通路中的一个子通路，从一个渲染通路开始，迭代所有子通路记录命令，最后结束这个渲染通路。
+
+```cpp
+void vkCmdBeginRenderPass( VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo * pRenderPassBegin, VkSubpassContents contents );
+
+void vkCmdNextSubpass( VkCommandBuffer commandBuffer, VkSubpassContents contents ); 
+
+void vkCmdEndRenderPass( VkCommandBuffer commandBuffer ); 
+```
+#  Chapter 8 着色器
+
+{{site.b}}着色器说明了可编程操作在图形图像的特定阶段（stage）与计算管线中对顶点、控制点、细分点、图元（primitive）、片元、工作组的计算处理；图形管线包括顶点着色，可选的细分控制与细分计算着色器，可选的作用在图元上的几何着色器，作用在由光栅化而来的片元上的片元着色器。顶点、细分控制、细分计算、几何着色器被认为作用在顶点处理阶段。
+
+{{site.b}}着色器能够读取输入变量，也能够读取、写入输出变量。输入、输出变量可以用来传递不同着色阶段的数据，或者允许着色器与运行环境的变量做交互。执行环境提供描述兼容性的常量。
+
+##  8.1 着色模块(Shader Modules)
+
+{% include image.html src="vulkan/vulkan_1.jpg" width="495" caption="图片截自：Vulkan_Essentials_GDC16_tlorach.pdf" align="center" %} {{site.b}}“着色器模块”包含“着色器代码”与一个或者多个进入口。Shaders are selected from a shader module by specifying an entry point as part of pipeline creation. 管线的不同阶段使用来自不同模块的着色器。定义着色器模块的着色器代码必须符合SPIR-V格式，见附录（p.135）。
+
+```cpp
+VkResult vkCreateShaderModule( VkDevice device, const VkShaderModuleCreateInfo * pCreateInfo, const VkAllocationCallbacks * pAllocator, VkShaderModule * pShaderModule ); 
+
+typedef struct VkShaderModuleCreateInfo { VkStructureType sType; const void * pNext; VkShaderModuleCreateFlags flags; size_t codeSize; const uint32_t * pCode;//必须指向一个合法的SPIR-V的代码； } VkShaderModuleCreateInfo; 
+
+void vkDestroyShaderModule( VkDevice device, VkShaderModule shaderModule, const VkAllocationCallbacks * pAllocator ); 
+```
+
+##  8.2 着色器的执行
+
+##  8.3 着色器内存访问次序

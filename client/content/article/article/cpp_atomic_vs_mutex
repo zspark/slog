@@ -1,0 +1,126 @@
+
+#  atomic与mutex
+
+下面是分别用mutex与atomic实现的10线程并发修改变量的demo，可以看出两者在性能上的差别，我的测试显示5倍左右。
+
+```cpp
+/// mutex
+#include <iostream>
+#include <atomic>
+#include <thread>
+#include <vector>
+#include <chrono>
+#include <mutex>
+
+std::mutex m;
+
+struct AA{
+void Inc(){
+m.lock();
+++a;
+m.unlock();
+}
+int Get(){return a;}
+private:
+int a{0};
+};
+
+std::atomic<bool> ready (false);
+AA a;
+
+void Run(int id){
+while (!ready) { std::this_thread::yield(); }
+for(volatile int i=0;i<100000;++i){
+a.Inc();
+}
+}
+
+int main () {
+std::vector<std::thread> threads;
+for (int i=1; i<=10; ++i) threads.push_back(std::thread(Run,i));
+
+std::chrono::high_resolution_clock::time_point t1=std::chrono::high_resolution_clock::now();
+
+ready = true;
+for (auto& th : threads) th.join();
+
+std::chrono::high_resolution_clock::time_point t2=
+	std::chrono::high_resolution_clock::now();
+std::chrono::duration<double> delta=
+	std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+
+std::cout<<"sum a is :"<<a.Get()<<", tooks:"<<delta.count()<<"s"<<std::endl;
+return 0;
+}
+```
+
+```cpp
+/// atomic
+#include <iostream>
+#include <atomic>
+#include <thread>
+#include <vector>
+#include <chrono>
+
+struct AA{
+void Inc(){
+++a;
+}
+int Get(){return a;}
+private:
+std::atomic_int a{0};
+};
+
+std::atomic<bool> ready (false);
+AA a;
+
+void Run(int id){
+while (!ready) { std::this_thread::yield(); }
+for(volatile int i=0;i<100000;++i){
+a.Inc();
+}
+}
+
+int main () {
+std::vector<std::thread> threads;
+for (int i=1; i<=10; ++i) threads.push_back(std::thread(Run,i));
+
+std::chrono::high_resolution_clock::time_point t1=std::chrono::high_resolution_clock::now();
+
+ready = true;
+for (auto& th : threads) th.join();
+
+std::chrono::high_resolution_clock::time_point t2=
+	std::chrono::high_resolution_clock::now();
+std::chrono::duration<double> delta=
+	std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+
+std::cout<<"sum a is :"<<a.Get()<<", tooks:"<<delta.count()<<"s"<<std::endl;
+return 0;
+}
+```
+
+测试结果如下：
+
+```
+// mutex
+sum a is :1000000, tooks:0.103023s
+sum a is :1000000, tooks:0.103787s
+sum a is :1000000, tooks:0.103285s
+sum a is :1000000, tooks:0.108117s
+sum a is :1000000, tooks:0.104295s
+sum a is :1000000, tooks:0.107922s
+sum a is :1000000, tooks:0.106551s
+sum a is :1000000, tooks:0.107863s
+
+// atomic
+sum a is :1000000, tooks:0.0187285s
+sum a is :1000000, tooks:0.0221801s
+sum a is :1000000, tooks:0.0186253s
+sum a is :1000000, tooks:0.0190748s
+sum a is :1000000, tooks:0.0202265s
+sum a is :1000000, tooks:0.0201618s
+sum a is :1000000, tooks:0.021605s
+sum a is :1000000, tooks:0.0190789s
+```
+

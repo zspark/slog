@@ -1,0 +1,39 @@
+
+
+软件发布总是需要一套劲量具有更多自动化的工具辅助，不然枯燥且乏味，于是着手开发一套基于Qt的发布工具，使用git控制软件版本，直接调用git.exe对外封装的命令不好对进度、深度定制把控，鉴于git是开源软件，自然想到直接集成git源码，这套源码就叫libgit2
+
+|#|~|
+| :--: | :--: |
+|官网|https://libgit2.org|
+|API|https://libgit2.org/libgit2/#HEAD|
+
+
+#   环境
+
+*    git客户端，用于克隆libgit2源码；
+*    cmake，用于生成libgit2的工程，或者间接编译为库；（cmake版本参考官网）
+*    编译器，诸如windows下的MSVC，linux下的gcc、clang；
+*    添加git与cmake到环境变量，方便直接从本地控制台调用； 
+
+#   编译
+
+*    在libgit2目录下创建全新目录，用于存放编译过程中与编译完成后的文件；（大家默认起名build）
+*    mkdir build
+*    cd build
+*    cmake .. -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF -DTHREADSAFE=ON
+*    cmake --build . 
+
+
+##  参数说明：
+
+*    BUILD_SHARED_LIBS=OFF makes libgit2 build as a static library (.lib for Windows, .a for Mac) instead of a dynamic library (.dll for Windows, .dylib for Mac). This is recommended by the libgit2 authors, as it simplifies project distribution.
+*    BUILD_CLAR=OFF prevents cmake from also building the libgit2 unit test suite (which is only useful for libgit2 development.)
+*    THREADSAFE=ON ensures that libgit2 will be safe for use in a multithreaded application.
+*    CMAKE_OSX_ARCHITECTURES="i386;x86_64" is a necessary flag when building for OS X or macOS. (See the libgit2 readme.) 
+
+#   libgit2使用汇总
+
+git_checkout_xxx()系列函数中的git_checkout_options参数，其中的checkout_strategy是个32位flag，可通过不同的组合，产生诸如“迁出指定提交而不撤销本地修改”、“强制迁出，顶掉任何本地修改”等逻辑。具体软件用于公司QA人员更新版本使用，忘记截图。
+
+¶ 
+

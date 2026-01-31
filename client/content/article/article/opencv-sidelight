@@ -1,0 +1,26 @@
+## 遍历目录获取文件的全局路径
+
+```cpp
+int main(int argc, char* argv[]) {
+    std::string folder_path = "D:\\database\\test\\*.*"; //path of folder, you can replace "*.*" by "*.jpg" or "*.png"
+    std::vector<cv::String> file_names;  
+    cv::glob(folder_path, file_names);   //get file names
+ 
+    cv::Mat img;   //try show it when file is a picture
+    for (int i = 0; i < file_names.size(); i++) {
+        std::cout << file_names[i] << std::endl;
+        img = cv::imread(file_names[i]);
+        if (!img.data) {
+            continue;        
+        }
+        //do some work with the img you readed
+        cv::imshow("img", img);
+        cv::waitKey(300);
+    }
+    std::getchar();  //check your output on terminal
+}
+```
+
+## 编译opencv，让其可以open视频
+
+`https://www.jianshu.com/p/f4ca1039eadf`

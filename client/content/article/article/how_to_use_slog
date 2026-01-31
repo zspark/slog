@@ -1,0 +1,20 @@
+# all markdown syntax
+
+# others
+
+## tip
+<blockquote class="tip">
+this is a tip with green color
+</blockquote>
+
+<blockquote class="note">
+this is a note with yellow color
+</blockquote>
+
+<blockquote class="warn">
+this is a warn with blue color
+</blockquote>
+
+<blockquote class="error">
+this is an error with red color
+</blockquote>

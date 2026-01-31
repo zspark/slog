@@ -1,0 +1,8 @@
+
+使用Eigen将四元数转欧拉角；
+```cpp
+::Eigen::Quaterniond q(w, x, y, z);
+::Eigen::Matrix3d rx = q.toRotationMatrix();
+::Eigen::Vector3d ea = rx.eulerAngles(2,1,0);
+```
+

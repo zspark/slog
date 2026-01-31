@@ -1,0 +1,26 @@
+```json
+{
+    "workbench.colorTheme": "Default Light+",
+    "vim.cursorStylePerMode.normal": "block",
+    "vim.cursorStylePerMode.replace": "block",
+    "C_Cpp.updateChannel": "Insiders",
+    "http.proxySupport": "off",
+    "editor.minimap.enabled": false,
+    "workbench.startupEditor": "welcomePage",
+    "editor.lineNumbers": "relative",
+    "window.zoomLevel": 0,
+    "breadcrumbs.enabled": false,
+    "editor.renderWhitespace": "all",
+    "terminal.integrated.fontSize": 12,
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    "update.mode": "none",
+    "editor.autoClosingBrackets": "never",
+    "editor.autoClosingOvertype": "never",
+    "editor.autoClosingQuotes": "never",
+    "diffEditor.ignoreTrimWhitespace": false,
+    "extensions.ignoreRecommendations": false,
+    "editor.wordWrap": "on"
+}
+```

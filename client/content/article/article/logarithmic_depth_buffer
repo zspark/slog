@@ -1,0 +1,84 @@
+I assume pretty much every 3D programmer runs into Z-buffer issues sooner or later. Especially when doing planetary rendering; the distant stuff can be a thousand kilometers away but you still would like to see fine details right in front of the camera.
+
+Previously I have dealt with the problem by splitting the depth range in two and using the first part for near stuff and another for distant stuff. The boundary was floating, somewhere around 5km - quad-tree tiles up to certain level were using the distant part, and the more detailed tiles that by law of LOD are occurring nearer the camera used the other part.
+Most of the time this worked. But in one case it failed miserably - when a more detailed tile appeared behind a less detailed one.
+I was thinking about the ways to fix it, grumbling why we can't have a Z-buffer with better distribution, when it occurred to me that maybe we can.
+
+[Steve Baker's document](https://www.sjbaker.org/steve/omniv/love_your_z_buffer.html) explains common problems with Z-buffer. In short, the depth values are proportional to the reciprocal of Z. This gives amounts of precision near the camera but little off in the distance. Common method is then to move your near clip plane further away, which helps but also brings its own problems, mainly that .. the near clip plane is too far.
+
+A much better Z-value distribution is a logarithmic one. It also plays nicely with LOD used in large scale terrain rendering.
+Using the following equation to modify depth value after it's been transformed by the projection matrix:
+
+```cpp
+z = log(C*w + 1) / log(C*Far + 1) * w      //DirectX with depth range 0..1
+
+//or 
+
+z = (2*log(C*w + 1) / log(C*Far + 1) - 1) * w   //OpenGL, depth range -1..1
+```
+
+<blockquote class="note">"you can use the value of w after your vertices are transformed by your model view projection matrix, since the w component ends up with the view space depth. Hence w is used in the equations above."</blockquote>
+
+Where C is constant that determines the resolution near the camera, and the multiplication by w undoes in advance the implicit division by w later in the pipeline.
+Resolution at distance x, for given C and n bits of Z-buffer resolution can be computed as
+
+```cpp
+Res = log(C*Far + 1) / ((2^n - 1) * C/(C*x+1))
+```
+
+
+So for example for a far plane at 10,000 km and 24-bit Z-buffer this gives the following resolutions:
+
+|     |       1m |     10m  |   100m  |  1km   |  10km  |  100km  | 1Mm   |  10Mm ||
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| C=1     |    1.9e-6 | 1.1e-5 | 9.7e-5 | 0.001  | 0.01  |  0.096 |  0.96  |  9.6  |   [m] |
+| C=0.001   |  0.0005 | 0.0005 | 0.0006 | 0.001 |  0.006 |  0.055 |  0.549  | 5.49  |  [m] |
+
+
+Along with the better utilization of z-value space it also (almost) gets us rid of the near clip plane.
+
+# More details
+The C basically changes the resolution near the camera; I used C=1 for the screenshots, having theoretical resolution 1.9e-6m. However, the resolution near the camera cannot be utilized fully as long as the geometry isn't finely tessellated too, because the depth is interpolated linearly and not logarithmically. On models such as the guy on the screenshots it is perfectly fine to put camera on his nose, but with models with long stripes with vertices few meters apart the bugs from the interpolation can be visible. We will be dealing with it by requiring certain minimum tessellation.
+
+
+# Fragment shader interpolation fix
+[Ysaneya suggested a fix](https://www.gamedev.net/blogs/entry/2006307-tip-of-the-day-logarithmic-zbuffer-artifacts-fix/) for the artifacts occurring with thin or large triangles when close to the camera, when perspectively interpolated depth values diverge too much from the logarithmic values, by writing the correct Z-value at the pixel shader level. This disables fast-Z mode but he found the performance hit to be negligible.
+
+**Update**: a more complete and updated info about the logarithmic depth buffer and the reverse floating point buffer can be found in post [Maximizing Depth Buffer Range and Precision](https://outerra.blogspot.com/2012/11/maximizing-depth-buffer-range-and.html).
+
+# Logarithmic depth buffer optimizations & fixes
+
+An updated logarithmic depth equation (vertex shader):
+
+```cpp
+//assuming gl_Position was already computed
+gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * Fcoef - 1.0;
+```
+
+Where `Fcoef` is a constant or uniform value computed as `Fcoef = 2.0 / log2(farplane + 1.0)`
+
+
+Changes (compared to the initial version):
+
+* using log2 instead of log: in shaders, log function is implemented using the log2 instruction, so it's better to use log2 directly, avoiding an extra multiply
+* clipping issues: for values smaller than or equal to 0 the log function is undefined. In cases when one vertex of the triangle lies further behind the camera (≤ -1), this causes a rejection of the whole triangle even before the triangle is clipped. Clamping the value via max(1e-6, 1.0 + gl_Position.w) solves the problem of disappearing long triangles crossing the camera plane.
+* no need to compute depth in camera space: after multiplying with the modelview projection matrix, gl_Position.w component contains the positive depth into the scene, so the above equation is the only thing that has to be added after your normal modelview projection matrix multiply
+* Previously used "C" constant changing the precision distribution was removed, since the precision is normally much higher than necessary, and C=1 works well
+
+To address the issue of the depth not being interpolated in perspectively-correct way, output the following interpolant from the vertex shader:
+
+```cpp
+//out float flogz;
+flogz = 1.0 + gl_Position.w;
+```
+
+and then in the fragment shader add:
+
+```cpp
+gl_FragDepth = log2(flogz) * Fcoef_half;
+
+//where 
+Fcoef_half = 0.5 * Fcoef
+```
+
+Note that writing fragment depth disables several depth buffer optimizations that may pose problems in scenes with high overdraw. The non-perspective interpolation isn't usually a problem when the geometry is tesselated finely enough, and in Outerra we are using the fragment depth writing only for objects, since the terrain is tesselated quite well.

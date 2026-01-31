@@ -1,0 +1,19 @@
+Assimp中有这么一个模板，其模板参数未被用到（就是下面的TDeriving），如此写有什么用意？可参见Assimp5.0源码中的LogAux.h文件 OR [这里](view?n=assimp-LogAux.h)查看该文件全部内容。
+
+```cpp
+template<class TDeriving>
+class LogFunctions {
+public:
+    // ------------------------------------------------------------------------------------------------
+    static void LogDebug(const Formatter::format& message)  {
+        if (!DefaultLogger::isNullLogger()) {
+            ASSIMP_LOG_DEBUG(Prefix()+(std::string)message);
+        }
+    }
+private:
+    static const char* Prefix();
+};
+
+/// usage：
+class FBXImporter : public BaseImporter, public LogFunctions<FBXImporter>{}
+```

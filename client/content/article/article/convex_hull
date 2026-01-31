@@ -1,0 +1,177 @@
+
+>计算机科学就是有关计算机的，正如天文学就是有关望远镜的。
+>—— 艾兹格·迪杰斯特拉（Edsger W. Dijkstra），荷兰计算机科学家，最短路径算法提出者
+
+学习物理碰撞相关的理论，凸包是绝对逃避不了的一个术语。
+
+#  凸包的概念
+
+>在一个实数向量空间V中，对于给定集合X，所有包含X的凸集的交集S被称为X的凸包。 ---摘自：百度百科
+
+上面概念就是说：凸包是凸集的子集，且是包含集合X的最小的子集；按照坊间通俗的话来说就是把所有的点用橡皮筋圈起来，橡皮筋形成的那个凸多边形就是这些点的凸包。
+
+{% include image.html src="convex-hull/image1.jpg" caption="图片来源：百度百科" width="269" height="216" align="center" %}
+
+这样的直观解释不能说不对，但显然不太考究，他会将读者的理解集中在“橡皮筋”之上，认为那个多边形的边就是凸包的实体。但是我们从概念上理解的话明显实体还要包括里面的东西（最小的凸集）。故此凸包是整个面而不仅仅是边；
+
+#  凸包的应用
+
+凸包是计算几何中基本的概念，既是基本概念其应用自然不是具体的，主要看使用者对凸包的理解。最常见的应用比如使用凸包去计算围绕树林的篱笆墙的最短距离，深入一些的话比如在《探求二维凸包及其应用》（徐瑞广，余志伟.中国矿业大学(北京）资源学院（100083））论文中作者提到用凸包区分两个点集是否可能被一条直接分开，再比如铸造新合金问题，乍看第与凸包没有关系，但作者还是巧妙的应用了凸包知识进行了计算。
+
+这里简单说下凸包在CD(collision detection)中的应用。
+
+一个物理碰撞引擎驱动的肯定不止是简单的规则图形，而对于不规则图形，我们一般使用图形的顶点去定义它。对于三角形，三个顶点可以任意顺序【注1】，但是顶点数量大于3的话，他们就必须要有一定的顺序，否则不但不能计算正确的表面法线方向，而且不能正确计算面积等属性。如图2所示，点集顺序按字母顺序。
+
+>【注1】：3个顶点的多边形虽然不可能造成边计算的错误，但仍然有可能造成表面法向方向的错误。故此依然需要排序，以方便用统一的逻辑处理；
+
+{% include image.html src="convex-hull/image2.jpg" caption="图2 [A,B,C,D]构成的点集" width="280" height="264" align="center" %}
+
+倘若不做处理，碰撞逻辑误以为AB、BC、CD、DA是四条边，这显然是不对的。故此需要先对该点集进行凸包计算，我们并不是为了显示（绘制）凸包的轮廓而去计算它，而是使用凸包计算过程中形成的统一的极点顺序（极点就是在凸包边上的顶点）。假如我们从A点开始计算，那么能在凸包边上的CW方向的下一个顶点肯定是D，然后是B，最后是C。
+
+#  凸包算法
+
+凸包算法有好多种，比如卷包裹算法(gift wrapping algorithm)、快包算法(Quick hull algorithm)、格雷厄姆扫描算法(Graham-scan algorithm)、等。
+
+##  卷包裹算法
+
+如图3所示，假如我们有这样一个点集
+
+{% include image.html src="convex-hull/image4.jpg" caption="图3 给定的一组点" width="400" height="300" align="center" %}
+
+首先计算出肯定在凸包边上的一个极点（极点就是肯定在凸包边缘上的点），假设我们取最左边的点I，然后我们的工作集中在如何得到第二个极点；
+
+{% include image.html src="convex-hull/image6.jpg" caption="图4 夹角最小的下一个点构成了新的边缘点（局部图）" width="357" height="300" align="center" %}
+
+从图4中可以看出，I的临近极点肯定是与直线w=I(x)夹角最小的点，图中向量u与w夹角为17.12度，而其他的点比如B则是48.68度，一次遍历下来后，夹角最小的肯定是H点，于是H点便是CCW方向下与I临近的下一个极点； 后面便是个循环，因为我们找到了下一个极点H，再找它的下一个极点与之前逻辑一样了。直到我们找到的下一个极点与第一个I相同，此循环便结束；
+
+{% include image.html src="convex-hull/image7.jpg" caption="图5 共线问题" width="400" height="300" align="center" %}
+
+这里有个问题需要说明的是，图5中点I，A，E好像在同一条直线上。当然感觉可能是未必准确，但如果他们确实共线的话，这就需要我们自己决定点A的去留了，一般情况下点A是去掉的，因为他就是线段IE上的一个普通点而已，就算碰撞解决，也是与IE做线段碰撞，并非与点A做点参与的碰撞。有时候我们为了提高性能，做一些取舍计算，假如点I、A、E不公线，但是角IAE（A是顶点）大于一定的阈值，几乎为180度，这个时候完全可以近似为他们共线，从而省去一部分计算量。
+
+###  具体实现（AS3）
+
+```cpp
+/**
+输入点集，得到在凸包上的点集；
+@param pointSet
+@param hullPointSet
+@return true表示经过了计算，false表示没有经过计算；
+*/ 
+public static function handle(pointSet:Array,hullPointSet:Array):Boolean{ 
+if(pointSet==null || hullPointSet ==null)return false; 
+if(pointSet.length<=2)return false; 
+
+hullPointSet.length=0;
+
+//找到最左边的点；这个点肯定是个极点；
+var firstPoint:Vector2D=LAMath.getFarestPoint(pointSet,new Vector2D(-1,0));
+hullPointSet.push(firstPoint);
+		
+var Point_a:Vector2D;//每次遍历的开始点，是上一个已经确定的极点；
+var Point_b:Vector2D=firstPoint;//每次遍历开始，是随机点集中的一点，该点在每次遍历之后是个极点；
+var d0:Vector2D=new Vector2D();
+var d1:Vector2D=new Vector2D();
+		
+do{
+	Point_a=Point_b;
+	Point_b=pointSet[0];
+	d0.resetComponent(Point_b.x-Point_a.x,Point_b.y-Point_a.y);
+			
+	for each(var v:Vector2D in pointSet){
+		if(v==Point_a)continue;
+		d1.resetComponent(v.x-Point_a.x,v.y-Point_a.y);
+		var result:Number=LAMath.cross2D(d0,d1);
+		if(result>0){
+			//大于零，表示有更左边的点；于是跟新Pont_b为这个点，同时更新d0；
+			Point_b=v;
+			d0.resetComponent(Point_b.x-Point_a.x,Point_b.y-Point_a.y);
+		}else if(result==0){
+			//在同一条直线上;选择远端的点;
+			if(LAMath.dotProduct(d0,d0)<LAMath.dotProduct(d1,d1)){
+				Point_b=v;
+				d0.resetComponent(Point_b.x-Point_a.x,Point_b.y-Point_a.y);
+			}
+		}
+	}
+			
+	//一次遍历结束，Point_b记录的肯定是最左边的点（相对了d0方向）；推入极点数组；
+	hullPointSet.push(Point_b);
+	
+//如果最新得到的极点不是最初的极点，说明圈还没有封闭，继续找下一个极点；
+}while(firstPoint!=Point_b)
+return true;
+}
+```
+
+###  算法分析
+
+从上面算法中可以看出，整个过程至少包含嵌套的2次循环。外圈while循环用来判断本次do逻辑里面计算出来的极点是否为第一个极点；而do中的for循环主要是遍历所有顶点，如此一来Gift-wrapping算法的时间复杂度便是\\(O(n*l)\\)，其中n是凸包极点数量，l是点集数量。
+
+进一步分析可知如果点集中的点全部在凸包上（比如圆），那么算法时间复杂度便是最大\\(O(n^2)\\),所以卷包裹算法不适合计算极点密集型点集；
+
+##  快包算法(quick-hull-algorithm)
+
+看过《实时碰撞检测算法技术》中的快包算法与维基百科中的算法，其中虽有部分出入，但本质一样：都是由内而外，膨胀到点集的边缘。不过《实时碰撞检测算法技术》一书中说为了快包算法健壮性，需要考虑两点：
+
+* 首次逼近四边形计算的时候，需要考虑到其退化情况，比如一个三角形或者一条直线；
+* 最远点不止一个的问题；
+
+书中说为了考虑到四边形有可能退化的问题，需要算法注意首次逼近构造四边形的退化情况。这条明显过虑了，因为后期当图形被迭代‘充气’的时候，都是计算距离边（三维的话是面）最远的点，如此一来的话，先前的四边形就是画蛇添足，完全可以一开始就仅仅构造一条直线（边），然后向两边“充气”。第二条在我们熟悉了算法之后再看；
+
+我们还是使用前面的点集，来具体看一下快包算法的过程，点集如下所示。
+
+{% include image.html src="convex-hull/image4.jpg" caption="图1 随即点形成的一个点集" width="423" height="361" align="center" %}
+
+首先计算出肯定在凸包上的2个点，比如是顶点H、E，它们构成初始边g，此时所有的其他顶点被分割成2部分：绿色与蓝色，见图2
+
+{% include image.html src="convex-hull/image_qh4.jpg" caption="图2 遍历找到给定方向下的两个凸包边缘点" width="423" height="361" align="center" %}
+
+后边要做的就是2部分，一部分遍历绿色的点直到完毕，另一部分就是遍历蓝色的点直到完毕，就拿蓝色来说。先找到距离直线g最远的顶点F，F肯定也是在凸包上的点，这个计算完毕后，肯定形成2条新的边h与i，见图3
+
+{% include image.html src="convex-hull/image_qh5.jpg" caption="图3 找到蓝点集中距离HE直线最远的点" width="423" height="361" align="center" %}
+
+后边的计算就与初始边的计算一样了，依次计算新的边对应的最远顶点，我们就得到了点C与B，至此蓝色点群遍历完毕；
+
+下面就是计算绿色的点，步骤与上面一样。
+
+###  注意点
+
+* 新形成的边（比如h边），它是怎么确定自己寻找的方向是朝向C而不是反方向？
+* 寻找最远点的过程中，是要遍历点集的，如何减少遍历？
+
+在我经验里面，所有涉及到“哪一边”的图形图像问题，一定要把握好初始点与结束点还有方向即可，比如我们明确在这个快包算法中，一律使用‘左边’，那么第一次找到的点F如果说要在初始边g的‘左边’的话，那么此时的初始边肯定是E为起始点，H为终点的边；当我们产生2条新边h与i之后，要保证以后检测的方向依然是“左边”的话，需要明确边h的起始点是E，终点是F，边i的起始点是F，终点是H； 大家肯定能想到当计算绿点群的时候，只需要将初始边方向改变就行了。所以没有必要调用2次函数，甚至写相同逻辑两边，当然这不是重点；
+
+现在说下《实时碰撞检测算法技术》提到的第二条。见图4
+
+{% include image.html src="convex-hull/image_qh6.jpg" caption="图4 最远点不止一个的问题" width="423" height="361" align="center" %}
+
+当我们为某条边（图中是边g）寻找最远点的时候，发现除了点F外还有M，K，L这三个点并驾最远，这时快包算法的策略是取距离这条边（边g）两个顶点（E，H）最近的点，从图中看出，距离E最近的是L，距离H最近的是M，此两者选其一即可。有朋友可能会想到如果点K与点L距离点E一样远怎么办，比如E位于K，L两点的垂直平分线上？ 稍微分析一下就知道这种情况不可能发生，如果有的话当初的点E就不可能被找到，代之的应该是图中的点L了。专业点说就是当E，H确定了后，其他所有的点都肯定位于边g的面域中，而非点域。
+
+###  具体实现（AS3）
+
+{% highlight as3 linenos%}
+
+{% endhighlight %} (暂略)
+
+###  算法分析
+
+快包的时间复杂度最好的情况下是：
+
+\\[ T(n)=2T(n/2)+O(n)=O(nlogn)\\]
+
+上面公式计算起来可能不太容易，可参考《数据结构与算法分析--C语言描述》书中对于快速排序的时间复杂度计算。话说回来，该算法正因为叫快包算法，其快quick就是来自快速排序quick sort，两者原理相同。
+
+最差的情况下是：
+
+\\[ T(n)=T(n-1)+O(n)=O(n^2)\\]
+
+###  质疑
+
+这里有篇关于凸包的博文，其中提到关于快包算法的时间复杂度最快能够达到O(n)的级别，我对此很质疑，快包算法就计算第一条分割线而言，怎么着也要O(n)的时间复杂度，更何况递归才刚刚开始。
+
+#  相关资料：
+
+[[维基百科|https://en.wikipedia.org/wiki/Quickhull]]
+
+http://www.personal.kent.edu/
+

@@ -1,0 +1,396 @@
+# hotkey
+
+```cpp
+#define _M_2_BASENODE(npointer) static_cast<DKGUIBaseNode*>(npointer);
+
+class DKGUIBaseNode:public HSNode{
+    public:
+        virtual HSNode* Traverse()=0;
+};
+
+/**
+ * this node will deleta all decedent nodes;
+ */
+class DKGUIDeleteNode:public DKGUIBaseNode{
+    public:
+        HSNode* Traverse()override
+        {
+            if(HSProcessor::GetChildrenCount(this)>0){
+                HSNode* _n=HSProcessor::GetFirstChild(this);
+                while(_n){
+                    HSProcessor::Remove(_n);
+                    delete _n;
+                    _n=HSProcessor::GetFirstChild(this);
+                }
+            }
+            return HSProcessor::GetNextSibling(this);
+        }
+};
+
+class DKGUIRenderableNode:public DKGUIBaseNode{
+    public:
+        virtual void Render()=0;
+    protected:
+        dks m_sDisplayName;
+};
+
+/*
+template<typename T>
+class DKGUIEngineTargetNode:public DKGUIRenderableNode{
+    protected:
+        T GetEngineTarget(){return m_ref_pEngineTarget;}
+    protected:
+        T m_ref_pEngineTarget;
+}
+
+class DKGUISceneNode final:public DKGUIEngineTargetNode<dkengine::DKScene*>{ 
+}
+*/
+
+class DKGUISceneNode final:public DKGUIRenderableNode{
+    private:
+        dkengine::DKScene* m_pDKScene{nullptr};
+}
+
+class DKGUIMeshNode final:public DKGUIRenderableNode{
+    private:
+        dkresource::DKImageResource* m_pImageResource{nullptr};
+};
+
+
+class DKGUIResourceCheckerNode final:public DKGUIBaseNode{
+
+    public:
+        HSNode* Traverse()override
+        {
+            if(dkresource::DKEResourceStatus::READY== m_pImageResource.GetStatus()){
+                /// TODO: remove this node and create a new node for resource handling.
+
+                DKGUIMeshNode* _n=new DKGUIMeshNode();
+                HSProcessor::InsertAsSibling(_n,this);
+
+                HSProcessor::Remove(this);
+                HSProcessor::InsertAsSibling(this,deletingNode);
+                return _n;
+            }else{
+                return HSProcessor::GetNextSibling(this);
+            }
+        }
+    private:
+        dkresource::DKImageResource* m_pImageResource{nullptr};
+};
+
+
+
+class DKGUICoreProcessor{
+    public:
+        dkb PreInit(){}
+        dkb Init(){
+            HSProcessor::InsertAsFirstChild(&m_deleteRootNode,&m_rootNode);
+            HSProcessor::InsertAsFirstChild(&m_taskRootNode,&m_rootNode);
+            HSProcessor::InsertAsFirstChild(&m_renderableRootNode,&m_rootNode);
+        }
+        dkb DeInit(){}
+
+        void Traverse(){
+            DKGUIBaseNode* _n=_M_2_BASENODE(HSProcessor::GetFirstChild(&m_rootNode));
+            while(_n){
+                _n=_n->Traverse();
+            }
+        }
+    private:
+        HSNode m_rootNode;
+        DKGUIDeleteNode* m_pDeleteRootNode{nullptr};
+        HSNode m_taskRootNode;
+        DKGUIRenderableNode* m_pRenderableRootNode{nullptr};
+
+}
+```
+
+热键包含一下功能：
+* 独立按键；`a`
+* 组合按键；`ctrl+a`
+* leader组合键；`ctrl+a,ctrl+c`
+
+按键的行为（action）：
+* press
+* release
+* tap
+
+键的状态（state）：
+* released;
+* pressed;
+
+设计思考：
+* 无论哪种功能，有且仅有唯一一个识别码与之对应;
+
+
+
+
+```cpp
+HSNode* Traverse(HSNode* rootNode,HSNode* pNode,HSNode* nNode,HSNode* cNode,bool begin){
+	HSNode* _retNode{nullptr};
+	if(begin){
+		_retNode=rootNode->m_ref_pFirstChildNode;
+	}else{
+		if(cNode){
+			_retNode=cNode;
+		}else{
+			if(nNode){
+				_retNode=nNode;
+			}else{
+				HSNode* _t{pNode};
+				while(_t!=rootNode){
+					if(_t->m_ref_pNextSiblingNode){
+						_retNode=_t->m_ref_pNextSiblingNode;
+						break;
+					}else{
+						_t=_t->m_ref_pParentNode;
+					}
+				}
+			}
+		}
+	}
+
+	if(_retNode){
+		pNode=_retNode->m_ref_pParentNode;
+		nNode=_retNode->m_ref_pNextSiblingNode;
+		cNode=_retNode->m_ref_pFirstChildNode;
+	}
+	return _retNode;
+}
+
+
+/// usage
+HSNode* pNode, nNode, cNode;/// these are temp nodes for traversing;
+HSNode* rootNode=<some-root-node>;
+
+HSNode* currentNode=HSProcessoer::Traverse(rootNode,pNode,nNode,cNode,true);
+while(currentNode){
+#if 1
+	// some logic with currentNode;
+	currentNode=HSProcessoer::Traverse(rootNode,pNode,nNode,cNode,false); // then continue;
+#endif
+#if 1
+	// if you want to remove currentNode from tree, just do it;
+	// causion: do NOT remove other nodes from tree while traversing;
+	HSProcessoer::Remove(currentNode);
+	delete currentNode;// you may delete if you want;
+	cNode=nullptr; //delete parent no children nodes will be trversaled. do NOT forget to set cNode to nullptr;
+	nNode=nullptr;// if you want to skip sibling nodes as well;
+	//pNode=nullptr;// do NOT do this;
+	currentNode=HSProcessoer::Traverse(rootNode,pNode,nNode,cNode,false);
+
+#endif
+#if 1
+	if(<some-condition>){
+		// if you want to stop traversing ,just break;
+		break;
+	}
+#endif
+	
+}
+```
+
+```cpp
+#ifndef __COMMON_DK_PLATFORM_H__
+#define __COMMON_DK_PLATFORM_H__
+
+#if defined(__WINDOWS__) || defined(_WIN32) || defined(WIN32) || defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__)
+# define DK_PLATFORM_OS_NAME "windows"
+# define DK_PLATFORM_OS_WINDOWS
+#elif defined(__linux__) || defined(linux) || defined(__linux) || defined(__LINUX__) || defined(LINUX) || defined(_LINUX)
+# define DK_PLATFORM_OS_NAME "linux"
+# define DK_PLATFORM_OS_LINUX
+#elif defined(__APPLE__)
+# define DK_PLATFORM_OS_NAME "apple"
+# define DK_PLATFORM_OS_APPLE
+#else
+# define DK_PLATFORM_OS_NAME "unknown"
+# error unknown os
+#endif
+
+#if defined(_WIN64) || defined(WIN64) || defined(__amd64__) || defined(__amd64) || defined(__LP64__) || defined(_LP64) || defined(__x86_64__) || defined(__x86_64) || defined(_M_X64) || defined(__ia64__) || defined(_IA64) || defined(__IA64__) || defined(__ia64) || defined(_M_IA64)
+# define DK_PLATFORM_BITS_NAME "64"
+# define DK_PLATFORM_BITS_64
+#elif defined(_WIN32) || defined(WIN32) || defined(__32BIT__) || defined(__ILP32__) || defined(_ILP32) || defined(i386) || defined(__i386__) || defined(__i486__) || defined(__i586__) || defined(__i686__) || defined(__i386) || defined(_M_IX86) || defined(__X86__) || defined(_X86_) || defined(__I86__)
+# define DK_PLATFORM_BITS_NAME "32"
+# define DK_PLATFORM_BITS_32
+#else
+# define DK_PLATFORM_BITS_NAME "unknown"
+# error unknown bits
+#endif
+
+#if defined(_MSC_VER)
+#	define DK_PLATFORM_CC_NAME "vc"
+#	define DK_PLATFORM_CC_VC
+#elif defined(__MINGW32__) || defined(__MINGW64__)
+#	define DK_PLATFORM_CC_NAME "mingw"
+#	define DK_PLATFORM_CC_MINGW
+#elif defined(__GNUG__) || defined(__GNUC__)
+#	define DK_PLATFORM_CC_NAME "gcc"
+#	define DK_PLATFORM_CC_GCC
+#else
+#	define DK_PLATFORM_CC_NAME "unknown"
+# error unknown compiler
+#endif
+
+#define DK_PLATFORM_INFO "OS:" DK_PLATFORM_OS_NAME ", Bits:" DK_PLATFORM_BITS_NAME ", Compiler:" DK_PLATFORM_CC_NAME
+
+# ifdef DLL_EXPORT
+#if defined(DK_PLATFORM_OS_WINDOWS)
+# ifndef M_API_FUNC
+//#  define M_API_FUNC __declspec(dllexport)
+#  define M_API_FUNC
+# endif
+#endif
+#else
+#if defined(DK_PLATFORM_OS_WINDOWS)
+# ifndef M_API_FUNC
+#  define M_API_FUNC
+//#  define M_API_FUNC __declspec(dllimport)
+# endif
+#endif
+#endif
+
+#ifndef M_API_FUNC
+#define M_API_FUNC extern "C"
+#endif
+
+
+#endif
+```
+
+```cpp
+#ifndef __COMMON_ST_PLATFORM_H__
+#define __COMMON_ST_PLATFORM_H__
+
+#if defined(__WINDOWS__) || defined(_WIN32) || defined(WIN32) || defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__)
+    #define ST_PLATFORM_OS_NAME "windows"
+    #define ST_PLATFORM_OS_WINDOWS
+#elif defined(__linux__) || defined(linux) || defined(__linux) || defined(__LINUX__) || defined(LINUX) || defined(_LINUX)
+    #define ST_PLATFORM_OS_NAME "linux"
+    #define ST_PLATFORM_OS_LINUX
+#elif defined(__ANDROID__)
+    #define ST_PLATFORM_OS_NAME "android"
+    #define ST_PLATFORM_OS_ANDROID
+#elif defined(__APPLE__) && defined(__MACH__)
+    #define ST_PLATFORM_OS_APPLE
+	#include <TargetConditionals.h>
+	#if TARGET_OS_IPHONE
+		#define ST_PLATFORM_OS_NAME "ios"
+	#elif TARGET_OS_TV
+		#define ST_PLATFORM_OS_NAME "tvos"
+	#else
+		#define ST_PLATFORM_OS_NAME "osx"
+	#endif
+#else
+    #define ST_PLATFORM_OS_NAME "unknown"
+    #define ST_PLATFORM_OS_UNKNOWN
+    #error unknown os
+#endif
+
+#if defined(ST_PLATFORM_OS_WINDOWS)
+    #if defined(_M_IX86)
+        #define ST_PLATFORM_ARCHITECTURE "x86"
+    #elif defined _M_X64
+        #define ST_PLATFORM_ARCHITECTURE "x86_64"
+    #endif
+#elif defined(ST_PLATFORM_OS_ANDROID)
+    #if __arm__
+        #define ST_PLATFORM_ARCHITECTURE "armv7"
+    #elif __aarch64__ 
+        #define ST_PLATFORM_ARCHITECTURE "aarch64"
+    #endif
+#elif defined(ST_PLATFORM_OS_LINUX)
+    #if __arm__ 
+        #define ST_PLATFORM_ARCHITECTURE "armv7"
+    #elif __aarch64__
+        #define ST_PLATFORM_ARCHITECTURE "aarch64"
+    #elif __i386__
+        #define ST_PLATFORM_ARCHITECTURE "x86"
+    #elif __x86_64__
+        #define ST_PLATFORM_ARCHITECTURE "x86_64"
+    #endif
+#elif defined(ST_PLATFORM_OS_APPLE)
+    #if defined(__MACH__)
+
+        #include <TargetConditionals.h>
+        #if TARGET_OS_IPHONE || TARGET_OS_TV
+            #if __LP64__
+                #define ST_PLATFORM_ARCHITECTURE "aarch64"
+            #else
+                #define ST_PLATFORM_ARCHITECTURE "armv7"
+            #endif
+        #endif
+
+    #else
+        #if __x86_64__
+            #define ST_PLATFORM_ARCHITECTURE "x86_64"
+        #elif __i386__
+            #define ST_PLATFORM_ARCHITECTURE "x86"
+        #endif
+    #endif
+
+#else
+    #error "not supported architecture"
+#endif
+
+#if defined(_MSC_VER)
+    #define ST_PLATFORM_CC_NAME "vc"
+    #define ST_PLATFORM_CC_VC
+#elif defined(__MINGW32__) || defined(__MINGW64__)
+    #define ST_PLATFORM_CC_NAME "mingw"
+    #define ST_PLATFORM_CC_MINGW
+#elif defined(__GNUG__) || defined(__GNUC__)
+    #define ST_PLATFORM_CC_NAME "gcc"
+    #define ST_PLATFORM_CC_GCC
+#else
+    #define ST_PLATFORM_CC_NAME "unknown"
+    #error unknown compiler
+#endif
+
+#ifndef ST_SDK_API
+    #ifdef ST_PLATFORM_CC_VC
+    #   ifdef __cplusplus
+    #       ifdef ST3D_STATIC_LIB
+    #           define ST_SDK_API  extern "C"
+    #       else
+    #           ifdef ST_SDK_EXPORTS
+    #               define ST_SDK_API extern "C" __declspec(dllexport)
+    #           else
+    #               define ST_SDK_API extern "C" __declspec(dllimport)
+    #           endif
+    #       endif
+    #   else
+    #       ifdef ST3D_STATIC_LIB
+    #           define ST_SDK_API
+    #       else
+    #           ifdef ST_SDK_EXPORTS
+    #               define ST_SDK_API __declspec(dllexport)
+    #           else
+    #               define ST_SDK_API __declspec(dllimport)
+    #           endif
+    #       endif
+    #   endif
+    #else
+    #   ifdef __cplusplus
+    #       ifdef ST_SDK_EXPORTS
+    #           define ST_SDK_API extern "C" __attribute__((visibility ("default")))
+    #       else
+    #           define ST_SDK_API extern "C"
+    #       endif
+    #   else
+    #       ifdef ST_SDK_EXPORTS
+    #           define ST_SDK_API __attribute__((visibility ("default")))
+    #       else
+    #           define ST_SDK_API
+    #       endif
+    #   endif
+    #endif
+#endif
+
+#define ST_PLATFORM_INFO "OS:" ST_PLATFORM_OS_NAME ", Bits:" ST_PLATFORM_BITS_NAME ", Compiler:" ST_PLATFORM_CC_NAME
+
+#endif
+```

@@ -1,0 +1,18 @@
+
+
+这个是半球面随机采样的函数，需要注意的是对u1进行开方操作，原因是当二维平面映射到三维空间后，如果不开方会导致随机点在空间分部不均匀。
+
+```cpp
+void cosine_sample_hemisphere(const float u1, const float u2, float3& p)
+{
+// Uniformly sample disk.
+const float r   = sqrtf( u1 );
+const float phi = 2.0f*M_PIf * u2;
+p.x = r * cosf( phi );
+p.y = r * sinf( phi );
+
+// Project up to hemisphere.
+p.z = sqrtf( fmaxf( 0.0f, 1.0f - p.x*p.x - p.y*p.y ) );
+}
+```
+

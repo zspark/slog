@@ -1,0 +1,256 @@
+
+*Hello everyone!，Optix SDK已经到7.0了，是一次大的改动，如果不跟上时代，将是倒退，come on！*
+
+这里是3.9时代我的大部分翻译：[《Nvidia Optix3.9编程指南》翻译（WIP）](/view?n=optix_programming_guide_translation_3_9_0)
+
+---
+
+# 第一章 介绍
+
+## 1.1 总体描述
+
+# 第二章 基础概念与定义
+
+
+## 2.1 程式
+
+## 2.2 程式与数据模型
+
+### 2.2.1 渲染绑定表
+### 2.2.2射线夹带
+### 2.2.3图元属性
+### 2.2.4缓冲区
+## 2.3加速结构体
+## 2.4迭代？？
+## 2.5射线追踪与Nvidia Optix7
+
+# 实现原则
+
+## 3.1错误处理
+## 3.2线程安全
+## 3.3无状态模型
+## 3.4异步执行
+## 3.5不可见型
+## 3.6函数表与入口函数
+
+# 上下文
+## 4.1用回调函数传递消息
+## 4.2编译缓存？？
+
+# 加速结构体
+本章描述的API函数有：
+* optixAccelComputeMemoryUsage
+* optixAccelBuild
+* optixAccelRelocate
+* optixConvertPointerToTraversableHandle
+
+实例加速体（IAS）与几何加速体（GAS）用一系列函数在设备端创建，用于促进交叠与管线的构建。These functions use one or more OptixBuildInput structs to specify the geometry plus a set of parameters to control the build. 为了保障未来版本的兼容性，OptixBuildInput结构体在使用前应该初始化为0.
+
+支持下面的一些构建输入类型：
+* IAS：<br>OPTIX_BUILD_INPUT_TYPE_INSTANCES<br>OPTIX_BUILD_INPUT_TYPE_INSTANCE_POINTERS 
+* 基于内建三角形的GAS： <br>OPTIX_BUILD_INPUT_TYPE_TRIANGLES 
+* 自定义几何图元的GAS： <br>OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES
+
+对于GAS的构建，每个构建输入要指明一系列三角面或者一系列由AABB包起来的自定义图元。optixAccelBuild的参数可以是多个构建输入组成的数组，以便组合不同的网格为单个加速体。单个构建的所有构建输入必须与构建输入类型匹配。
+
+Instance acceleration structures have a single build input and specify an array of instances that include a ray transformation and an OptixTraversableHandle that refers to a GAS, a transform node, or another instance acceleration structure.
+
+为了备足构建（的必要数据），通过给optixAccelComputeMemoryUsage函数传递一个初始化的构建输入与一些参数可以查询到需要的内存大小。它返回三种不同的尺寸：
+
+* outputSizeInBytes：Size of the memory region where the resulting acceleration structure is placed. This size is an upper bound and may be substantially larger than the ﬁnal acceleration structure. See “Compaction” (page 24) for more information. 
+* tempSizeInBytes：Size of the memory region that is temporarily used during the build.
+* tempUpdateSizeInBytes：Size of the memory region that is temporarily required to update the acceleration structure.
+
+Using these sizes, the application allocates memory for the output and temporary memory buffers on the device. The pointers to these buffers must be aligned to a 128-byte boundary. These buffers are actively used for the duration of the build. For this reason, they cannot be shared with other currently active build requests.
+
+Note that optixAccelComputeMemoryUsage does not initiate any activity on the device, and pointers to device memory or contents of input buffers are not required to point to allocated memory.
+
+The function optixAccelBuild takes the same array of OptixBuildInput structs as optixAccelComputeMemoryUsage and builds a single acceleration structure (AS) over these inputs. This acceleration structure can be of type IAS or GAS depending on the inputs to the build.
+
+The build operation is executed on the device in the speciﬁed CUDA stream and runs asynchronously on the device, similar to CUDA kernel launches. Accordingly, the application may choose to block the host-side thread or synchronize with other CUDA streams by using available CUDA synchronization functionality such as cudaStreamSynchronize or CUDA events. The traversable handle returned is computed on the host and is returned from the function immediately without any need to wait for the build to ﬁnish. By producing handles at acceleration time, custom handles can also be generated based on input to the builder.
+
+The AS constructed by optixAccelBuild does not reference any of the device buffers referenced in the build inputs. All relevant data is copied from these buffers into the acceleration output buffer, possibly in a different format.
+
+The application is free to release this memory after the build without invalidating the acceleration structure. However, IAS builds do continue to refer to other IAS and GAS instances and transform nodes.
+
+The following example uses this sequence to build a single acceleration structure:
+```cpp
+OptixAccelBuildOptions accelOptions; 
+OptixBuildInput buildInputs[2];
+
+CUdeviceptr tempBuffer, outputBuffer;
+size_t tempBufferSizeInBytes, outputBufferSizeInBytes;
+
+memset(accelOptions, 0, sizeof(OptixAccelBuildOptions));
+accelOptions.buildFlags = OPTIX_BUILD_FLAG_NONE;
+accelOptions.operation = OPTIX_BUILD_OPERATION_BUILD;
+//A numKeys values of zero (set by memset here) implies that there is no motion blur
+accelOptions.motionOptions.numKeys = 0;
+
+memset(buildInputs, 0, sizeof(OptixBuildInput) * 2);
+OptixAccelBufferSizes bufferSizes;
+optixAccelComputeMemoryUsage(optixContext, &accelOptions, buildInputs, 2, &bufferSizes);
+
+void* d_output;
+void* d_temp;
+
+cudaMalloc(&d_output, bufferSizes.outputSizeInBytes);
+cudaMalloc(&d_temp, bufferSizes.tempSizeInBytes);
+
+OptixTraversableHandle outputHandle;
+OptixResult results = optixAccelBuild(optixContext, cuStream,
+    &accelOptions, buildInputs,
+    2, d_temp,
+    bufferSizes.tempSizeInBytes, d_output,
+    bufferSizes.outputSizeInBytes, &outputHandle,
+    nullptr, 0);
+```
+
+
+## 5.1图元构建输入
+## 5.2实例构建输入
+## 5.3构建标记
+## 5.4动态更新
+## 5.5重定位
+## 5.6压缩
+## 5.7迭代
+## 5.7.1GAS的迭代
+## 5.8运动模糊
+## 5.8.1移动加速体
+## 5.8.2移动矩阵变换
+## 5.8.3移动SRT变换
+
+# 创建程式管线
+
+## 6.1程式输入
+## 6.2创建模块
+## 6.3管线启动参数
+## 6.4创建程式组
+## 6.5管线链接
+## 6.6管线对战尺寸
+## 6.7编译缓存
+
+# 渲染绑定表
+渲染绑定表是渲染记录的一个数组，而渲染记录持有程式地址与它的参数。SBT存在与设备内存上，由客户端应用程序管理（内存）。
+## 7.1 SBT记录
+一个渲染记录由头部与数据块构成。头部包含了客户端不可见的内容。它持有一些在递归执行时期才能访问的信息，用于标识（记录）和关联程式。数据块中的内容不被NVIDIA Optix用到，它持有应用程序对该程式的特性数据。头部的大小由OPTIX_SBT_RECORD_HEADER_SIZE宏决定（当前32字节）。
+
+使用API函数optixSbtRecordPackHeader与期望的OptixprogramGroup对象填充SBT记录头部。这些SBT记录（的内容）需要在NVIDIA Optix启动之前上载到设备内存。虽然SBT记录的头部是不透明的，但是可以拷贝与移动。如果相同的程式组用在多个SBT记录中，那么SBT记录的头部可以通过直接用设备端内存操作函数拷贝，比如：
+```cpp
+template <typename T> 
+struct Record {
+  __align__(OPTIX_SBT_RECORD_ALIGNMENT) 
+  char header[OPTIX_SBT_RECORD_HEADER_SIZE]; 
+  T data; 
+};
+
+typedef Record<RayGenData> RayGenSbtRecord;
+OptixProgramGroup raygenPG; 
+... 
+RayGenSbtRecord rgSBT; 
+rgSBT.data.color = make_float3(1.0f, 1.0f, 0.0f); 
+optixSbtRecordPackHeader(raygenPG, &rgSBT); 
+CUdeviceptr deviceRaygenSbt; 
+cudaMalloc((void**)&deviceRaygenSbt, sizeof(RayGenSbtRecord)); 
+cudaMemcpy((void**)deviceRaygenSbt, &rgSBT,// 译注：这里官方文档有误
+  sizeof(RayGenSbtRecord), cudaMemcpyHostToDevice);
+```
+只要模块与程式组的编译选项相同，那么SBT头可以在不同的管线之间重用。
+
+## 7.2SBT布局
+一个SBT被划分成5个区域，他们分别是：
+
+|Group|Program|Value of enum OptixProgramGroupKind|
+|:--:|:--:|:--:|
+|Ray generation|RG|OPTIX_PROGRAM_GROUP_KIND_RAYGEN|
+|Exception|EX|OPTIX_PROGRAM_GROUP_KIND_EXCEPTION|
+|Miss|MS|OPTIX_PROGRAM_GROUP_KIND_MISS|
+|Hit|IS,AH,CH|OPTIX_PROGRAM_GROUP_KIND_HITGROUP|
+|Callable|DC,CC|OPTIX_PROGRAM_GROUP_KIND_CALLABLES|
+
+（参见 “创建程式组”章节）
+
+```cpp
+typedef struct OptixShaderBindingTable 
+{ 
+  //Device address of the SBT record of the ray generation program to start launch
+  CUdeviceptr raygenRecord;
+
+  //Device address of the SBT record of the exception shader
+  CUdeviceptr exceptionRecord;
+
+  //Arrays of SBT records. The base address, stride in bytes and maximum index are defined.
+  CUdeviceptr missRecordBase;
+  unsigned int missRecordStrideInBytes;
+  unsigned int missRecordCount;
+
+  CUdeviceptr hitgroupRecordBase;
+  unsigned int hitgroupRecordStrideInBytes;
+  unsigned int hitgroupRecordCount;
+
+  CUdeviceptr callablesRecordBase;
+  unsigned int callablesRecordStrideInBytes;
+  unsigned int callablesRecordCount;
+} OptixShaderBindingTable;
+```
+所有的SBT记录在设备端内存都需要一个最小的内存对齐，用OPTIX_SBT_RECORD_ALIGNMENT宏定义（当前是16字节）。如此，记录之间的跨度需要是这个长度的整数倍。每个SBT区域都是一块独立的存储区间，这些区间并非一定要连续。
+
+由于执行射线生成与异常程式只能调用一次，因此这2个程式组没有跨度，且传入的（程式）指针是明确的SBT记录。
+
+对其他类型而言，位于sbt-index处的group-type类型的程式组有如下公式得到：
+
+***group-type*RecordBase + sbt-index * *group-type*RecordStrideInBytes**
+
+举例来说，第三个（索引为2）丢失程式组是：missRecordBase + 2 * missRecordStrideInBytes
+
+渲染绑定表中记录的索引在丢失、碰撞、调用程式组中有不同的用途：
+* Miss ： 丢失程式组是由每次optixTrace调用选择的，利用missSBTIndex参数；
+* Callable ： 调用程式组用索引作为DC（optixDirectCall）与CC（optixContinuationCall）的参数；
+* 任意碰撞、最近碰撞、橡胶 ： 碰撞程式组的索引是在递归期间计算的，细节见接下来的章节；
+
+## 7.3几何加速体的渲染绑定表
+The selection of the SBT hit group record for the instance is slightly more involved to allow for a number of use cases such as the implementation of different ray types. SBT记录的索引sbtIndex是在递归期间由下面的方法计算：
+
+sbt-index=sbt-instance-offset + (sbt-GAS-index * sbt-stride-from-trace-call) + sbt-fooset-from-trace-call
+
+* SBT实例偏移：IAS实例（OptixInstance）在递归期间持有SBT偏移。由于没有对应的IAS持有这个值，因此在单个GAS情况下该值为0（参见单一GAS遍历）。该值被限制在24位（参见OpitxInstance::sbtOffset的申明）。
+* SBT GAS索引：每个GAS构建输入引用至少一个SBT记录。
+
+
+### 7.3.1场景SBT示例
+## 7.4SBT记录在设备端的访问
+
+# 射线生成启动
+
+# 设备端函数
+
+## 9.1发射索引
+## 9.2追踪
+## 9.3夹带访问
+## 9.4报告相交与属性访问
+## 9.5射线信息
+## 9.6为定义的值
+## 9.7相交信息
+## 9.8随即访问三角网格
+## 9.9GAS行动选项
+## 9.10变换列表
+## 9.11终止或者忽略迭代
+## 9.12异常
+
+# 可调用
+# Nvidia智能降噪
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

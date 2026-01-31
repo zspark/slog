@@ -1,0 +1,289 @@
+# cin 
+
+```cpp
+int n;
+cin >> n;
+```
+
+如果输入类型不匹配，将发生4种情况：
+* n的值保持不变；
+* 不匹配的输入将被留在输入队列中；
+* cin对象中的一个错误标记被设置；
+* 对cin方法的调用将返回false（如果被转换为bool类型）；
+
+非数字输入设置错误标记意味着必须重置该标记，程序才能继续读取输入。clear()方法重置错误输入标记，同时也重置文件尾。输入错误和EOF都将导致cin返回false。
+
+### 文件尾条件
+很多操作系统允许通过键盘来模拟文件尾条件。Unix可以在行首按下Ctrl+D来实现；Windows命令提示符模式下可以在任意位置按Ctrl+Z和Enter。但有些系统不支持。
+
+\
+cin方法检测到EOF时，cin将两位（eofbit 和 failbit）都设置为1。可以通过成员函数eof()来查看eofbit是否被设置；如果检测到EOF，则cin.eof将返回bool值true,否则返回false。同样，如果eofbit或failbit被设置为1，则fail()成员函数返回true，否则返回false。注意，eof() 和 fail() 方法报告最近读取的结果。
+
+设置标记后cin将不再读取输入，再次调用cin也不管用。cin.clear()方法可能清除EOF标记，使输入继续进行。不过在有些操作系统中Ctrl+Z将结束输入和输出，而cin.clear()将无法恢复输入和输出。
+
+### cin.get(char)
+
+cin读取基本类型的值时，将忽略回车和换行符。更复杂的是，发送给cin的输入被缓冲，只有在用户按下回车键后，他输入的内容才会被发送给程序。
+
+cin.get(ch)读取输入中的下一个字符（即使它是空格），并将变量赋给ch。
+
+```cpp
+#include<iostream>
+int main()
+{
+  using namespace std;
+  char ch;
+  int count = 0;
+  
+  cout << "Enter characters;enter # to quit:\n";
+  cin.get(ch);   // use the cin.get(ch) function
+  while(ch.fail() == false)  // test for EOF
+  {
+    cout << ch;
+    ++count;
+    cin.get(ch);  // use it again
+  }
+  cout << endl << count << " characters read\n";
+  return 0;
+}
+```
+
+cin.get(char)方法返回的是一个cin对象。istream类提供了一个可以将istream对象（如cin）转换为bool值的函数：当cin出现在需要bool值的地方时，该转换函数将被调用。例：
+```cpp
+while(cin)  //while input is successful
+```
+
+因此可以将上述循环精简成这种格式：
+```cpp
+while(cin.get(ch))   // while input is successful
+{
+  ...   // do stuff
+}
+```
+这样，为判断循环测试条件，程序必须首先调用cin.get(ch)。如果成功，则将值放入ch中。然后，程序获得函数调用的返回值，即cin。接下来，程序对cin进行bool转换，如果输入成功，则结果为true，否则为false。三条指导原则（确定结束条件、对条件进行初始化以及更新条件）全部被放在循环测试条件中。
+
+### cin.get()版本
+```cpp
+char name[ArSize];
+...
+cout << "Enter your name:\n";
+cin.get(name,ArSize).ger();
+```
+最后一行相当于两个连续的函数调用：
+```cpp
+cin.get(name,ArSize);
+cin.get();
+```
+cin.get()的一个版本接受两个参数：数组名（字符串（char* 类型）的地址）和ArSize(int类型的整数)
+不接受任何参数的cin.get()成员函数返回输入中的下一个字符。
+```cpp
+ch = cin.get();
+```
+
+使用cin输入表达式的值来检测输入是不是数字。程序发现用户输入了错误内容时，采取以下3个步骤：
+
+1. 重置cin以接受新的输入。
+1. 删除错误输入
+1. 提示用户再输入
+
+注意，程序必须先重置cin，然后才能删除错误输入。
+
+```cpp
+#include<iostream>
+const int Max = 5;
+int main()
+{
+  using namespace std;
+  //get data
+  int golf[Max];
+  cout << "Please enter your golf scores.\n";
+  cout << "You must enter " << Max << " rounds.\n";
+  int i;
+  for (int i = 0; i < Max; i++)
+  {
+    cout << "round #" << i+1 << ": ";
+    while(!(cin >> golf[i]))
+    {
+      cin.clear();    //reset input
+      while(cin.get() != '\n')
+        continue;     //get rid of bad input
+      cout << "Please enter a number: ";
+    }
+  }
+  //calculate average
+  double total = 0.0;
+  for(i = 0; i< Max; i++)
+    total += golf[i];
+  //report results
+  cout << total/Max << " = average score " << Max << " rounds\n";
+  return 0;
+}
+```
+
+# 简单文件输入/输出
+### 文本文件输出
+* 必须包含头文件fstream。
+* 头文件fstream定义了一个用于处理输出的ofstream类。
+* 需要声明一个或多个ofstream变量（对象），并以自己喜欢的方式对其进行命名，条件时遵守常用的命名规则。
+* 必须指明名称空间std; 例如，为引用元素ofstream，必须使用编译指令using或前缀std::。
+* 需要将ofstream对象和运算符<<来输出各种类型的数据。
+
+注意，必须声明自己的ofstream对象，为其命名，并将其同文件关联起来。在这之后，便可以像使用cout那样使用它，所有可用于cout的操作和方法（如<<、endl和setf()）都可以用于ofstream对象。
+
+```cpp
+ ofstream outFile;     // outFile an ofstream object
+ ofstream fout;        // fout an ofstream object
+ outFile.open("fish.txt");  // outFile used to write to the fish.txt file
+ char filename[50];
+ cin >> filename;      // user specifies a name 
+ fout.open(filename);  // fout used to read specified file
+```
+
+注意，方法open()接受一个C-风格字符串作为参数，这可以是一个字面字符串，也可以是存储在数组中的字符串。若文件不存在，方法open()将新建一个文件，**若文件已存在，默认情况下，open()将首先将其长度截短到零——丢弃原有的内容，然后将新的输入加入到该文件中。**
+
+总之，使用文件输出的主要步骤如下：
+
+1. 包含头文件fstream。
+1. 创建一个ofstream对象。
+1. 将该ofstream对象同一个文件关联起来。
+1. 就像使用cout那样使用该ofstream对象。
+
+```cpp
+#include<iostream>
+#include<fstream>   // for file I/O
+
+int main()
+{
+  using namespace std;
+  
+  char automobile[50];
+  int year;
+  double a_price;
+  double b_price;
+  
+  ofstream outFile;             // create object for output
+  outFile.open("carinfo.txt");  // associate with a file
+  
+  cout << "Enter the make and model of automobile: ";
+  cin.getline(sutomobile,50);
+  cout << "Enter the model year: ";
+  cin >> year;
+  cout << "Enter the original asking price: ";
+  cin >> a_price;
+  d_price = 0.913 * a_price;
+  
+  // display information using outFile
+  outFile << fixed;
+  outFile.precision(2);
+  outFile << "Make and model: " << sutomobile << endl;
+  outFile << "Year: " << year << endl;
+  outFile << "Was asking $" << a_price << endl;
+  outFile << "Now Asking $" << b_price << endl;
+  
+  outFile.close();   // down with file
+  return 0;
+}
+```
+
+注意，方法close()不需要使用文件名作为参数，这是因为outFile已经同特定的文件关联起来。如果忘记关闭文件，程序正常终止时将自动关闭它。
+
+
+### 文本文件输入
+* 必须包含头文件fstream。
+* 头文件fstream定义了一个用于处理输入的ifstream类。
+* 需要声明一个或多个ifstream变量（对象）。
+* 必须指明名称空间std。
+* 需要将ifstream对象与文件关联起来。为此，方法之一是使用open()方法。
+* 使用完文件后，应使用close()方法将其关闭。
+* 可结合使用ifstream对象和运算符>>来读取各种类型数据。
+* 可以试用ifstream对象和get()方法来读取一个字符，使用ifstream对象和getline()来读取一行字符。
+* 可结合使用ifstream和eof()/fail()等方法来判断输入是否成功。
+* ifstream对象本身被用做测试条件时，如果最后一个读取操作成功，它将被转换为布尔值true，否则被转换为false。
+
+如果试图打开一个不存在的文件用于输入，将导致后面使用ifstream对象进行输入时失败。检查文件是否被成功打开的首先方法是使用is_open():
+```cpp
+inFile.open("bowling.txt");
+if(!inFile.is_open())
+{
+  eixt(EXIT_FAILURE);
+}
+```
+
+终止程序函数exit()的原型是在头文件csdlib中定义的，在该头文件中，还定义了一个用于同操作系统通信的参数值EXIT_FAILURE。
+方法is_open()是C++中相对较新的内容。如果编译器不支持，可用较老的方法good()来代替。
+
+下面的程序打开用户指定的文件，读取其中的数字，然后指出文件中包含多少个值以及它们的和与平均值。
+
+```cpp
+#include<iostream>
+#include<fstream>   // file I/O support
+#include<cstdlib>   // supprot for exit()
+const int SIZE = 60;
+int main()
+{
+  using namespace std;
+  char filename[SIZE];
+  ifstream inFile;   // object for handing file input
+  cout << "Enter name of data file: ";
+  cin.getline(filename,SIZE);
+  inFile.open(filename,SIZE);  // associate inFile with a file
+  if(!inFile.is_open())        // failed to open file
+  {
+    cout << "Could not open the file " << filename << endl;
+    cout << "Program terminating.\n";
+    exit(EXIT_FAILURE);
+  }
+  double value;
+  double sum = 0.0;
+  int count = 0;    //number of items read;
+  
+  inFile >> value;  //get first value
+  while(inFile.good())   //while input good and not at EOF
+  {
+    ++count;        //one more item read
+    sum += value;   //calculate running total
+    inFile >> value //get next value
+  }
+  if(inFile.eof())
+    cout << "End of file reached.\n";
+  else if(inFile.fail())
+    cout << "Input terminated by data mismatch.\n";
+  else
+    cout << "Input terminated for unknown reason.\n";
+  if(count == 0)
+    cout << "No data processed.\n";
+  else
+  {
+    cout << "Items read: " << count << endl;
+    cout << "Sum: " << sum << endl;
+    cout << "Average: " << sum / count << endl;
+  }
+  inFlie.close();     //finished with the file 
+  return 0;
+}
+```
+
+读取文件时，有几点需要检查。首先，程序读取文件时不应超过EOF。如果最后一次读取数据时遇到EOF，方法eof()将会返回true。其次，程序可能遇到类型不匹配的情况。例如上面的程序，期望文件中只包含数字，如果最后一次读取操作中发生了类型不匹配的情况，方法fail()将返回true（如果遇到EOF该方法也返回true）。最后，可能出现意外的问题，如文件受损或硬件故障，如果最后一次读取文件时发生了这样的问题，方法bad()将返回true。不分开检查这些情况下，使用good()方法更为简单，该方法在没有发生任何错误时返回true。
+
+可以对上述代码进行精简：表达式inFile>>value的结果为inFile，而在需要一个bool值的情况下，inFile的结果为inFile.good(),即true或false，因此可以将两条输入语句用一条用作循环测试的输入语句代替：
+
+```cpp
+while(inFile >> value)   // read and test for success
+{
+...
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

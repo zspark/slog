@@ -1,0 +1,64 @@
+{
+  "version": "2.0.0",
+  "manager": "jerry-chaos@outlook.com",
+  "visitor": {
+    "allowCreate": false,
+    "allowDeleteSelf": false,
+    "allowDeleteOthers": false,
+    "allowModifySelf": false,
+    "allowModifyOthers": false,
+    "allowView": true,
+    "allowSearch": true,
+    "allowReadingHistory": true
+  },
+  "users": [
+    {
+      "id": "jerry-chaos@outlook.com",
+      "password": "c4ca4238a0b923820dcc509a6f75849b",
+      "displayName": "Jerry Chaos",
+      "registedTime": "2015-10-18T19:24:00.000Z",
+      "lastLoginTime": "2019-10-18T19:24:00.000Z",
+      "loginCount": 100,
+      "allowCreate": true,
+      "allowDeleteSelf": true,
+      "allowDeleteOthers": true,
+      "allowModifySelf": true,
+      "allowModifyOthers": true,
+      "allowView": true,
+      "allowSearch": true,
+      "allowReadingHistory": true
+    },
+    {
+      "id": "438808192@qq.com",
+      "password": "c4ca4238a0b923820dcc509a6f75849b",
+      "displayName": "Nancy Chaos",
+      "registedTime": "2015-10-18T19:24:00.000Z",
+      "lastLoginTime": "2019-10-18T19:24:00.000Z",
+      "loginCount": 100,
+      "allowCreate": true,
+      "allowDeleteSelf": true,
+      "allowDeleteOthers": false,
+      "allowModifySelf": true,
+      "allowModifyOthers": true,
+      "allowView": true,
+      "allowSearch": true,
+      "allowReadingHistory": true
+    },
+    {
+      "id": "tester",
+      "password": "c4ca4238a0b923820dcc509a6f75849b",
+      "displayName": "tester",
+      "registedTime": "2015-10-18T19:24:00.000Z",
+      "lastLoginTime": "2019-10-18T19:24:00.000Z",
+      "loginCount": 4,
+      "allowCreate": true,
+      "allowDeleteSelf": true,
+      "allowDeleteOthers": false,
+      "allowModifySelf": true,
+      "allowModifyOthers": false,
+      "allowView": true,
+      "allowSearch": true,
+      "allowReadingHistory": true
+    }
+  ]
+}

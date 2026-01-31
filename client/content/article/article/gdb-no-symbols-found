@@ -1,0 +1,5 @@
+如果用gdb调试发现说**no symbols found**，那么尝试下面的操作：
+
+* 添加 -g　注意要给最外面的CMakeList.txt也加上
+* 去掉 -s 或 -S
+* 删除此前的所有obj，全新编译

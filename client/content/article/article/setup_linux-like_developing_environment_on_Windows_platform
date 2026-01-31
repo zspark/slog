@@ -1,0 +1,208 @@
+记录一下在windows上搭建gnu开发环境的过程，虽然是windows平台，但不想使用MS相关的套件做开发，那么就看看windows下的gnu套件吧，这是我在工作中接触了Linux平台之后（个人此前断断续续有使用Ubuntu系统）的一个带有学习性质的决定，无它意思。
+
+我会记录两个方面，编译器与终端。
+
+
+# compiler - mingw-w64
+
+我对windows平台下使用gcc的经验比较少，记忆中第一个冒出来的是[MinGW](http://mingw.org/)（minimal gnu for windows），进入其官网发现待验证什么什么东西，没辙，向Google求救。发现MinGW有个后人名曰**[mingw-w64](http://mingw-w64.org/doku.php)**，不但能编译64位版本程序，而且编译器版本比较新，维护活跃，而MinGW基本没有再维护。
+
+我第一次下载的是个压缩包，但在我一顿猛如虎的操作之后，控制台就是发现不了编译器（当时怎么弄的记不清了，此处不赘述）。于是又下载了[在线安装](https://sourceforge.net/projects/mingw-w64/files/latest/download)版本的安装器**mingw-w64-install.exe**（938KiB），在选择了不同的版本及其另外几个选项后，真正的下载开始了。设置好环境变量，用powershell运行如下命令：
+
+```ps
+PS C:\xxxx> g++ -v
+// blablabla...
+gcc version 8.1.0 (x86_64-posix-seh-rev0, Built by MinGW-W64 project)
+```
+这就是说可以运行编译器了，赶紧写个HelloWorld测试一下吧：
+
+```cpp
+// helloworld.cpp
+#include <iostream>
+using namespace std;
+int main(int argc,char** argv){
+printf("Hello World!");
+return 0;
+}
+```
+
+```ps
+PS C:\xxxx> g++ .\helloworld.cpp -o out.exe
+PS C:\xxxx> .\out.exe
+Hello World!
+```
+成功编译并且运行，out.exe文件83KiB，使用编译器参数`-s -O1`之后是38KiB
+
+以上算是一个小段落，安装了mingw-w64，成功在微软家的powershell编译运行了HelloWorld程序。
+
+---
+
+
+# cmake
+为了项目的轻松部署与编译，选择使用[cmake](https://cmake.org/)，我使用了最新的windows平台3.16.0版本，安装好后，powershell运行测试命令
+
+```ps
+PS C:\xxxx> cmake --version
+cmake version 3.16.0
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+```
+
+编写CMakeLists.txt脚本如下：
+
+```cmake
+CMAKE_MINIMUM_REQUIRED(version 2.6)
+PROJECT("test")
+ADD_EXECUTABLE("test" helloworld.cpp)
+```
+继续在powershell运行cmake尝试编译上面的helloworld.cpp源码
+
+```ps
+PS C:\xxxx> mkdir build
+PS C:\xxxx> cd build
+PS C:\xxxx> cmake -G "MinGW Makefiles" ..  #如果windows平台直接安装cmake，注意-G参数
+# -- some printed infos.
+PS C:\xxxx> make
+Scanning dependencies of target test
+[ 50%] Building CXX object CMakeFiles/test.dir/helloworld.cpp.obj
+[100%] Linking CXX executable test.exe
+[100%] Built target test
+```
+成功编译，也是83KiB的大小，继续在CMakeLists.txt中添加编译器参数，此后的文件大小是37KiB
+
+```cmake
+CMAKE_MINIMUM_REQUIRED(version 2.6)
+PROJECT("test")
+SET(CMAKE_CXX_FLAGS "-s -O1") #这是新增的
+ADD_EXECUTABLE("test" helloworld.cpp)
+```
+
+> "这里需要注意的是cmake命令的-G参数，可以通过**cmake -G**查看其它-G参数的内容（切记一定不要打错字，注意大小写），该参数具体的含义我尚未计较，大概的意思就是cmake需要知道它即将构建的工程文件是将要用哪个编译器去编译的，因为我下载的是mingw-w64的gnu编译器，所以指定了**MinGW Makefiles**内容，你总不能让cmake构建一个*.sln的visual studio工程，然后让gnu去编译吧，g++会一脸懵逼的。"
+
+
+---
+
+# 进入Linux-like的世界 - msys2
+
+## 安装、修改、更新
+
+[msys2](https://www.msys2.org/)是一个在windows上发布、编译软件的平台，是windows平台中的Linux的子系统，它基于Cygwin与MinGW-w64并重写了MSYS的内核，专注于与windows原生软件更好的交互。下载安装好后，首先需要修改镜像源，打开`/etc/pacman.d`目录，在网上找找你喜欢的国内镜像地址，依次修改里面的3个mirrorlist.*文件即可，我修改后是这样的（也是网上抄来的）：
+
+```bash
+## msys2.org
+Server = http://mirrors.ustc.edu.cn/msys2/msys/$arch/
+Server = http://repo.msys2.org/msys/$arch
+Server = http://downloads.sourceforge.net/project/msys2/REPOS/MSYS2/$arch
+Server = http://www2.futureware.at/~nickoe/msys2-mirror/msys/$arch/
+
+## mirror.mingw32
+Server = http://mirrors.ustc.edu.cn/msys2/mingw/i686/
+Server = http://repo.msys2.org/mingw/i686
+Server = http://downloads.sourceforge.net/project/msys2/REPOS/MINGW/i686
+Server = http://www2.futureware.at/~nickoe/msys2-mirror/i686/
+
+## mirror.mingw64
+Server = http://mirrors.ustc.edu.cn/msys2/mingw/x86_64/
+Server = http://repo.msys2.org/mingw/x86_64
+Server = http://downloads.sourceforge.net/project/msys2/REPOS/MINGW/x86_64
+Server = http://www2.futureware.at/~nickoe/msys2-mirror/x86_64/
+```
+
+>
+> MSYS2 is a software distro and building platform for Windows
+
+> At its core is an independent rewrite of MSYS, based on modern Cygwin (POSIX compatibility layer) and MinGW-w64 with the aim of better interoperability with native Windows software. It provides a bash shell, Autotools, revision control systems and the like for building native Windows applications using MinGW-w64 toolchains.
+>  https://www.msys2.org/
+
+然后是同步、更新软件源（至于pacman怎么使用，可[查看这里](view?n=pacman)）：
+
+```bash
+pacman -Syu
+```
+
+## 安装必要开发套件
+
+```bash
+pacman -S vim git base-devel
+```
+
+## msys2 mingw-w64
+
+最初我安装的是mingw-w64的工具链：**mingw-w64-x86_64-toolchain**
+
+```bash
+pacman -S mingw-w64-x86_64-toolchain
+:: 在组 mingw-w64-x86_64-toolchain 中有 17 成员：
+:: 软件仓库 mingw64
+1) mingw-w64-x86_64-binutils  2) mingw-w64-x86_64-crt-git  3) mingw-w64-x86_64-gcc  4) mingw-w64-x86_64-gcc-ada
+5) mingw-w64-x86_64-gcc-fortran  6) mingw-w64-x86_64-gcc-libgfortran  7) mingw-w64-x86_64-gcc-libs  8) mingw-w64-x86_64-gcc-objc
+9) mingw-w64-x86_64-gdb  10) mingw-w64-x86_64-headers-git  11) mingw-w64-x86_64-libmangle-git
+12) mingw-w64-x86_64-libwinpthread-git  13) mingw-w64-x86_64-make  14) mingw-w64-x86_64-pkg-config  15) mingw-w64-x86_64-tools-git
+16) mingw-w64-x86_64-winpthreads-git  17) mingw-w64-x86_64-winstorecompat-git
+```
+
+将**msys64/mingw64/bin**添加到msys的环境变量后，继续使用cmake编译，分别是511KiB与42KiB，可以明显看出来同一份helloworld.cpp源码编译出来了不同大小的程序，这可能是因为不同的编译器（即便同一个编译器也有不同的版本）对动态/静态库的链接有不同的策略。
+
+>"忘记了mingw-w64-x86_64-toolchain中是否包含了cmake工具，总之需要将其中的mingw32-make.exe复制一份并将副本改名为make.exe"
+
+## msys2 gcc
+
+显然用msys2中的mingw64编译的太大，其背后的原因无非与编译器有关，那好，我们再尝试使用msys2下的gcc：
+
+```bash
+#查看gcc信息：
+pacman -Si gcc
+软件库         : msys
+名字           : gcc
+版本           : 9.1.0-2
+描述           : The GNU Compiler Collection - C and C++ frontends
+架构           : x86_64
+URL            : https://gcc.gnu.org/
+软件许可       : GPL  LGPL  FDL  custom
+组             : msys2-devel
+提供           : 无
+依赖于         : gcc-libs=9.1.0-2  binutils  gmp  isl  mpc  mpfr  msys2-runtime-devel  msys2-w32api-headers  msys2-w32api-runtime
+windows-default-manifest
+可选依赖       : 无
+与它冲突       : 无
+取代           : 无
+下载大小       : 26.32 MiB
+安装后大小     : 112.06 MiB
+打包者         : Alexey Pavlov <alexpux@gmail.com>
+编译日期       : 2019年07月17日 16:12:33
+验证者         : MD5校验值  SHA-256 校验值  数字签名
+
+#安装gcc
+pacman -S gcc
+```
+
+还有其他一些必要的工具比如cmake，安装命令与gcc一致，我安装的是3.15.5-1版本的。bingoo，可以编译，且helloworld.exe大小分别为149KiB与9KiB，这么小，简直出乎意料，好吧，暂且使用msys2下的gcc作为编译器，虽然msys2与mingw-w64是主打的Linux子系统，但就目前而言先使用gcc吧。
+
+## 更方便的bash脚本
+常规的套路是将工程文件生产到指定的目录下，而不是更目录，这样更有结构性，也清晰明了，简单写了以下脚本：
+
+```bash
+rm -rf build
+mkdir -p build
+cd build
+cmake .. #这里没有-G "MinGW Makefiles"
+make
+```
+
+# terminal
+
+
+MS家的CLI终端多受大家的诟病，确实体验与功能上相较Linux家族的terminal甚远。我有程序要通过powershell编译，还有blog需要nodejs运行于powershell，还有其他一些东西开好几个终端。此前在Microsoft Store有看到过微软家的多开终端工具名曰**windows terminal**，用起来尚且可行，但在安装了msys2之后，它也要启动一个终端，在查看如何在windows terminal中添加msys2的启动时，想起了此前同事用的**[cmder](https://cmder.net/)**这么一个软件，一番查阅与学习之后，决定使用它了。
+
+在cmder -> settings -> Starup -> Tasks 配置项中，我们添加启动msys2的条目，新增command groups，配置以下启动命令（感谢网友提供）：<br>`-new_console:d:C:\msys64 set CHERE_INVOKING=1 & %MSYS2_ROOT%\usr\bin\bash.exe --login -i`<br>具体配置见下图（依然是网友提供）。
+
+> "如果你想启动msys2的mingw-w64，需要添加**MSYSTEM=MINGW64**到cmder中，注意放到bash.exe之前，如下示例："
+`-new_console:d:C:\msys64 set CHERE_INVOKING=1 & set "MSYSTEM=MINGW64" & %MSYS2_ROOT%\usr\bin\bash.exe --login -i`
+
+
+# 总结
+
+折腾了一天，学习了一天，赶紧做笔记，免得忘记也有的复习。目前我一共有3个编译器在我的电脑上，A是mingw-w64的windows平台版本（version：8.1），B是msys2子系统下的mingw-w64-toolchain版本（version：9.2），C是msys2子系统下的gcc编译器（version：9.1）。此三者皆能编译出来helloworld.cpp，目前选则用gcc编译器，不过我担心后续会有问题，毕竟msys2与mingw-w64是官方主打的一套开发环境，从gcc版本也能看得出来。至于终端的选择目前就是大家联袂推荐的cmder了，用着确实还行，至于其如何把玩还需要加些时日，其次也不是重点。
+
+好了，以日记的形式胡乱写了些东西，还是那句话：自己的理解与表达都有可能对你的理解产生误导，切记莫要全盘接受。
+
+

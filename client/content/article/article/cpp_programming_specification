@@ -1,0 +1,203 @@
+
+
+使用统一编码约定的主要原因是使应用程序的结构和编码风格标准化，以便于阅读和理解程序。好的编码约定可使源代码严谨、可读性强、意义清楚且直观。同时编码约定的良好执行也是一个团队整体性、协作性的外在体现之一。文档主要从以下几个方面进行必要的约定：
+
+* 命名规范；
+* 结构规范；
+
+# 命名规范
+文件名、函数名、变量名命名应具有描述性。不要怕起名太长，不要怕输入完整单词（认真输入一遍，其他时候都是IDE智能提示，麻烦么？），让读者从名称上就能大体了解所要指示的内容；不要过度或者刻意的缩写，只有非常普遍性的才用缩写（比如 SVN、MSDN、QQ、FPT、HTTP、SQL），或者局部变量可以写的随意些，比如for循环中的i；除非团队约定，不然一律使用英文全拼。
+
+类名、结构体名、枚举名、成员变量名、常量名，这些名称（标识）表示一个事物、一种状态、一个事件等，一般用名词形式命名，同时注意添加常用类型符号（见下）；而函数名表示一种行为或者动作，一般用动词或动词+名词这种指令性的方式命名，不需要添加额外符号。整体而言我们使用：驼峰+匈牙利命名法
+
+>
+> **匈牙利命名法**：标识符的名字以一个或者多个小写字母开头作为前缀；前缀之后的是首字母大写的一个单词或多个单词组合，该单词要指明变量的用途。m_lpszStr, 表示指向一个以0字符结尾的字符串的长指针成员变量。
+>
+> **（大小）骆驼式命令法**：正如它的名称所表示的那样，是指混合使用大小写字母来构成变量和函数的名字。printInfos(小驼峰)、PrintInfos(大驼峰，又叫帕斯卡命名法)
+>
+
+
+## 类名
+* 类名采用大驼峰命名法；
+* 成员变量一律采用小驼峰命名法，外加前缀 m_
+ * b bool (int) 布尔(整数)
+ * f float
+ * i integer 整数
+ * l long 长整数
+ * n Short int 短整数
+ * u Unsigned int 无符号整数
+ * ul unsigned long (ULONG) 无符号长整数
+ * c char 字符(字节)
+ * s String 字符串
+ * p Pointer 指针
+ * lp Long pointer 长指针
+ * w WORD (unsigned short) 无符号短整数
+ * dw DWORD (unsigned long) 双字(无符号长整数)
+ * h Handle 句柄
+ * fn Function 函数
+* 公有成员方法一律采用大驼峰命名法，无外加字符；
+* 私有成员方法一律采用大驼峰命名法，外加后导下划线；
+* 存取方法命名：由于他们形似函数，需要采用大驼峰方式，存值函数加前缀Set，取值函数加前缀Get，同时注意后接单词需要与存取的变量名尽量匹配；
+
+## 结构体名
+* 加入前导大写字母S，以示其为一个结构体，而非类；
+* 其他与类中命名约定相同，不赘述；
+
+## 枚举名
+* 枚举名采用驼峰命名法；
+* 枚举值应全部大写，单词间以下划线相连；
+* 尽量保持相同的部分在前面，比如下面的ERROR；
+
+
+```cpp
+//非类内嵌枚举；
+enum urlTableErrors {
+ERROR_OUT_OF_MEMORY=0,
+ERROR_MALFORMED_INPUT,
+ERROR_OTHERS,
+};
+```
+
+
+## 宏命名
+* 其命名采用枚举值（不是枚举名）命名原则；
+
+
+```cpp
+#define ROUND(x) ...
+#define PI_ROUNDED 3.0
+MY_EXCITING_ENUM_VALUE
+```
+
+
+## 其他变量名
+* 全局变量名加前缀 g_
+* 静态变量名加前缀 s_
+* 局部变量命可以随意些，比如tmp，temp，i，n，m，等，只要对阅读不会造成明显障碍与干扰就可以，建议尽量用不同的字母，或者对象首字母等；
+
+# 结构规范
+
+## 头文件结构
+
+正确使用头文件可令代码在可读性、文件大小和性能上大为改观，严谨且命名优秀的头文件可以明确引导使用者完全依赖接口编程，而不关注实现。下面的规则将引导你规避使用头文件时的各种麻烦：
+
+* 头文件保护放在最开始，命名格式是： < PROJECT>_< PATH>_< FILE>_H_ 为保证唯一性，头文件的命名应基于其所在项目源代码树的全路径；
+* 头文件依赖；使用前置声明（forward declarations）尽量减少.h 文件中#include的数量。
+* 内联函数：当函数有比较少的语句（小于 10 行左右）时，一定要将其定义为内联函数（inline function）。一般我们会将存取函数（get、set）以及其他一些比较短的关键执行函数定义为内联函数。
+* 函数参数顺序；定义函数时，参数顺序为输入参数在前，输出参数在后。C/C++函数参数分为输入参数和输出参数两种，有时输入参数也会输出。输入参数一般传值或常数引用（const references）常数指针（const pointer），输出参数为非常数指针（non-const pointer）。 对参数排序时，将所有输入参数置于输出参数之前。不要仅仅因为是新添加的参数，就将其置于最后，而应该依然置于输出参数之前。
+* 包含文件的名称及次序：将包含次序标准化可增强可读性、避免隐藏依赖 ，次序如下：
+ * 自己的头文件（针对类）
+ * C 库
+ * C++库
+ * 其他库的.h
+ * 项目内的.h
+
+## 类结构
+* 编写短小函数；倾向于选择短小、凝练的函数。长函数有时是恰当的，因此对于函数长度并没有严格限制。如果函数超过 40 行，可以考虑在不影响程序结构的情况下将其分割一下。即使一个长函数现在工作的非常好，一旦有人对其修改，有可能出现新的问题，甚至导致难以发现的 bug。使函数尽量短小、简单，便于他人阅读和修改代码；
+* 为降低复杂性，尽量不重载操作符，模板、标准类中使用时提供文档说明；
+* 函数实现顺序尽量与头文件中定义的顺序相同；
+* 参考所有头文件结构约定；
+* const的使用：const变量、数据成员、函数和参数为编译时类型检测增加了一层保障，更好的尽早发现错误。因此强烈建议在任何可以使用的情况下使用const
+* 明确的构造函数；对单参数构造函数使用C++关键字 explicit 定义，所有单参数构造函数必须是明确的。在类定义中，将关键字explicit加到单参数构造函数前：explicit Foo(string name);
+* 存取函数；将数据成员私有化，并提供相关存取函数，如定义变量m_bFoo及取值函数bool GetFoo()const、赋值函数void SetFoo(bool v)。
+* 函数申明顺序：不建议定义 public 变量，而是采用存取内联函数进行，整体来看越私有越靠后、函数在变量前；
+ * 静态函数；
+ * 静态变量；
+ * public 函数；
+ * public 存取函数；
+ * private 函数；
+ * private 变量；
+
+
+
+```cpp
+#ifndef FOO_BAR_BAZ_H_
+#define FOO_BAR_BAZ_H_
+
+#include <sys/types.h> // 系统头文件
+#include <unistd.h>
+#include <hash_map>
+#include <vector>
+#include "base/basictypes.h" // 第三方库的头文件
+#include "base/commandlineflags.h"
+#include "foo/public/bar.h" // 自己项目的头文件
+
+class CMeshViewer {
+public:
+//static func..
+
+public:
+CMeshViewer();
+explicit CMeshViewer(int meshId);
+~CMeshViewer();
+
+void Render()const;
+
+//存取函数
+inline void SetID(int id){m_iID=id;};
+inline int GetID()const{return m_iID;};
+
+private:
+//私有函数
+void Draw_();
+void OutputCurrentMeshData_(...);
+
+private:
+//成员变量
+int m_iID;
+bool m_bIsOpen;
+};
+
+#endif // FOO_BAR_BAZ_H_
+```
+
+## 类构造函数的"成员初值列"
+冒号与逗号在前面会有种明确提示读者“我是承上的，我是承上的，而不是一句新的语句”的视觉提示。
+```cpp
+FBXConverter::FBXConverter(aiScene* out, const Document& doc, bool removeEmptyBones )
+    : defaultMaterialIndex()
+    , lights()
+    , cameras()
+    , textures()
+    , materials_converted()
+    , textures_converted()
+    , meshes_converted()
+    , node_anim_chain_bits()
+    , mNodeNames()
+    , anim_fps()
+    , out(out)
+    , doc(doc) {...}
+```
+
+
+# 注释结构
+
+必须对实现代码中巧妙的、晦涩的、有趣的、重要的、使用了算法的地方加以注释，注释掉的语句尽量加以说明，不然阅读者可能难以理解，时间久了自己也会忘记。注释我们分三种：行注释、块注释、文档注释；
+
+* 单个的一行、或者几行之间没有明确的逻辑关系可使用行注释（双斜线）；
+* 前后有逻辑关系的几行注释使用块注释方式；
+* 文档注释用于对类、函数、变量等进行说明行描述，使用块注释方式，同时注意若要多行的话，每行必须以*开始；
+* TODO 注释：对那些临时的、短期的解决方案，或已经够好但并不完美的代码使用 TODO 注释。这样的注释要使用全大写的字符串TODO，后面加上你的标记方便区分这个TODO是你的而非他人的，也方便识别与定位；
+
+
+```cpp
+行注释：
+//int i_numberOfEmitters;
+
+块注释：
+/*
+glMatrixMode(GL_MDOEL_VIEW);
+glLoadIdentity();
+*/
+
+文档注释方式，若要多行，每行必须以*开始；
+/**
+* Some comments are here.
+* There may be many lines.
+*/
+
+TODO 注释风格如下，只要能定位到自己的标记就好：
+// TODO(kl@gmail.com): Use a "*" here for concatenation operator.
+// TODO:JC: change this to use relations.
+```
+

@@ -1,0 +1,56 @@
+
+
+面试遇到虚函数的题，被面试官问蒙了，啊好菜，这是基础要记牢
+
+**注意区别重写(override)、重载(overload)、覆盖(mask OR hide)三者的区别。"**
+
+```cpp
+#include<iostream>
+using namespace std;
+
+class A
+{
+public:
+	void foo(){ cout<<1<<endl; }
+	virtual print(){ cout<<2<<endl; }
+};
+
+class B : public A
+{
+public:
+	void foo(){ cout<<3<<endl; } ///覆盖了父类的同名函数;
+	virtual print(){ cout<<4<<endl; }///重写了父类的实现;
+};
+
+int main()
+{
+	A a;     //父类的实例
+	A *p;   //父类的指针p
+	p = &a;
+	p->foo();
+	p->print();
+	B b;    //子类的实例
+	p = &b;   
+	p->foo();     //此处由于指针类型是父类的，所以调用的是父类的foo()
+	p->print();   //由于在父类中声明了print()为虚函数，故调用子类的print()
+	B *q;   //子类的指针q
+	q = &b;
+	q->foo();
+	q->print();
+	return 0;
+}
+
+/*
+输出结果：
+1
+2
+1
+4
+3
+4
+Press any key to continue
+
+*/
+```
+
+

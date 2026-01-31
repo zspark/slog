@@ -1,0 +1,41 @@
+
+
+```cpp
+#include <iostream>
+#include <stdio.h>
+using namespace std;
+
+class A {
+public:
+~A(){   cout << "~A\n";     };
+
+int m_a;
+};
+
+class B {
+public:
+~B(){   cout << "~B\n";     };
+int m_b;
+};
+
+class C : public A, public B {
+public:
+~C(){   cout << "~C\n";     };
+};
+
+int main()
+{
+cout << "Hello World\n";
+C* c=new C();
+printf("%p, %p, %p\n", c, reinterpret_cast<B*>(c), static_cast <B*>(c));
+B* b1=reinterpret_cast<B*>(c);
+B* b2=static_cast<B*>(c);
+B* b3=dynamic_cast<B*>(c);
+// delete c;
+// delete b1;
+// delete b2;
+// delete b3;
+return 0;
+}
+```
+you may copy this code and test at [[here|http://www.dooccn.com/cpp/]]

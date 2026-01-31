@@ -1,0 +1,87 @@
+
+下面是我用https://en.cppreference.com/w/cpp/thread/condition_variable/wait_for 中的代码添加了时间之后的测试，从中可以知道：
+
+* 如果wait_for时间到了，总会继续执行；
+* 如果条件变量通知并且成功亦会继续执行；
+
+
+```cpp
+#include <iostream>
+#include <atomic>
+#include <condition_variable>
+#include <thread>
+#include <chrono>
+using namespace std::chrono_literals;
+ 
+std::condition_variable cv;
+std::mutex cv_m;
+int i;
+
+std::chrono::high_resolution_clock::time_point start;
+ 
+void waits(int idx)
+{
+    std::unique_lock<std::mutex> lk(cv_m);
+    if(cv.wait_for(lk, idx*100ms, []{return i == 1;})) {
+        std::chrono::high_resolution_clock::time_point end=std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> d=
+        std::chrono::duration_cast<std::chrono::duration<double>>(end-start);
+
+        std::cerr << "Thread " << idx << " finished waiting. i == " << i << " time:"<<d.count() <<'\n';
+    }else{
+        std::chrono::high_resolution_clock::time_point end=std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> d=
+        std::chrono::duration_cast<std::chrono::duration<double>>(end-start);
+
+        std::cerr << "Thread " << idx << " timed out. i == " << i <<" time:"<<d.count()<< '\n';
+    }
+    
+    std::chrono::high_resolution_clock::time_point end=std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> d=
+        std::chrono::duration_cast<std::chrono::duration<double>>(end-start);
+     std::cerr << "Thread " << idx <<" finished time:"<<d.count()<< '\n';
+}
+ 
+void signals()
+{
+    std::this_thread::sleep_for(120ms);
+    std::cerr << "Notifying...\n";
+    
+     std::chrono::high_resolution_clock::time_point end=std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> d=
+        std::chrono::duration_cast<std::chrono::duration<double>>(end-start);
+std::cerr<<"notified time:"<<d.count()<<std::endl;
+    
+    cv.notify_all();
+    std::this_thread::sleep_for(100ms);
+    {
+        std::lock_guard<std::mutex> lk(cv_m);
+        i = 1;
+    }
+    std::cerr << "Notifying again...\n";
+    cv.notify_all();
+}
+ 
+int main()
+{
+    start=std::chrono::high_resolution_clock::now();
+    std::thread t1(waits, 1), t2(waits, 2), t3(waits, 3), t4(signals);
+    t1.join();
+    t2.join();
+    t3.join();
+    t4.join();
+}
+```
+
+output:
+```
+Thread 1 timed out. i == 0 time:0.100551
+Thread 1 finished time:0.100864
+Notifying...
+notified time:0.120924
+Thread 2 timed out. i == 0 time:0.200659
+Thread 2 finished time:0.200756
+Notifying again...
+Thread 3 finished waiting. i == 1 time:0.221426
+Thread 3 finished time:0.221489
+```

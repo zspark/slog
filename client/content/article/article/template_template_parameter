@@ -1,0 +1,196 @@
+
+
+模板模板参数
+
+
+最近在扩展节点层级图的通用性，决定采用模板模板参数的方式。模板模板意思就是函数或者类模板的typename依然是个模板。具体参见转载的下文：
+
+<WRAP center round important 100%>
+C++ Common Knowledge: Template Template Parameters\\
+By Stephen C. Dewhurst\\
+May 12, 2005\\
+来源：[[http://www.informit.com/articles/article.aspx?p=376878]]\\
+其他参考：\\
+[[http://stackoverflow.com/questions/213761/what-are-some-uses-of-template-template-parameters-in-c]]\\
+[[http://www.progdoc.de/papers/ttp/psi-ttp/psi-ttp.html]]
+</WRAP>
+
+This chapter provides a brief rundown of template parameters in C++ with examples to help you keep track of the limitations of C++ templates.
+
+Let's pick up the Stack template we considered in Specializing for Type Information [52, 183]. We decided to implement it with a standard deque, which is a pretty good compromise choice of implementation, though in many circumstances a different container would be more efficient or appropriate. We can address this problem by adding an additional template parameter to Stack for the container type used in its implementation.
+
+```cpp
+template <typename T, class Cont>
+class Stack;
+```
+
+For simplicity, let's abandon the standard library (not usually a good idea, by the way) and assume we have available a set of nonstandard container templates: List, Vector, Deque, and perhaps others. Let's also assume these containers are similar to the standard containers but have only a single template parameter for the element type of the container.
+
+Recall that the standard containers actually have at least two parameters: the element type and an allocator type. Containers use allocators to allocate and free their working memory so that this behavior may be customized. In effect, the allocator specifies a memory management policy for the container (see Policies [56, 205]). The allocator has a default so it's easy to forget it's there. However, when you instantiate a standard container like `vector<int>`, you're actually getting `vector< int, std::allocator<int>>` .For example, the declaration of our nonstandard List would be
+
+
+```cpp
+template <typename> class List;
+```
+
+Notice that we've left out the name of template parameter in the declaration of List, above. Just as with a formal argument name in a function declaration, giving a name to a template parameter in a template declaration is optional. As with a function definition, the name of a template parameter is required only in a template definition and only if the parameter name is used in the template. However, as with formal arguments in function declarations, it's common to give names to template parameters in template declarations to help document the template.
+
+```cpp
+template <typename T, class Cont>
+class Stack {
+public:
+~Stack();
+void push( const T & );
+//...
+private:
+Cont s_;
+};
+```
+
+A user of Stack now has to provide two template arguments, an element type and a container type, and the container has to be able to hold objects of the element type.
+
+```cpp
+Stack<int, List<int> > aStack1; // OK
+Stack<double, List<int> > aStack2; // legal, not OK           
+Stack<std::string, Deque<char *> > aStack3; // error!   
+```
+
+The declarations of aStack2 and aStack3 show we have a potential problem in coordination. If the user selects the incorrect type of container for the element type, we'll get a compile-time error (in the case of aStack3, because of the inability to copy a string to a char *) or a subtle bug (in the case of aStack2, because of loss of precision in copying a double to an int). Additionally, most users of Stack don't want to be bothered with selection of its underlying implementation and will be satisfied with a reasonable default. We can improve the situation by providing a default for the second template parameter.
+
+```cpp
+template <typename T, class Cont = Deque<T> >
+class Stack {
+//...
+};
+```
+
+This helps in cases where the user of a Stack is willing to accept a Deque implementation or doesn't particularly care about the implementation.
+
+```cpp
+Stack<int> aStack1; // container is Deque<int>
+Stack<double> aStack2; // container is Deque<double>
+```
+
+This is more or less the approach employed by the standard container adapters stack, queue, and priority_queue.
+
+```cpp
+std::stack<int> stds; // container is
+// deque< int, allocator<int> >
+```
+
+This approach is a good compromise of convenience for the casual user of the Stack facility and of flexibility for the experienced user to employ any (legal and effective) kind of container to hold the Stack's elements.
+
+However, this flexibility comes at a cost in safety. It's still necessary to coordinate the types of element and container in other specializations, and this requirement of coordination opens up the possibility of miscoordination.
+
+```cpp
+Stack<int, List<int> > aStack3;
+Stack<int, List<unsigned> > aStack4; // oops!     
+```
+
+Let's see if we can improve safety and still have reasonable flexibility. A template can take a parameter that is itself the name of a template. These parameters have the pleasingly repetitious name of template template parameters.
+
+```cpp
+template <typename T, template <typename> class Cont>
+class Stack;
+```
+
+This new template parameter list for Stack looks unnerving, but it's not as bad as it appears. The first parameter, T, is old hat. It's just the name of a type. The second parameter, Cont, is a template template parameter. It's the name of a class template that has a single type name parameter. Note that we didn't give a name to the type name parameter of Cont, although we could have:
+
+```cpp
+template <typename T, template <typename ElementType> class Cont>
+class Stack;
+```
+
+However, such a name (ElementType, above) can serve only as documentation, similar to a formal argument name in a function declaration. These names are commonly omitted, but you should feel free to use them where you think they improve readability. Conversely, we could take the opportunity to reduce readability to a minimum by eliminating all technically unnecessary names in the declaration of Stack:
+
+```cpp
+template <typename, template <typename> class>
+class Stack;
+```
+
+But compassion for the readers of our code does impose constraints on such practices, even if the C++ language does not.
+
+The Stack template uses its type name parameter to instantiate its template template parameter. The resulting container type is used to implement the Stack:
+
+```cpp
+template <typename T, template <typename> class Cont>
+class Stack {
+//...
+private:
+Cont<T> s_;
+};
+```
+
+This approach allows coordination between element and container to be handled by the implementation of the Stack itself, rather than in all the various code that specializes Stack. This single point of specialization reduces the possibility of miscoordination between the element type and the container used to hold the elements.
+
+```cpp
+Stack<int,List> aStack1;
+Stack<std::string,Deque> aStack2;
+```
+
+For additional convenience, we can employ a default for the template template argument:
+
+```cpp
+template <typename T, template <typename> class Cont = Deque>
+class Stack {
+//...
+};
+//...
+Stack<int> aStack1; // use default: Cont is Deque
+Stack<std::string,List> aStack2; // Cont is List
+```
+
+This is often a good approach for dealing with coordination of a set of arguments to a template and a template that is to be instantiated with the arguments.
+
+It's common to confuse template template parameters with type name parameters that just happen to be generated from templates. For example, consider the following class template declaration:
+
+```cpp
+template <class Cont> class Wrapper1;
+```
+
+The Wrapper1 template needs a type name for its template argument. (We used the keyword class instead of typename in the declaration of the Cont parameter of Wrapper1 to tell the readers of our code that we're expecting a class or struct rather than an arbitrary type, but it's all the same to the compiler. In this context typename and class mean exactly the same thing technically. See Optional Keywords [63, 231].) That type name could be generated from a template, as in `Wrapper1< List<int>>`, but `List<int>` is still just a class name, even though it was generated from a template.
+
+```cpp
+Wrapper1< List<int> > w1; // fine, List<int> is a type name
+Wrapper1< std::list<int> > w2; // fine, list<int> is a type
+Wrapper1<List> w3; // error! List is a template name
+```
+
+
+Alternatively, consider the following class template declaration:
+
+```cpp
+template <template <typename> class Cont> class Wrapper2;
+```
+
+The Wrapper2 template needs a template name for its template argument, and not just any template name. The declaration says that the template must take a single type argument.
+
+```cpp
+Wrapper2<List> w4; // fine, List is a template one type
+Wrapper2< List<int> > w5; // error! List<int> isn't a template 
+Wrapper2<std::list> w6; // error! std::list takes 2+ arguments 
+```
+
+If we want to have a chance at being able to specialize with a standard container, we have to do the following:
+
+```cpp
+template <template <typename Element,
+class Allocator> class Cont>
+class Wrapper3;
+
+//or equivalently:
+
+template <template <typename,typename> class Cont>
+class Wrapper3;
+```
+
+This declaration says that the template must take two type name arguments:
+
+```cpp
+Wrapper3<std::list> w7; // might work...
+Wrapper3< std::list<int> > w8; // error! list<int> is a class 
+Wrapper3<List> w9; // error! List takes one type argument     
+```
+
+However, the standard container templates (like list) may legally be declared to take more than two parameters, so the declaration of w7 above may not work on all platforms. Well, we all love and respect the STL, but we never claimed it was perfect.
+

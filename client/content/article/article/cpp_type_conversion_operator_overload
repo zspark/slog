@@ -1,0 +1,50 @@
+
+
+>origin:http://c.biancheng.net/cpp/biancheng/view/222.html
+
+C++提供类型转换函数(type conversion function)来解决这个问题。类型转换函数的作用是将一个类的对象转换成另一类型的数据。如果已声明了一个Complex类，可以在Complex类中这样定义类型转换函数：
+
+```cpp
+operator double( )
+{
+return real;
+}
+```
+
+函数返回double型变量real的值。它的作用是将一个Complex类对象转换为一个double型数据，其值是Complex类中的数据成员real的值。请注意，函数名是operator double，这点是和运算符重载时的规律一致的（在定义运算符“+”的重载函数时，函数名是operator +）。
+
+>
+> 类型转换函数的一般形式为：<br>
+> operator 类型名( ){<实现转换的语句>}
+>
+
+在函数名前面不能指定函数类型，函数没有参数。其返回值的类型是由函数名中指定的类型名来确定的。类型转换函数只能作为成员函数，因为转换的主体是本类的对象。不能作为友元函数或普通函数。
+
+从函数形式可以看到，它与运算符重载函数相似，都是用关键字operator开头，只是被重载的是类型名。double类型经过重载后，除了原有的含义外，还获得新的含义(将一个Complex类对象转换为double类型数据，并指定了转换方法)。这样，编译系统不仅能识别原有的double型数据，而且还会把Complex类对象作为double型数据处理。
+
+那么程序中的Complex类对具有双重身份，既是Complex类对象，又可作为double类型数据。Complex类对象只有在需要时才进行转换，要根据表达式的上下文来决定。转换构造函数和类型转换运算符有一个共同的功能：当需要的时候，编译系统会自动调用这些函数，建立一个无名的临时对象(或临时变量)。
+
+```cpp
+#include <iostream>
+using namespace std;
+class Complex
+{
+public:
+Complex( ){real=0;imag=0;}
+Complex(double r,double i){real=r;imag=i;}
+operator double( ) {return real;} //类型转换运算符重载
+private:
+double real;
+double imag;
+};
+int main( )
+{
+Complex c1(3,4),c2(5,-10),c3;
+double d;
+d=2.5+c1;//要求将一个double数据与Complex类数据相加
+cout<<d<<endl;
+return 0;
+}
+```
+
+

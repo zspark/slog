@@ -1,0 +1,512 @@
+初入职场的小菜鸟，记一些工作中才开始遇到的问题。
+
+[[_TOC_]]
+
+## 索引
+
+1. 动态初始化数组
+2. 小数取整
+3. 函数指针
+4. 定义带参数的宏
+5. 处理图片
+6. std::string大小写转换
+7. **安卓环境注意**
+8. 凸包计算方法
+9. 遍历二维三角形内所有的点
+10. 多边形区域填充算法——[多边形扫描线填充算法思想](/view?n=algorithm_polygon_scan_line)
+11. 数值微分法DDA（Digital Differential Analyzer）
+12. vector插入排序的方法
+13. 绘制正弦函数曲线
+14. sstream  --待续
+15. 字符串处理(snprintf、sscanf、strncpy、strcpy_s等等)--待续
+16. git随手记
+
+## 1. 动态初始化数组
+```cpp
+//一维数组
+int *p = new int[n];
+// 全都初始化为val
+memset(p,val,n*sizeof(int));
+// 或全都初始化为0
+ZeroMemory(p,n*sizeof()int);
+//记得析构
+delete p;
+p = nullptr;
+
+//二维数组 n*m
+int **p = new int*[n];
+for(int i =0; i < n; ++i){
+  p[i] = new int[m];
+  memset(p[i],val,m*sizeof(int));
+}
+//析构
+for(int i = 0; i< n; ++i){
+  delete[] p[i];
+  p[i] = nullptr;
+}
+delete[] p;
+p = nullptr;
+// delete之后用不用加=nullptr这句不确定，但是加了没问题
+```
+## 2. 小数取整
+向下取整：使用floor函数。floor(x)返回的是小于或等于x的最大整数。
+如：     floor(10.5) == 10    floor(-10.5) == -11
+
+向上取整：使用ceil函数。ceil(x)返回的是大于x的最小整数。
+如：     ceil(10.5) == 11    ceil(-10.5) ==-10
+
+## 3. 函数指针
+领导教了下函数指针的用法：
+```cpp
+typedef void(SceneHeatMapPrivate::*PROC_FUNC)(const cJSON *);
+// 存函数指针的map
+std::map<Echo::String, PROC_FUNC> proc_func;
+
+//将对应函数指针存入map
+dp->proc_func["Entity"] = &SceneHeatMapPrivate::processEntities;
+
+//调用指向的函数
+for (auto it : dp->proc_func)
+{
+	const cJSON *pNode = cJSON_GetObjectItem(pRoot, it.first.c_str());
+	if (pNode != nullptr && pNode->type == cJSON_Array)
+	(dp->*it.second)(pNode);
+}
+```
+
+下面稍具体些介绍：   
+参考：https://blog.csdn.net/u014221279/article/details/50978204
+### 函数指针的形式：
+#### 形式1：返回类型(*函数名)(参数表)
+
+```cpp
+#include <iostream>
+using namespace std;
+// 定义一个函数指针pFUN,它指向一个返回类型为char，有一个整形参数的函数
+char (*pFun)(int);
+
+// 定义一个返回类型为char，参数为int的函数
+// 从指针层面上理解该函数，即函数的函数名实际上是一个指针，
+// 该指针指向函数在内存中的首地址
+char glFun(int a)
+{
+  cout << a;
+  return a;
+}
+
+int main()
+{
+  //将函数glFun的地址赋值给变量pFun
+  pFun = glFun;
+  //*pFun显然是取pFun所指向的地址的内容
+  (*pFun)(2);
+  return 0;
+}
+```
+以上是函数指针的用法，而**tyoedef可以让函数指针更直观方便**
+
+#### 形式2: typedef 返回类型(*新类型)(参数表)
+```cpp
+typedef bool (*PTRFUN)(int);   // 定义一个名为PTRFUN的指向一个返回类型为bool有一个int类型参数的函数指针类型
+PTRFUN pFun;  // 声明一个PTRFUN类型的函数指针
+char glFun(int a){ return ture;};
+void main()
+{
+  pFun = glFun;
+  (*pFun)(2);
+}
+```
+
+
+## 4. 定义带参数的宏
+注意：宏替换在编译前进行，所以传递的值只能是静态的，单纯的字符串替换。
+
+参数前一个#会给参数两端加上双引号"";两个##是连接字符串，
+```cpp
+#define OBJ_FUNC(par) proc_func[#par] = &SceneHeatMapPrivate::process##par;
+
+OBJ_FUNC(tmp)   
+// 会被替换为
+// proc_func["tmp"] = &SceneHeatMapPrivate::processtmp;
+```
+
+## 5. 处理图片
+可以把要处理的区域移动到左上角 也就是x,y都从0开始，这样计算的时候比较方便，没有负值
+
+```cpp	
+Echo::FloatRect tmp{ maxL / pixelSize,maxT / pixelSize,maxR / pixelSize,maxB / pixelSize };
+tmp.left -= range.left;
+tmp.right -= range.left;
+tmp.top -= range.top;
+tmp.bottom -= range.top;
+// 把范围转换为整数 减少后面用浮点数计算的误差
+int xStart= Echo::Math::Clamp(int(tmp.left + 0.5f), 0, hm_width - 1);
+int xEnd = Echo::Math::Clamp(int(tmp.right + 0.5f), 0, hm_width - 1);
+int yStart= Echo::Math::Clamp(int(tmp.top + 0.5f), 0, hm_height - 1);
+int yEnd = Echo::Math::Clamp(int(tmp.bottom + 0.5f), 0,hm_height - 1);
+
+for (int y = yStart; y <= yEnd; ++y) {
+	for (int x = xStart; x <= xEnd; ++x) {
+		int index = hm_width*y + x;
+		if (index > hm_width*hm_height || index <0 )
+			continue;
+			hmap[index] += objInfo.tri_count / TriCount;
+			if (hmap[index] > hm_maxTri) hm_maxTri = hmap[index];
+		}
+	}
+}
+```
+
+## 6. std::string大小写转换
+```cpp
+// @par1: 要转换的子串起始位置
+// @par2: 要转换的子串末尾位置
+// @par3: 转换后的子串覆盖原字符串的起始位置
+// @par4: ::tolower 转小写  ::toupper 转大写
+transform(tmp.begin() + 1, tmp.end(), tmp.begin() + 1, ::tolower);
+```
+
+## 7. 安卓环境注意
+
+* 安卓只支持最小的std库，不支持std::tostring一类的函数。换了一种方法，使用sstream将数字转换为string。具体如何使用还木有看懂，日后补充。
+* android studio 向手机打安装包的时候提示 INSTALL_FAILED_TEST_ONLY，原因是Android Studio 3.0会在debug apk的manifest文件application标签里自动添加 android:testOnly="true"属性，解决办法是在项目中的gradle.properties全局配置中设置：android.injected.testOnly=false
+* android studio 向手机打安装包时遇到提示Installation failed due to : '-200' ，查半天没找到解决方法，最后发现我同时用VS打开了一个安卓的项目，VS也连接了这个手机，把VS关上就解决了。。。
+
+## 8. 凸包计算方法
+参考：https://www.cnblogs.com/aiguona/p/7232243.html   
+ps: 两向量叉积 p1 x p2 <0 ,说明p1在p2的逆时针方向，即p1->p2的夹角小于180°；反之p1在p2的顺时针方向，即p1->p2的夹角大于180°；若等于零，两向量共线。
+```cpp
+using namespace std;
+struct node
+{
+	int x, z;
+};
+node vex[8];//存入的所有的点
+node stackk[8];//凸包中所有的点
+int top = 1;//最后凸包中拥有点的个数
+int xx, zz;
+int cross(node a, node b, node c)//计算叉积
+{
+	return (b.x - a.x)*(c.z - a.z) - (c.x - a.x)*(b.z - a.z);
+}
+double dis(node a, node b)//计算距离
+{
+	return sqrt((a.x - b.x)*(a.x - b.x)*1.0 + (a.z - b.z)*(a.z - b.z));
+}
+bool cmp(node a, node b)//极角排序
+{
+	if (atan2(a.z - zz, a.x - xx) != atan2(b.z - zz, b.x - xx))
+		return (atan2(a.z - zz, a.x - xx)) < (atan2(b.z - zz, b.x - xx));
+	return a.x < b.x;
+}
+   
+//计算凸包
+void ConvexHull() 
+{
+	int i;
+	for (i = 0; i < 8; i++)
+	{
+    	//给计算的点赋值
+		vex[i].x = x; 
+		vex[i].z = z;
+	}
+	memset(stackk, 0, sizeof(stackk));
+    sort(vex, vex + 8, cmp);
+	stackk[0] = vex[0];
+	xx = stackk[0].x;
+	zz = stackk[0].z;
+	sort(vex + 1, vex + 8, cmp);//cmp2是更快的，cmp更容易理解
+	stackk[1] = vex[1];//将凸包中的第两个点存入凸包的结构体中
+	top = 1;//最后凸包中拥有点的个数
+	for (i = 2; i < 8; ++i)
+	{
+		if (top >= 1 && top < 8)
+        	//对使用极角排序的i>=1有时可以不用，但加上总是好
+			while (i >= 1 && cross(stackk[top - 1], stackk[top], vex[i]) <= 0)   
+					top--;			
+        if (top>-1 && top < 7)
+			stackk[++top] = vex[i];
+	}	
+}
+```
+
+## 9. 遍历二维三角形内所有的点
+参考：
+* https://blog.csdn.net/weixin_34304013/article/details/89063136
+* https://blog.csdn.net/feengg/article/details/85699897
+
+已知三角形的三个顶点坐标为A,B,C。则在三角形内某一点P = a*A+b*B+c*C,其中a+b+c=1，
+
+```cpp
+double a = 1.0 / max_edge_length; //最长边的长度
+for (double p = 0; p < 1; p += a)
+{
+    for (double q = 0; q < 1 - p; q += a)
+    {
+        int p_x = p*A.x() + q*B.x() + (1 - p - q)*C.x();
+        int p_y = p*A.y() + q*B.y() + (1 - p - q)*C.y();
+    }
+}
+```
+
+## 10. 多边形区域填充算法——扫描填充算法
+另起一篇。点击： 
+[多边形扫描线填充算法思想](/view?n=algorithm_polygon_scan_line)
+
+## 11. 一个画线的小算法——数值微分法DDA（Digital Differential Analyzer）
+参考：https://blog.csdn.net/qq_37844142/article/details/83378355
+```cpp
+void DrawLine(int x1, int y1, int x2, int y2)
+{
+	//该程序考虑到了k范围不同，以及k不存在时的情况
+	int dx, dy, n, k;
+	double xinc, yinc, x, y;
+	dx = x2 - x1;
+	dy = y2 - y1;
+	if (abs(dx) - abs(dy) > 0) //比较两参数的绝对值哪一个大，哪一个就作为步长参数（n），此参数将作为沿直线所画出点的数目
+		n = abs(dx);
+	else
+		n = abs(dy);
+	xinc = (double)dx / n;
+	yinc = (double)dy / n;
+	x = x1;
+	y = y1;
+	for (k = 0; k < n; k++)
+	{
+		LineImg.setColourAt(color[COLOR], floor(x + 0.5), floor(y + 0.5), 0);
+		x += xinc;
+		y += yinc;
+	}
+}
+```
+
+## 12. 学习了一个vector插入排序的方法
+vector中是一个自定义类型，要重载下运算符，我这里实现的是从大到小排序。   
+参考： https://blog.csdn.net/hzqhbc/article/details/7497646
+```cpp
+typedef struct _Edge  // 边表结构
+{
+	double xi;   // 扫描线与多边形交点的x坐标
+	double dx;   // dx = - b/a 直线斜率的倒数
+	int ymax;    // 这条边上端点的y坐标
+	int dy;      // 初始化为这条边在y方向上的长度，每处理完一条扫描线，--dy,当0==dy时，这条边已经不与扫描线相交
+}Edge;
+
+typedef struct tagSP_EDGES_TABLE {
+	std::vector<Edge> slEdges;
+	int first;  // first last定义活动边(与扫描线有交点的边)的范围
+	int last;
+	bool operator()(const Edge& lh, const Edge& rh)
+	{
+		return lh.ymax > rh.ymax;
+	}
+}SP_EDGES_TABLE;
+
+SP_EDGES_TABLE spET;
+spET.slEdges.insert(std::upper_bound(spET.slEdges.begin(), 
+spET.slEdges.end(), e, tagSP_EDGES_TABLE()), 
+e);
+```
+
+## 13. 绘制正弦函数曲线
+参考：https://blog.csdn.net/liumangmao1314/article/details/53844582
+
+```cpp
+// 图片大小4096*4096
+#define PI 3.1415926535
+
+struct RTRect   // 自定矩形结构
+{
+  RTRect() {}
+  RTRect(int a_minX, int a_minY, int a_maxX, int a_maxY)
+  {
+    min[0] = a_minX;
+	min[1] = a_minY;
+	max[0] = a_maxX;
+	max[1] = a_maxY;
+  }
+  int min[2];
+  int max[2];
+  inline int getArea() {
+	return (max[0] - min[0])*(max[1] - min[1]);
+  }
+  bool operator==(const RTRect& RT)
+  {
+	if (this->max[0] == RT.max[0] 
+    &&this->max[1] == RT.max[1] 
+    &&this->min[0] == RT.min[0] 
+    && this->min[1] == RT.min[1])
+	return true;
+	else return false;
+  }
+  RTRect operator * (const float& n) {
+    RTRect rec;
+	for (int i = 0; i < 2; i++) {
+      rec.max[i] = this->max[i] * n;
+      rec.min[i] = this->min[i] * n;
+	}
+	return rec;
+  }
+};  
+
+void draw(){
+  RTRect tmpRec(-2000,-2000,1000,1000);
+  int s;
+  int period;  //周期
+  if (it_result->getArea() > 100000) {
+    s = 20;
+    data->speed = 50;
+    period = 4.0;
+  }
+  else {
+    data->speed = 30;
+    s = 10;
+    period = 3.0;
+  }
+
+  node* pre = new node;
+  node* next = new node;
+  int h = tmpRec.max[1] - tmpRec.min[1];
+  int w = tmpRec.max[0] - tmpRec.min[0];
+  double y, radian;
+  int xstart = tmpRec.min[0];
+  radian = xstart / ((double)w / period)*PI;
+  y = sin(radian) * (h / 2.0) + tmpRec.min[1] + h / 2;
+  pre->x = xstart;
+  pre->z = y;
+  for (; xstart < tmpRec.max[0]; xstart += s) {
+  //弧度=X坐标/曲线宽度*角度*π
+  //Y坐标=振幅*曲线宽度*sin(弧度)
+  radian = xstart / ((double)w / period)*PI;
+  y = sin(radian) * (h / 2.0) + tmpRec.min[1] + h / 2;
+  next->x = xstart;
+  next->z = y;
+  if (next->x < range.left 
+  || next->x > range.right 
+  || next->z < range.top 
+  || next->z > range.bottom) break;
+  DrawLine(pre->x - range.left, 
+  		pre->z - range.top, 
+          next->x - range.left, 
+          next->z - range.top);
+  *pre = *next;
+  }
+}
+```
+## 14. sstream  --待续
+```cpp
+#include <string>
+#include <sstream>
+#include <iostream>
+
+int main()
+{
+	// Convert int to string
+	std::stringstream stream;
+	std::string result1;
+	int i = 1000;
+	stream << i;
+	stream >> result;
+	// print the string "1000"
+	std::out << result1 << std::endl;
+
+	// U must clear the stream before the next convert
+	stream.clear();
+
+	// Convert xxx to char*
+	char result2[8];
+	stream << 8888;
+	stream >> result2;
+	// print "8888"
+	std::cout << result2 << std::endl;
+
+	stream.clear();
+
+	// Convert bool to int
+	int result3;
+	stream << true;
+	stream >> result3;
+	// print "1"
+	std::cout << result3 << std::endl;
+}
+```
+## 15. 字符串处理(snprintf、sscanf、strncpy、strcpy_s等等)--待续
+
+#### snprintf()
+
+声明
+```cpp
+int snprintf ( char * str, size_t size, const char * format, ... );
+```
+
+参数
+* str -- 目标字符串。
+* size -- 拷贝字节数(Bytes)。
+* format -- 格式化成字符串。
+* ... -- 可变参数。
+
+返回值
+* (1) 如果格式化后的字符串长度小于等于 size，则会把字符串全部复制到 str 中，并给其后添加一个字符串结束符 \0；
+* (2) 如果格式化后的字符串长度大于 size，超过 size 的部分会被截断，只将其中的 (size-1) 个字符复制到 str 中，并给其后添加一个字符串结束符 \0;
+
+**返回值为欲写入的字符串长度。**
+
+```cpp
+#include <stdio.h>
+
+int main()
+{
+	char buffer[50];
+	char *s = "wangxinleizuishou";
+
+	int j = snprintf(buffer,9,"%s\n",s);
+
+	printf("string:\n%s\ncharacter count = %d\n",buffer,j);
+}
+
+/*
+string:
+wangxinl
+character count = 18
+*/
+```
+
+#### sscanf()
+
+声明
+```cpp
+int sscanf(const char *str,const char *format,...)
+```
+
+参数
+* str -- 这是 C 字符串，是函数检索数据的源。
+* format -- 这是 C 字符串，包含了以下各项中的一个或多个：空格字符、非空格字符 和 format 说明符。
+
+返回值
+* 如果成功，该函数返回成功匹配和赋值的个数，如果到达文件末尾或发生读错误，则返回EOF。
+
+## 16. git随手记
+安装了vim之后，再打开git bash显示log中文出现乱码，解决方案参考：https://www.cnblogs.com/yanzige/p/9810333.html
+
+1. 运行Git Bash窗口，在该窗口导航条（即最上面）右键，选择Options−>Text，找到下面两处
+* Locale:选择 zh_CN  
+* Charector set:选择 UTF-8 
+
+然后保存。
+
+2、到Git Bash命令窗口输入如下设置命令语句
+
+git config --global i18n.commitencoding utf-8  --注释：该命令表示提交命令的时候使用utf-8编码集提交
+
+git config --global i18n.logoutputencoding utf-8 --注释：该命令表示日志输出时使用utf-8编码集显示
+
+export LESSCHARSET=utf-8  --注释：设置LESS字符集为utf-8
+
+设置完成后，发现使用git log后，之前提交代码的中文注释正确显示出来。
+
+
+
+
+
+
+

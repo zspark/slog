@@ -1,0 +1,140 @@
+
+#  CUDA basic
+
+
+```cuda
+// Kernel definition
+__global__ void MatAdd(float A[N][N], float B[N][N], float C[N][N]) {
+  int i = threadIdx.x;
+  int j = threadIdx.y;
+  C[i][j] = A[i][j] + B[i][j];
+}
+int main()
+{
+  //...
+  // Kernel invocation with one block of N * N * 1 threads
+  int numBlocks = 1;
+  dim3 threadsPerBlock(N, N);
+  MatAdd>numBlocks, threadsPerBlock>>>(A, B, C);
+  //...
+}
+ ```
+
+
+OR like this:
+
+
+```cuda
+// Kernel definition
+__global__ void MatAdd(float A[N][N], float B[N][N], float C[N][N]) {
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  int j = blockIdx.y * blockDim.y + threadIdx.y;
+  if (i < N && j < N)
+    C[i][j] = A[i][j] + B[i][j];
+}
+int main()
+{
+  //...
+  // Kernel invocation
+  dim3 threadsPerBlock(16, 16);
+  dim3 numBlocks(N / threadsPerBlock.x, N / threadsPerBlock.y);
+  MatAdd>numBlocks, threadsPerBlock>>>(A, B, C);
+  //...
+}
+```
+
+
+Threads within a block can cooperate by sharing data through some shared memory and by synchronizing their execution to coordinate memory accesses. More precisely, one can specify synchronization points in the kernel by calling the __syncthreads() intrinsic function; __syncthreads() acts as a barrier at which all threads in the block must wait before any is allowed to proceed. Shared Memory gives an example of using shared memory. In addition to __syncthreads() , the Cooperative Groups API provides a rich set of thread-synchronization primitives.
+
+For efficient cooperation, the shared memory is expected to be a low-latency memory near each processor core (much like an L1 cache) and __syncthreads() is expected to be lightweight.
+3.1.1.2. Just-in-Time Compilation
+
+Any PTX code loaded by an application at runtime is compiled further to binary code by the device driver. This is called just-in-time compilation. Environment variables are available to control just-in-time compilation as described in CUDA Environment Variables
+
+##  3.2.12. Graphics Interoperability
+
+A buffer object is registered using cudaGraphicsGLRegisterBuffer() . In CUDA, it appears as a device pointer and can therefore be read and written by kernels or via cudaMemcpy() calls. A texture or renderbuffer object is registered using cudaGraphicsGLRegisterImage() . In CUDA, it appears as a CUDA array.
+
+###  3.2.12.2. Direct3D Interoperability
+
+Direct3D interoperability is supported for Direct3D 9Ex, Direct3D 10, and Direct3D 11.
+
+A CUDA context may interoperate only with Direct3D devices that fulfill the following criteria: Direct3D 9Ex devices must be created with DeviceType set to D3DDEVTYPE_HAL and BehaviorFlags with the D3DCREATE_HARDWARE_VERTEXPROCESSING flag; Direct3D 10 and Direct3D 11 devices must be created with DriverType set to D3D_DRIVER_TYPE_HARDWARE .
+
+The Direct3D resources that may be mapped into the address space of CUDA are Direct3D buffers, textures, and surfaces. These resources are registered using cudaGraphicsD3D9RegisterResource() , cudaGraphicsD3D10RegisterResource() , and cudaGraphicsD3D11RegisterResource() .
+
+The following code sample uses a kernel to dynamically modify a 2D width x height grid of vertices stored in a vertex buffer object.
+
+#  CUDA graphic interoperation
+
+
+```cuda
+__host__ cudaError_t cudaGraphicsMapResources ( int  count, cudaGraphicsResource_t* resources, cudaStream_t stream = 0 )
+```
+
+
+
+See also:
+
+cudaGraphicsResourceGetMappedPointer, cudaGraphicsSubResourceGetMappedArray, cudaGraphicsUnmapResources, cuGraphicsMapResources
+
+#  显存分类
+
+在同一个block中的线程通过共享存储器（shared memory）交换数据，并通过栅栏同步保证线程间能够正确地共享数据 
+
+
+![img](https://raw.githubusercontent.com/zspark/assets/blog/cuda/memory.jpg)
+
+Kernel函数实质上是以block为单位执行的，同一个block中的线程需要共享数据，因此它们必须在同一个SM中发射，而block中的每一个thread则被发射到一个SP上执行；一个block必须被分到同一个SM中，但是一个SM中同一时刻可以有多个活动线程块（active block）在等待执行
+
+What Every CUDA Programmer Should Know About OpenGL
+
+##  Motivation
+
+* CUDA was created to expose the GPU’s powerful parallel processing capabilities without any Graphics knowledge or experience
+* It’s a success! And now there are 10,000’s of new GPU programmers
+* But GPUs can still do graphics… so let’s use this capability for visualization 
+
+##  CUDA + OpenGL
+
+* CUDA C uses familiar C memory management techniques (malloc, pointers)
+* OpenGL stores data in abstract generic buffers called buffer objects
+* CUDA/OpenGL interop uses one simple concept: – Map/Unmap an OpenGL buffer into CUDA's memory space 
+
+##  Setup Steps to OpenGL with CUDA
+
+* Create a window (OS specific)
+* Create a GL context (also OS specific)
+* Set up the GL viewport and coordinate system
+* Create the CUDA Context
+* Generate one or more GL buffers to be shared with CUDA
+* Register these buffers with CUDA 
+
+##  Steps to Draw an Image From CUDA
+
+* Allocate a GL buffer the size of the image
+* Allocate a GL texture the size of the image
+* Map the GL buffer to CUDA memory
+* Write the image from CUDA to the mapped memory
+* Unmap the GL buffer
+* Create the texture from the GL buffer
+* Draw a Quad, specify the texture coordinates for each corner
+* Swap front and back buffers to draw to the display 
+
+##  Using a Vertex Array With CUDA
+
+* Allocate the GL buffer for the Vertex array, Register it for CUDA;
+* Use CUDA to create/manipulate the data
+ *    Map the GL Buffer to CUDA
+ *   Set the values for all vertices in the array
+ *   Unmap the GL Buffer 
+* Use OpenGL to Draw the Vertex Data
+ *   Bind the buffer as the GL_ARRAY_BUFFER
+ *   Set the type and array pointers for the type of data in the array
+ *  Draw the array (glDrawArrays() ) 
+*  Swap Buffers 
+
+More on the Pointers
+
+![img](https://raw.githubusercontent.com/zspark/assets/blog/opengl/more_on_the_pointers.jpg)
+

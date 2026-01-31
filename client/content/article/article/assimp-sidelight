@@ -1,0 +1,88 @@
+
+下面代码是我调试Assimp库时候用的一些逻辑，还原之前在这里记录下；
+
+```cpp
+void Document::_JerryTestScope(const Scope* sc)
+{
+    if(sc==nullptr)return;
+    const ElementMap& allEle=sc->Elements();
+    for(auto& it : allEle){
+        //std::cout<<"==================element name:"<<it.first<<std::endl;
+        auto it2=allEle.equal_range(it.first);
+        for (auto it3 = it2.first; it3 != it2.second; ++it3)
+        {
+            auto it4=it3->first;
+            auto ele=it3->second;
+            _JerryTestElement(ele);
+
+        }
+    }
+}
+
+void Document::_JerryTestElement(const Element * ele)
+{
+    if(ele==nullptr)return;
+    const TokenList &tl = ele->Tokens();
+    const Token &kt = ele->KeyToken();
+    TokenType type=kt.Type();
+    switch (type)
+    {
+    case TokenType_OPEN_BRACKET:
+        break;
+    case TokenType_CLOSE_BRACKET:
+        break;
+    case TokenType_DATA:
+        std::cout<<"---------toke type: data"<<std::endl;
+        {
+            std::string kts = kt.StringContents();
+            if (!std::strcmp(kts.c_str(), "P"))
+            {
+                //std::cout << "-----propety toke" << std::endl;
+                const std::string &s = ParseTokenAsString(*tl[1]);
+                const char *const cs = s.c_str();
+
+                if (!strcmp(cs, "Lcl Scaling"))
+                {
+                    aiVector3D a(ParseTokenAsFloat(*tl[4]), ParseTokenAsFloat(*tl[5]), ParseTokenAsFloat(*tl[6]));
+                    std::cout << "Lcl Scaling, value is:" << a.x << "," << a.y << "," << a.z << std::endl;
+                }
+            }
+        }
+        break;
+    case TokenType_BINARY_DATA:
+        std::cout << "---------toke type: binary data" << std::endl;
+        {
+            std::string kts = kt.StringContents();
+            if (!std::strcmp(kts.c_str(), "P"))
+            {
+                //std::cout << "-----propety toke" << std::endl;
+                const std::string &s = ParseTokenAsString(*tl[1]);
+                const char *const cs = s.c_str();
+
+                if (!strcmp(cs, "Lcl Scaling"))
+                {
+                    aiVector3D a(ParseTokenAsFloat(*tl[4]), ParseTokenAsFloat(*tl[5]), ParseTokenAsFloat(*tl[6]));
+                    std::cout << "Lcl Scaling, value is:" << a.x << "," << a.y << "," << a.z << std::endl;
+                }
+            }
+        }
+        break;
+    case TokenType_COMMA:
+        break;
+    case TokenType_KEY:
+        break;
+    default:
+        break;
+    }
+
+    const Scope* sc= ele->Compound();
+    _JerryTestScope(sc);
+}
+
+void Document::_JerryTest()
+{
+    // read ID objects from "Objects" section
+    const Scope& sc = parser.GetRootScope();
+    _JerryTestScope(&sc);
+}
+```

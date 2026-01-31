@@ -1,0 +1,16 @@
+
+
+## GLTF 2.0
+```cpp
+struct GLTF_Data{};
+struct GLTF_Scene{};
+struct GLTF_Node{};
+struct GLTF_Camera{};
+struct GLTF_Mesh{};
+struct GLTF_Accessor{};
+struct GLTF_BufferView{};
+struct GLTF_Buffer{};
+struct GLTF_Material{};
+struct GLTF_Texture{};
+struct GLTF_Image{};
+```

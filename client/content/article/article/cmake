@@ -1,0 +1,139 @@
+
+# target_link_libraries
+对于这个命令有这些说明：
+* 如果动态或者静态库是自己的工程（或者至少在同一个工程里面），那么需要链接的库是可以简写的，比如我库的名字叫A，静态库的话一般会改名为libA.a，在这种情况下可以使用简写A，cmake就可以找到需要链接的库文件的正确名字libA.a
+* 如果链接的是外部的工程，这就不能用简写了，因为你工程中的cmake不知道需要补充什么字符才能是你最终的库文件名，因此需要用全名
+
+
+# CMAKE_CXX_FLAGS
+添加-g参数,用于调试,注意不要再添加-s或者-S
+
+<blockquote class="warn">-g 参数不能在最后边加，否则有时候（可能cmake不同的版本，或者g++版本）会报错。有些cmake版本会将<strong>-g<空格>-O0</strong>合并起来，传给gcc的命令变成了<strong>-g-O0</strong>，非常恶心（cmake必死），此时用引号括起来就好。</blockquote>
+
+```cmake
+SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -g)
+SET(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -g)
+```
+
+
+
+#  cmake string
+```cmake
+string(TOLOWER &{sssss} xxxx)
+```
+上面代码中如果sssss没有定义，或者xxxx没有被使用，会报**string no output variable specified**错误。
+
+
+# cmake外部添加参数
+## CMAKE_INSTALL_PREFIX
+
+CMAKE_INSTALL_PREFIX变量类似于configure脚本的 –prefix，常见的使用方法看起来是这个样子：
+
+```cmake
+cmake -DCMAKE_INSTALL_PREFIX=/usr .
+```
+
+
+
+## ADD_DEFINITIONS
+```cmake
+ADD_DEFINITIONS(-DFOO -DBAR ...)
+```
+
+## PROJECT指令的语法是：
+
+```cmake
+PROJECT(projectname [CXX] [C] [Java])
+```
+
+你可以用这个指令定义工程名称，并可指定工程支持的语言，支持的语言列表是可以忽略的，这个指令隐式的定义了两个cmake变量:`<projectname>_BINARY_DIR` 以及` <projectname>_SOURCE_DIR`，这里就是 HELLO_BINARY_DIR 和 HELLO_SOURCE_DIR (所以CMakeLists.txt中两个MESSAGE指令可以直接使用了这两个变量)，因为采用的是内部编译，两个变量目前指的都是工程所在路径/backup/cmake/t1，后面我们会讲到外部编译，两者所指代的内容会有所不同。同时cmake系统也帮助我们预定义了 PROJECT_BINARY_DIR 和 PROJECT_SOURCE_DIR 变量，他们的值分别跟 HELLO_BINARY_DIR 与 HELLO_SOURCE_DIR 一致。
+
+为了统一起见，建议以后直接使用 PROJECT_BINARY_DIR，PROJECT_SOURCE_DIR，即使修改了工程名称，也不会影响这两个变量。如果使用了`<projectname>_SOURCE_DIR`，修改工程名称后，需要同时修改这些变量。
+
+## SET指令的语法是：
+
+```cmake
+SET(VAR [VALUE] [CACHE TYPE DOCSTRING [FORCE]])
+```
+
+现阶段，你只需要了解SET指令可以用来显式的定义变量即可。比如我们用到的是SET(SRC_LIST main.c)，如果有多个源文件，也可以定义成：
+
+```cmake
+SET(SRC_LIST main.c t1.c t2.c)
+```
+
+## MESSAGE指令的语法是：
+
+```cmake
+MESSAGE([SEND_ERROR | STATUS | FATAL_ERROR] "message to display"...)
+```
+这个指令用于向终端输出用户定义的信息，包含了三种类型:
+
+* SEND_ERROR，产生错误，生成过程被跳过。
+* SATUS，输出前缀为—的信息。
+* FATAL_ERROR，立即终止所有cmake过程。
+
+我们在这里使用的是STATUS信息输出，演示了由PROJECT指令定义的两个隐式变量HELLO_BINARY_DIR和HELLO_SOURCE_DIR。
+
+##  ADD_EXECUTABLE
+
+```cmake
+ADD_EXECUTABLE(hello ${SRC_LIST})
+```
+
+定义了这个工程会生成一个文件名为hello的可执行文件，相关的源文件是SRC_LIST中定义的源文件列表， 本例中你也可以直接写成 ADD_EXECUTABLE(hello main.c)。
+
+在本例我们使用了${}来引用变量，这是cmake的变量应用方式，但是，有一些例外，比如在IF控制语句，变量是直接使用变量名引用，而不需要${}。如果使用了${}去应用变量，其实IF会去判断名为${}所代表的值的变量，那当然是不存在的了。
+
+
+##  ADD_SUBDIRECTORY语法
+
+```cmake
+ADD_SUBDIRECTORY(source_dir [binary_dir] [EXCLUDE_FROM_ALL])
+```
+
+这个指令用于向当前工程添加存放源文件的子目录，并可以指定中间二进制和目标二进制存放的位置。EXCLUDE_FROM_ALL参数的含义是将这个目录从编译过程中排除，比如，工程的example，可能就需要工程构建完成后，再进入example目录单独进行构建(当然，你也可以通过定义依赖来解决此类问题)。
+
+上面的例子定义了将src子目录加入工程，并指定编译输出(包含编译中间结果)路径为bin目录。如果不进行bin目录的指定，那么编译结果(包括中间结果)都将存放在build/src目录(这个目录跟原有的src目录对应)，指定bin目录后，相当于在编译时将src重命名为bin，所有的中间结果和目标二进制都将存放在bin目录。这里需要提一下的是SUBDIRS指令，使用方法是：SUBDIRS(dir1 dir2...)，但是这个指令已经不推荐使用。它可以一次添加多个子目录，并且，即使外部编译，子目录体系仍然会被保存。如果我们在上面的例子中将ADD_SUBDIRECTORY (src bin)修改为SUBDIRS(src)。那么在build目录中将出现一个src目录，生成的目标代码hello将存放在src目录中。
+
+##  output path
+```cmake
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+```
+
+
+## ADD_LIBRARY
+```cmake
+ADD_LIBRARY(libname [SHARED|STATIC|MODULE][EXCLUDE_FROM_ALL]source1 source2 ... sourceN)
+```
+
+你不需要写全libhello.so，只需要填写hello即可，cmake系统会自动为你生成libhello.X。类型有三种:
+
+* SHARED，动态库(扩展名为.so)
+* STATIC，静态库(扩展名为.a)
+* MODULE，在使用dyld的系统有效，如果不支持dyld，则被当作SHARED对待。
+* EXCLUDE_FROM_ALL 参数的意思是这个库不会被默认构建，除非有其他的组件依赖或者手工构建。
+
+
+# 添加库
+## 添加第三方静态库到工程，并生产本地工程动态库
+这里需要重点说明的是：**静态库的链接顺序是越基础的库，越要在后面链接**。查看[[这里|undefined reference to xx]]
+
+```cmake
+SET(libname <third-party-lib-name>)
+SET(dylibname "xx")
+ADD_LIBRARY(${libname} STATIC IMPORTED)
+SET_TARGET_PROPERTIES(${libname} PROPERTY IMPORTED_LOCATION <path-to-lib>/lib${libname}.a)
+TARGET_LINK_LIBRARIES(${dylibname} ${libname})
+TARGET_INCLUDE_DIRECTORIES(${dylibname} PUBLIC <path-to-lib>)
+```
+
+## 添加第三方动态库到工程
+
+```cmake
+LINK_DIRECTORIES(<path-to-lib>)
+ADD_EXECUTABLE(${libname} <some-cpp-files>)
+TARGET_LINK_LIBRARIES(${libname} -l<lib-name>)
+```
+

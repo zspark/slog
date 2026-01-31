@@ -1,0 +1,79 @@
+
+# cpp文件使用不同的编译参数
+在cpp中加入：
+```cpp
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wall"
+#elif defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic error "-Wall"
+#endif
+
+/// 弄完后加入：
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#elif defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+```
+
+
+# 交换capslock与ctrl建
+* cp /etc/default/keyboard ~/.keyboard
+* vim ~/.keyboard
+* append: XKBOPTIONS="ctrl:nocaps"
+
+## c++中system("xxx.sh")权限不够
+```bash
+chmod u+x var.sh
+```
+
+目前我用到的linux的命令们，其语法格式大部分应该是：有 -> 无   
+比如：
+```bash
+#A.txt是已经存在的文件   
+cp A.txt B.txt
+ln -s A.so B.so
+```
+
+# tar
+```bash
+tar -zcvf xxx.tar.gz /path/to/your/file|/path/to/your/folder
+tar -ztvf xxx.tar.gz
+tar -zxvf xxx.tar.gz
+```
+
+# scp 
+```bash
+scp user-name@host:/home/path/to/your/file.so user-name2@host2:/path/to/save/
+```
+<blockquote class="tip">
+more infomation about <b>scp</b>? click <a href="view?n=linux_scp">here</a>
+</blockquote>
+
+# xargs
+<implementation>
+
+# 添加路径到环境变量
+
+```sh
+export PATH=/usr/local/toolchains/bin:$PATH;
+```
+
+# 文件用途
+
+**/etc/profile** -> 环境变量相关的文件
+
+**/etc/rc.local** -> 启动项内容，不能执行长期循环的任务，需要一次性完毕，最终返回```exit 0```，在```/etc/profile```文件之前执行
+
+#  开启点击dock按钮最大化最小化应用
+
+```bash
+#设置ｄｏｃｋ点击最小化（适合ubuntu1604版本）：
+gsettings set org.compiz.unityshell:/org/compiz/profiles/unity/plugins/unityshell/ launcher-minimize-window true
+
+# 不同的ubuntu图形桌面使用的是不同的系统，1604应该是unity，如果是gnome桌面系统，可能是：
+
+gsettings set org.gnome.shell.extensions.dash-to-dock click-action 'minimize'
+```

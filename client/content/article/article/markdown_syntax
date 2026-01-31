@@ -1,0 +1,27 @@
+# table
+
+| hello |world|!|
+| -- |:-- | --:|
+|a|b|A|
+|c|d|B|
+|d|f|C|
+
+# quote
+>abc
+abc
+
+# list
+* item A
+* item B
+* item C
+* item D
+
+# href
+click [here](/view?n=home) to return to home page. OR click [here](http://www.bing.com) to open Bing front page.
+
+# bold
+this is **bold**, and this is *itlalic*, and this is ~delete~
+
+# image
+begin with **!**, others the same with URL.
+this is a image. ![image](/share/code.jpg)

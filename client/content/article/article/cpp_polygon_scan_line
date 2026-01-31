@@ -1,0 +1,258 @@
+```cpp
+struct node
+{
+	int x, z;
+};
+node polygon[12];
+int gtop = 1;//拥有点的个数
+
+float* hmap = nullptr;  // 图片数据
+int hm_width = 0, hm_height = 0;
+float pixelSize = 1.0;
+const float TriCount = 1.f;
+const float HMapMaxSize = 1080.f;
+
+typedef struct _Edge  // 边结构
+{
+	double xi;   // 扫描线与多边形交点的x坐标
+	double dx;   // dx = - b/a 直线斜率的倒数
+	int ymax;    // 这条边上端点的y坐标
+	int dy;      // 初始化为这条边在y方向上的长度，
+                 // 每处理完一条扫描线，--dy,当0==dy时，这条边已经不与扫描线相交
+}Edge;
+
+typedef struct tagSP_EDGES_TABLE   // “活动边表”，这是一个线性表，每个元素是一条边的全部属性，同时还要包含first和last指针
+{
+	std::vector<Edge> slEdges;
+	int first = 0;  // first last定义活动边(与扫描线有交点的边)的范围
+	int last = 0;
+    // 重载Edge的运算符，便于比较大小
+	bool operator()(const Edge& lh, const Edge& rh)
+	{
+		return lh.ymax > rh.ymax;
+	}
+}SP_EDGES_TABLE;
+	
+int gymin = 4096;   // 此多边形的y最小值
+int gymax = 0;      // 此多边形的y最大值
+
+// 调整“活动边区间”的first指针和last指针
+//使符合条件的新边加入到“活动边区间”
+//同时将处理完的边从“活动边区间”剔除。
+void UpdateEdgesTableActiveRange(SP_EDGES_TABLE& spET, int yScan) {
+	std::vector<Edge>& slET = spET.slEdges;
+	int edgesCount = static_cast<int>(slET.size());
+	while ((spET.last < (edgesCount - 1)) && (slET[spET.last + 1].ymax >= yScan))
+	{
+		spET.last++;  // last所指的下一条边的ymax大于下一扫描线的y值
+	}
+	while (spET.first < edgesCount  && slET[spET.first].dy == 0)
+	{
+		spET.first++;   // first所指边的Δy为0
+	}
+}
+
+bool EdgeXiComparator2(Edge& e1, Edge& e2) {
+	return (e1.xi < e2.xi);
+}
+
+// 对区间内的边排序
+void SortActiveRangeByX(SP_EDGES_TABLE& spET) {
+	std::vector<Edge>& slET = spET.slEdges;
+	sort(slET.begin() + spET.first, slET.begin() + spET.last + 1, EdgeXiComparator2);
+}
+
+//更新参与求交计算的各边的属性值: 
+//根扫描线处理完之后需要对“活动边区间”内的边做如下调整：dy = dy – 1;	xi = xi – dx;
+void UpdateEdgesTableRangeIntersection(SP_EDGES_TABLE& spET) {
+	for (int pos = spET.first; pos <= spET.last; ++pos)
+	{
+		if (spET.slEdges[pos].dy > 0)
+		{
+			spET.slEdges[pos].dy--;
+			spET.slEdges[pos].xi -= spET.slEdges[pos].dx;
+		}
+	}
+}
+
+// “活动边区间”内取出交点
+int GetIntersectionInActiveRange(SP_EDGES_TABLE& spET, int pos) {
+	if (pos <= spET.last) return pos;
+	return -1;
+}
+
+// 填充水平线
+void DrawHorizontalLine(int x1, int x2, int yScan, float color,int lod) {
+	for (int x = x1; x <= x2; ++x) {
+		int index = hm_width*yScan + x;
+		if (index > hm_width*hm_height || index < 0)
+			continue;
+		hmap[index] += color;
+		if (hmap[index] > hm_maxTri) hm_maxTri = hmap[index];
+	}
+}
+
+//“活动边区间”内依次取出两个交点组成填充区间
+void FillActiveRangeScanLine(SP_EDGES_TABLE& spET, int yScan, float color, int lod) {
+	std::vector<Edge>& slET = spET.slEdges;
+	int pos = spET.first;
+	do {
+		pos = GetIntersectionInActiveRange(spET, pos);
+		if (pos != -1)
+		{
+			int x1 = int(slET[pos].xi + 0.5f);
+			pos = GetIntersectionInActiveRange(spET, pos+1);
+			if (pos != -1)
+			{
+				int x2 = int(slET[pos].xi);
+				pos++;
+				// 填充水平线
+				DrawHorizontalLine(x1, x2, yScan, color,lod);
+			}
+			else {
+				//assert(false);
+			}
+		}
+	} while (pos != -1);
+}
+
+void ProcessScanLineFill(SP_EDGES_TABLE& spET, int color, int lod) {
+	for (int yScan = gymax; yScan >= gymin; --yScan) {
+		UpdateEdgesTableActiveRange(spET, yScan);
+		SortActiveRangeByX(spET);
+		FillActiveRangeScanLine(spET, yScan, color, lod);
+		UpdateEdgesTableRangeIntersection(spET);
+	}
+}
+
+//ps和pe分别是当前处理边的起点和终点。
+//pee是终点的后一个相邻点，pee用于辅助判断ps和pe两个点是否是左顶点或右顶点
+//然后根据判断结果对此边的ymax进行-1修正
+void initScanLineEdgesTable(SP_EDGES_TABLE& spET, const node* py,int color,int lod) {
+	Edge e;
+	int n = top + 1;
+	for (int i = 0; i < n; ++i)
+	{
+		const node ps = py[i];
+		const node pe = py[(i + 1) % n];
+		const node pee = py[(i + 2) % n];
+        // 这里坐标原点不一样处理方式也不一样
+		if (pe.z != ps.z)  // 不处理水平边
+		{
+			e.dx = double(pe.x - ps.x) / double(pe.z - ps.z);
+			if (pe.z < ps.z)
+			{
+				if (pe.z > pee.z) // 右顶点
+				{
+					e.xi = ps.x;
+					e.ymax = ps.z;
+					e.dy = ps.z - (pe.z + 1) + 1;
+				}
+				else
+				{
+					e.xi = ps.x;
+					e.ymax = ps.z;
+					e.dy = ps.z - pe.z + 1;
+				}
+			}
+			else // (pe.z > ps.z)
+			{
+				if (pe.z < pee.z)  // 左顶点
+				{
+					e.xi = pe.x - e.dx;
+					e.ymax = pe.z - 1;
+					e.dy = e.ymax - ps.z + 1;
+				}
+				else
+				{
+					e.xi = pe.x;
+					e.ymax = pe.z;
+					e.dy = pe.z - ps.z + 1;
+				}
+			}
+			spET.slEdges.insert(
+            std::upper_bound(spET.slEdges.begin()
+           	 			,spET.slEdges.end()
+                            ,e
+                            ,tagSP_EDGES_TABLE())
+            ,e);   // 根据ymax从大到小插入到vector中
+		}
+		else {
+			//水平边直接填充
+			int xStart = ps.x > pe.x ? pe.x : ps.x;
+			int xEnd = ps.x < pe.x ? pe.x : ps.x;
+			DrawHorizontalLine(xStart, xEnd, ps.z, color, lod);
+		}
+		if (ps.z > gymax) gymax = ps.z;
+		if (ps.z < gymin) gymin = ps.z;
+	}
+}
+
+void OutPutPNG(const Echo::String &imgPath)
+{
+	using namespace std;
+	Echo::Image hmapImg;
+	hmapImg.setHeight(hm_height);
+	hmapImg.setWidth(hm_width);
+	hmapImg.setFormat(Echo::PixelFormat::PF_R8G8B8);
+	hmapImg.allocMemory();
+	Echo::ColorValue color;
+    
+	for (int i = 0; i < hm_height; ++i) {
+		for (int j = 0; j < hm_width; ++j) {
+			hmapImg.setColourAt(Echo::ColorValue::Black, j, i, 0);
+			float tmp = hmap[i*hm_width + j] / hm_maxTri;
+			tmp = Echo::Math::Clamp(tmp, 0.f, 1.f);
+			color.r = color.g = color.b = tmp;
+			hmapImg.setColourAt(color, j, i, 0);
+		}
+	}
+	if ("" == picName) picName = "ALL";
+	int num = hm_maxTri * TriCount;
+	std::string name = imgPath + picName + '#' + Echo::StringConverter::toString(num) + ".png";
+	hmapImg.save(name);
+	hmapImg.freeMemory();
+}
+
+void setup()
+{
+	float worldWidth = HMapMaxSize;
+	float worldHeight = HMapMaxSize;
+	hm_height = worldHeight / pixelSize;
+	hm_width = worldWidth / pixelSize;
+	range.left = range.left / pixelSize;
+	range.right = range.right / pixelSize;
+	range.top = range.top / pixelSize;
+	range.bottom = range.bottom / pixelSize;
+
+	hmap = new float*[3];
+	for (int i = 0; i < 3; ++i) {
+		hmap[i] = new float[hm_height*hm_width];
+		memset(hmap[i], 0, (hm_height*hm_width) * sizeof(float));
+	}
+}
+void testpolygon()
+{
+	setup();
+	memset(polygon, 0, sizeof(polygon));
+    // 这里点的顺序是从最下方的点(如果多点于一线则选最左的点)开始逆时针旋转所取的多边形的顶点。
+    // 其实点的顺序只需按边首尾相连即可
+	polygon[0].x = 100;	polygon[0].z = 1000;
+	polygon[1].x = 900;	polygon[1].z = 1000;
+	polygon[2].x = 600;	polygon[2].z = 800;
+	polygon[3].x = 650;	polygon[3].z = 300;
+	polygon[4].x = 800;	polygon[4].z = 500;
+	polygon[5].x = 800;	polygon[5].z = 100;
+	polygon[6].x = 250;	polygon[6].z = 450;
+	polygon[7].x = 400;	polygon[7].z = 600;
+	polygon[8].x = 550;	polygon[8].z = 450;
+	polygon[9].x = 500;	polygon[9].z = 700;
+	SP_EDGES_TABLE spET;
+	gtop = 9;
+	initScanLineEdgesTable(spET, polygon, 255, 0);
+	ProcessScanLineFill(spET,  255, 0);
+    OutPutPNG("E\");
+}
+
+// 参考：https://blog.csdn.net/orbit/article/details/7393022
+```

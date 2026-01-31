@@ -1,0 +1,75 @@
+Everyone here is talking about the similarities of the two. I am gonna point out the differences.
+
+1. Using new Object() allows you to pass another object. The obvious outcome is that the newly created object will be set to the same reference. Here is a sample code:
+
+
+```js
+var obj1 = new Object();
+obj1.a = 1;
+var obj2 = new Object(obj1);
+obj2.a // 1
+```
+
+
+2. The usage is not limited to objects as in OOP objects. Other types could be passed to it too. The function will set the type accordingly. For example if we pass integer 1 to it, an object of type number will be created for us.
+
+
+```js
+var obj = new Object(1);
+typeof obj // "number"
+```
+
+
+3. The object created using the above method (new Object(1)) would be converted to object type if a property is added to it.
+
+
+```js
+var obj = new Object(1);
+typeof obj // "number"
+obj.a = 2;
+typeof obj // "object"
+```
+
+
+4. If the object is a copy of a child class of object, we could add the property without the type conversion.
+
+
+```js
+var obj = new Object("foo");
+typeof obj // "object"
+obj === "foo" // true
+obj.a = 1;
+obj === "foo" // true
+obj.a // 1
+var str = "foo";
+str.a = 1;
+str.a // undefined
+```
+
+
+```js
+Object.defineProperties(obj, {
+newDataProperty: {
+value: 101,
+writable: true,
+enumerable: true,
+configurable: true
+},
+newAccessorProperty: {
+set: function (x) {
+document.write("in property set accessor" + newLine);
+this.newaccpropvalue = x;
+},
+get: function () {
+document.write("in property get accessor" + newLine);
+return this.newaccpropvalue;
+},
+enumerable: true,
+configurable: true
+}});
+```
+
+
+每一个不同的JS项目需要的库不一样，如果使用同一个包含所有JS库的目录，那么经过gulp工具打包后会有冗余代码。这就需要我们用npm针对不同的JS项目搭建不同的库依赖配置文件，简单的在你的项目目录中使用npm init就可以生成一个package.json的文件（文件在你cwd中），当我们将项目提交Github等平台后，自然是不需要提交第三方依赖库的，在拉取你的项目后，需要运行npm install，npm会在你的cwd下找到package.json文件，创建一个名为node_modules目录，然后将package.json中配置的依赖库下载到其中，这样你就可以在另一台主机工作了。
+
+:)

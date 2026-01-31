@@ -1,0 +1,367 @@
+记录工作中遇到的安卓问题
+## 索引
+1. 获取进程ID(C++)
+2. 获取CPU芯片型号(C++)
+3. 获取进程占用内存(C++)
+4. 获取进程CPU占用率(C++&java)
+5. 获取线程CPU占用率(java)
+6. 获取安卓sdcard路径(java)
+7. 输出文件到sdcard(java)
+8. 获取安卓MAC地址
+
+### 1.获取进程ID
+```cpp
+// 进程ID
+uint32 getPID()
+{
+	m_nPID = (int)syscall(SYS_getpid);
+	return m_nPID;
+}
+```
+
+### 2. 获取CPU芯片型号
+```cpp
+// CPU芯片型号
+bool getCpuType() {
+	FILE *fd;
+	char buff[1024] = { 0 };
+	
+    fd = fopen("/proc/cpuinfo", "r");
+	if (nullptr == fd) {
+		Echo::LogManager::instance()->logMessage(LogMessageLevel::LML_CRITICAL, strerror(errno));
+		return 0;
+	}
+
+	char name1[64] = { 0 };
+	char s[5][64] = { {0},{0},{0},{0},{0} };
+	char cputype[64] = { 0 };
+	bool flag = false;
+	while (fgets(buff, sizeof(buff), fd) != nullptr) {
+		sscanf(buff, "%s", name1);
+		if (strcmp("Hardware",name1) == 0)
+		{
+			int n = sscanf(buff, "%*s %*s %s %s %s %s %s", s[0],s[1],s[2],s[3],s[4]);
+			for (int i = 0; i < n; ++i) {
+				strcat(cputype, s[i]);
+			}
+			flag = true;
+			break;
+		}
+	}
+	fclose(fd);
+	if (flag) {
+		strcpy(m_info.strCPUType, cputype);
+		return true;
+	}
+	else return false;
+}
+```
+### 3.获取进程占用内存
+```cpp
+// 进程占用内存
+unsigned int getProcMem() {
+	char file_name[64] = { 0 };
+	FILE *fd;
+	char line_buff[512] = { 0 };
+	sprintf(file_name, "/proc/%d/status", m_nPID);
+
+	fd = fopen(file_name, "r");
+	if (nullptr == fd) {
+		return -1;
+	}
+
+	char name[64];
+	int vmrss;
+	for (int i = 0; i < VMRSS_LINE - 1; i++) {
+		fgets(line_buff, sizeof(line_buff), fd);
+	}
+
+	fgets(line_buff, sizeof(line_buff), fd);
+	sscanf(line_buff, "%s %d", name, &vmrss);
+	fclose(fd);
+	return vmrss;
+}
+
+// 进程占用虚拟内存
+unsigned int getProcVirtualMem() {
+	char file_name[64] = { 0 };
+	FILE *fd;
+	char line_buff[512] = { 0 };
+	sprintf(file_name, "/proc/%d/status", m_nPID);
+
+	fd = fopen(file_name, "r");
+	if (nullptr == fd) {
+		return -1;
+	}
+
+	char name[64];
+	int vmsize;
+	for (int i = 0; i < VMSIZE_LINE - 1; i++) {
+		fgets(line_buff, sizeof(line_buff), fd);
+	}
+
+	fgets(line_buff, sizeof(line_buff), fd);
+	sscanf(line_buff, "%s %d", name, &vmsize);
+	fclose(fd);
+	return vmsize;
+}
+```
+
+### 4. 获取进程CPU占用率
+
+1. 网上说的最多的方法是读取/proc/stat这个文件获取系统cpu使用时间，再除以proc/pid/stat获取进程cpu使用时间，就得到了cpu使用率， 但是/proc/stat这个文件在andriod 7.0以后就没有读取的权限了...
+2. 我试了通过读取/proc/pid/stat这个文件获取当前进程的cpu使用时间，在很短的时间片内获取两次，然后再除这个时间片，这样虽然可以得到一个近似的值，但是每次读/proc/pis/stat这个文件的时候会卡帧，perfdog监测的cpu使用率也会突然掉下来
+
+```cpp
+// 获取第N项开始的指针
+const char* get_items(const char*buffer, unsigned int item) {
+	const char *p = buffer;
+	int len = strlen(buffer);
+	int count = 0;
+
+	for (int i = 0; i < len; i++) {
+		if (' ' == *p) {
+			count++;
+			if (count == item - 1) {
+				p++;
+				break;
+			}
+		}
+		p++;
+	}
+
+	return p;
+}      
+// 进程cpu使用时间
+unsigned long getCpuProcOccupy(unsigned int pid) {
+	char file_name[64] = { 0 };
+	Proc_Cpu_Occupy_t t;
+	FILE *fd;
+	char line_buff[1024] = { 0 };
+	sprintf(file_name, "/proc/%d/stat", pid);
+
+	fd = fopen(file_name, "r");
+	if (nullptr == fd) {
+		return 0;
+	}
+	fgets(line_buff, sizeof(line_buff), fd);
+	sscanf(line_buff, "%u", &t.pid);
+	const char *q = get_items(line_buff, PROCESS_ITEM);
+	sscanf(q, "%ld %ld %ld %ld", &t.utime, &t.stime, &t.cutime, &t.cstime);
+	fclose(fd);
+	return (t.utime + t.stime + t.cutime + t.cstime);
+}
+// 进程cpu使用率
+float getProcUsedCpu() {
+	unsigned long totalcputime1, totalcputime2;
+	unsigned long procputime1, procputime2;
+	long tck = sysconf(_SC_CLK_TCK);
+	struct  timeval tv;
+	struct  timezone tz;
+	gettimeofday(&tv,&tz);
+	totalcputime1 = tv.tv_usec;  // 微秒
+	procputime1 = getCpuProcOccupy(m_nPID);
+	usleep(200000);
+
+	gettimeofday(&tv, &tz);
+	totalcputime2 = tv.tv_usec;
+	procputime2 = getCpuProcOccupy(m_nPID);
+
+	float pcpu = 0.0;
+	if (0 != totalcputime2 - totalcputime1) {
+	    double protime = 1000000 * (procputime2 - procputime1)*1.0 / tck * 1.0;  // us
+	    double totaltime = (totalcputime2 - totalcputime1);
+		pcpu = protime / totaltime * 1.0;
+	}
+	return pcpu;
+}        
+```
+
+3. 另一种实时获取cpu使用率的方法是java层执行top命令，这个我试了 一执行这句也会卡一下帧，据网友提供的top语句的源码来看，这个命令也会读取proc/pid/stat这个文件（猜测可能因为系统要实时向这个文件写东西，而本进程同时去读取这个文件可能会导致阻塞？之类的？），要是每帧监测一下的话fps基本就是3或4
+
+```cpp
+private int PID = android.os.Process.myPid();  // 获取进程ID
+private float coreNum = Runtime.getRuntime().availableProcessors();  //获取cpu核心数
+private String AndroidVersion = android.os.Build.VERSION.RELEASE;   // 获取当前安卓版本
+private String USER;
+private float getProcessCpuUsageByCmd(){
+    Process process;
+    String line = "";
+    String cmd = "top -n 1";
+    try{
+        process = Runtime.getRuntime().exec(new String[]{"sh","-c",cmd});
+        BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        while(((line = br.readLine())!=null)){
+            line  = line.trim();
+            line = line.replaceAll(" +", " ");
+            String[] resp = line.split(" ");
+            if(PID.startsWith(resp[0].substring(0,
+                    resp[0].length()-1)))
+            {
+            	USER = resp[1+n]; // 此处是为了下面获取线程cpu做铺垫
+            	// 这里获取到的cpu使用率是所有核的cpu使用率之和，所以会大于100%，我这里取了一个平均值
+            	return Float.parseFloat(resp[8+n]) / coreNum;
+            }
+        }
+        try{
+            process.waitFor();
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+    }catch (IOException e){
+        e.printStackTrace();
+    }
+    return 0.f;
+    }
+```
+* 最后采取了第三种方法 切出一个线程执行这个命令，再把计算的值传递给主线程。这样执行这个命令就不会影响到主线程了
+
+### 5. 获取线程CPU占用率
+
+此方法与第四条-3方法大同小异，但要在其之后使用，原因是，原本想根据包名过滤线程信息，但是bufferedReader获取到的文本没有top命令的最后一列(或者说是最后一列变成了乱码)，问题应该出在这两句：
+```cpp
+process = Runtime.getRuntime().exec(new String[]{"sh","-c",cmd});
+BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+```
+由于我是Java小白，问题具体出在哪里还没查清，为了早点交活只能另辟蹊径：top命令执行的第二列USER也是程序的唯一识别码，其实对应的uid可以取到，但没找到获取USER这个字符串的接口，转念一想，从上面执行的top命令中获取不就好了嘛...虽然有的拆东墙补西墙的感jio，但素也是一种可行的办法~嘻嘻，先把问题记下，等后面弄懂了具体原因再回来改。代码如下：
+
+```cpp
+ private String getThreadCpuUsageByCmd(){
+	Process process;
+    String line = "";
+    String cmd = "";
+    String ThreadMsg = "";
+    // 安卓8.0以上获取线程信息为-H 以前为-t
+    if((Float.parseFloat(AndroidVersion)) > 8.0)
+        cmd = "top -n 1 -H";
+    else
+        cmd = "top -n 1 -t";
+    try{
+        process = Runtime.getRuntime().exec(new String[]{"sh","-c",cmd});
+        BufferedReader buff = new BufferedReader(new InputStreamReader(process.getInputStream()), 1000);
+        while(((line = buff.readLine())!=null)){
+            line  = line.trim();
+            line = line.replaceAll(" +", " ");
+            String[] resp = line.split(" ");
+            // 以下的判断是防止解析文本错误导致多出一列乱码，这个问题很诡异还没查出原因，待续...
+            if(resp.length < 3) continue;
+            int n = 0;
+            if(USER.startsWith(resp[1].substring(0, resp[1].length()-1)))
+                n = 0;
+            else if(USER.startsWith(resp[2].substring(0,resp[2].length()-1)))
+                n = 1;
+            else continue;
+
+            float cpu = Float.parseFloat(resp[8 + n]) / coreNum;   // 获取线程所占cpu
+            if(cpu < 0.0001) continue;
+            ThreadMsg += resp[11+n];   // 这一列是线程名
+            ThreadMsg += ": ";
+            ThreadMsg += String.valueOf(cpu);
+            ThreadMsg += "\n";
+        }
+        try{
+            process.waitFor();
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+    }catch (IOException e){
+        e.printStackTrace();
+    }
+    return ThreadMsg;
+}
+```
+### 6. 获取安卓sdcard路径
+
+```cpp
+public String getDiskCacheDir(Context context) {
+        String cachePath = null;
+        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
+                || !Environment.isExternalStorageRemovable()) {
+            cachePath = context.getExternalCacheDir().getPath();
+        } else {
+            cachePath = context.getCacheDir().getPath();
+        }
+        return cachePath;
+    }
+```
+
+### 7. 输出文件到sdcard
+
+```cpp
+try {
+    File file = new File(getDiskCacheDir(gameView.getContext()) + File.separator + "dumpsysmeminfo.txt");
+    FileOutputStream fos = new FileOutputStream(file);
+    //FileOutputStream outputStream1 = gameView.getContext().openFileOutput(  getDiskCacheDir(gameView.getContext()) + File.separator + "aaaaatest.txt", Context.MODE_APPEND);
+    // 1.建立通道对象
+    //ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    BufferedWriter outputStream = new BufferedWriter(new OutputStreamWriter(fos));
+    // 2.定义存储空间
+    //byte[] buffer = new byte[1024];
+    BufferedReader buff = new BufferedReader(new InputStreamReader(inputStream), 2000);
+    // 3.开始读文件
+    //int len = -1;
+    try {
+    	if (inputStream != null) {
+    		while (((line = buff.readLine()) != null)) {
+    		//while ((len = inputStream.read(buffer)) != -1) {
+    		// 将Buffer中的数据写到outputStream对象中
+    		//outputStream.write(line, 0, len);
+    		outputStream.write(line);
+    		outputStream.write("\n");
+    	}
+    }
+    // 4.关闭流
+    outputStream.close();
+    inputStream.close();
+    } catch (IOException e) {
+    e.printStackTrace();
+}
+```
+## 8. 获取安卓MAC地址
+```cpp
+ private static String getMacAddr() {
+        try {
+            List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface nif : all) {
+                if (!nif.getName().equalsIgnoreCase("wlan0")) continue;
+
+                byte[] macBytes = nif.getHardwareAddress();
+                if (macBytes == null) {
+                    return null;
+                }
+
+                StringBuilder res1 = new StringBuilder();
+                for (byte b : macBytes) {
+                    res1.append(String.format("%02X:", b));
+                }
+
+                if (res1.length() > 0) {
+                    res1.deleteCharAt(res1.length() - 1);
+                }
+                return res1.toString();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

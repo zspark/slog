@@ -1,0 +1,90 @@
+# private variable
+
+```js
+class Rectangle {
+  #height = 0;
+  #width;
+  constructor(height, width) {    
+    this.#height = height;
+    this.#width = width;
+	this.height=height;
+  }
+};
+let a=new Rectangle(10,11);
+console.log(a.height);// ok => 10;
+
+//blow: Uncaught SyntaxError: Private field '#height' must be declared in an enclosing class
+console.log(a.#height);
+```
+
+# private method
+```js
+function myPrivateFunction() {
+  console.log("My property: " + this.prop);
+}
+
+class MyClass() {
+  constructor() {
+    this.prop = "myProp";
+    myPrivateFunction.bind(this)();
+  }
+}
+
+new MyClass(); // 'My property: myProp'
+```
+
+# 一个广度域版本的私有成员实现
+```js
+// Private Class Definition
+class test
+{
+    // Private Method
+    get(){ console.log('Private Get Hello'); }
+
+    // Private class constructor
+    constructor()
+	{
+        // Private Fields
+        this.fields = [];
+
+        // Private Instance
+        const self = this;
+
+        // Public Class Definition
+        class test
+        {
+            // Public Properties to Private Fields
+	        set counter(_counter) { self.fields['counter'] = _counter; }
+            get counter() { return self.fields['counter']; }
+
+            // Public Constructor
+            constructor()
+            {
+                console.log(arguments);
+            }
+
+            // Public Method
+            increase()
+            {
+                self.fields['counter'] += 1;
+                console.log(self.fields);
+            }
+
+            // Public Method to Private method
+            get()
+            {
+                self.get();
+            }
+        }
+
+        return new test(...arguments);
+    }
+}
+
+var a = new test(54321,'abc');
+console.log(a);
+a.counter = 1234;
+a.increase();
+a.get();
+console.log(a.fields);  // <-- Undefined Private
+```

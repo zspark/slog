@@ -1,0 +1,86 @@
+我的vimrc配置参见[这里](/view?n=vimrc)
+
+# fzf 命令
+
+|Command	|List|
+|:--|:-- |
+|Files [PATH]	|Files (similar to :FZF)|
+|GFiles [OPTS]	|Git files (git ls-files)|
+|GFiles?	|Git files (git status)|
+|Buffers	|Open buffers|
+|Colors	|Color schemes|
+|Ag [PATTERN]	|ag search result (ALT-A to select all, ALT-D to deselect all)|
+|Lines [QUERY]	|Lines in loaded buffers|
+|BLines [QUERY]	|Lines in the current buffer|
+|Tags [QUERY]	|Tags in the project (ctags -R)|
+|BTags [QUERY]	|Tags in the current buffer|
+|Marks	|Marks|
+|Windows	|Windows|
+|Locate PATTERN	|locate command output|
+|History	|v:oldfiles and open buffers|
+|History:	|Command history|
+|History/	|Search history|
+|Snippets	|Snippets (UltiSnips)|
+|Commits	|Git commits (requires fugitive.vim)|
+|BCommits	|Git commits for the current buffer|
+|Commands	|Commands|
+|Maps	|Normal mode mappings|
+|Helptags	|Help tags \<sup id="a1">1|
+|Filetypes	|File types|
+
+# vim script
+```vim
+(nothing) In a function: local to a function; otherwise: global 
+buffer-variable    b:     Local to the current buffer.                          
+window-variable    w:     Local to the current window.                          
+tabpage-variable   t:     Local to the current tab page.                        
+global-variable    g:     Global.                                               
+local-variable     l:     Local to a function.                                  
+script-variable    s:     Local to a :source'ed Vim script.                     
+function-argument  a:     Function argument (only inside a function).           
+vim-variable       v:     Global, predefined by Vim.
+```
+
+# 以二进制显示
+```vimrc
+:%!xxd -r
+```
+
+
+#  查找
+
+```vim
+" basic syntax
+vimgrep|vim /匹配模式/[g][j] 要搜索的文件/范围 
+"g：表示是否把每一行的多个匹配结果都加入
+"j：表示是否搜索完后定位到第一个匹配位置
+```
+
+|#|~|
+|:--:|:--:|
+|vimgrep /pattern/ %|           在当前打开文件中查找|
+|vimgrep /pattern/ *|             在当前目录下查找所有|
+|vimgrep /pattern/ **|            在当前目录及子目录下查找所有|
+|vimgrep /pattern/ *.c|          查找当前目录下所有.c文件|
+|vimgrep /pattern/ **/*|         只查找子目录|
+|cn|                                          查找下一个|
+|cp                     |                     查找上一个|
+|copen                 |                   打开quickfix|
+|cw                     |                     打开quickfix|
+|cclose                 |                  关闭qucikfix|
+|help vimgrep        |               查看vimgrep帮助|
+
+用例1  
+
+在当前文件夹下面所有.c文件中查找字符串 classA
+
+```vim
+:vimgrep /classA/gj ./*.c
+```
+
+查找的结果可以用`:copen`命令查看,在列表里,将光标移动至相应的位置,按回车就打开对应的文件了.
+
+<blockquote class="tip">
+可以直接使用vim代替vimgrep"
+</blockquote>
+

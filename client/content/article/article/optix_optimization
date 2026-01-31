@@ -1,0 +1,44 @@
+
+
+The following tips are from Internet, mostly from Nvidia forum of optix section. I just collected them for the usage of me.
+
+---
+https://devtalk.nvidia.com/default/topic/796226/?comment=4393377
+
+* "All of the other programs are empty, save for rtPrintf calls to let me know whether or not the programs are actually invoked."
+* That is the problem. The acceleration structure building didn't happen and there is no traversal possible without (maybe for NoAccel, but you don't want that on triangle meshes). You must implement the bounding box and intersection programs to be able to get any invocations of your anyhit and closesthit programs.
+* Other tips:
+* optix::Buffer buffer = mContext->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT3, 1024); <wrap em>Try to avoid float3 output buffers if you want to be fast. Use float4 instead.</wrap> See the OptiX multi-GPU tips in the Programming Guide. Do not use an INPUT_OUTPUT Buffer if you only use it for output on the device. Use RT_BUFFER_OUTPUT instead.
+* You can move the iBuffer->unmap() from line 112 to line 96. You're not using it in the AABB calculation.
+* Always try the Bvh builder first. Then add a benchmark and try the others.
+* const __device__ float PI = 3.141592654f; There is no need to define Pi. OptiX math headers contain M_PIf among others.
+
+----
+
+https://devtalk.nvidia.com/default/topic/802481/?comment=4417885
+
+* I was wondering if anyone could tell me what the preferred (in terms of performance) data representation in Optix programs is. Think of BRDF materials in form of a struct. Should I send all materials in a single buffer and link the indices to the geometry instances, or would it be better to link the materials directly to each geometry instance? I would need to access the material data in multiple programs/launches each cycle if that changes anything.
+* For few variables it's faster to put them into individual variable declarations because of the additional indirection when reading material parameters from a buffer.
+* I favor the buffer plus index method. In my global illumination path tracer, which concentrates on the simple creation of complex layered materials, I use a context global input buffer with an array of structures to define all material parameters in the scene. 
+* The individual Material node itself only needs a single integer variable to index into that buffer. The same index is used to present the GUI-side parameters driving these (which is using a different representation of values, e.g. degrees in the GUI vs. radians in the shader.)
+* The performance difference was in the 1-2% range, definitely not worth the hassle of individual variable declarations per Material node.
+* The centralized routine to update any material parameter is just so much more convenient if you have many parameters per material. My current material parameter structure defines 36 different color, scalar, and bindless texture ID parameters and each layered material picks a subset from that as needed. 
+* If you animate many parameters at the same time that should also be beneficial. With a huge number of materials in the scene, animating individual parameters might be more costly due to the map, write, unmap of the whole buffer, though I have not seen any issue of updating individual parameters in the GUI interactively. (So far tried with a maximum of 4096 different materials in a scene.)
+
+----
+
+https://devtalk.nvidia.com/default/topic/989677/optix/rtcontextlaunch2d-failed-719-/
+
+* Not sure if it helps, but note that <wrap em>the OptiX C++ wrapper functions are not reference counting the OptiX objects in the scene hierarchy</wrap>, they just wrap the C-API calls.
+* That means destroying the root Group node's child is not automatically destroying the whole sub-tree below that GeometryGroup child as well! GeometryInstance, Material, Geometry, and Acceleration structure are still there afterwards, but possibly orphaned, if you didn't track them otherwise.
+* Your algorithm is generating memory leaks. You need to track and destroy these resources individually. Try to fix that first and see if it solves the problem.
+* If I interpret your code snippets correctly, you have the following scene structure:
+* Group (Acceleration) -> GeometryGroup (Acceleration) -> GeometryInstance (Material) -> Geometry.
+* First, if there isn't anything else under the root Group node, there is no need for that node at all. The GeometryGroup could be the root then.
+* In your code block you delete the top-level GeometryGroup under the root node, create a new one and assign the mesh GeometryInstance. That is more work than necessary. Your initial description contained the better algorithm.
+* There would be no need to destroy and re-create that top-level GeometryGroup itself. You could only exchange the sub-tree starting at the GeometryInstance instead.
+* Assuming there is only one GeometryInstance you could simply call gg->setChild(0, mesh.geom_instance) and then call markDirty() on the existing Acceleration nodes at the GeometryGroup and root Group to rebuild the acceleration structures from the exchanged Geometry.
+* Try that only after cleanly destroying the previously attached sub-tree nodes.
+* If that also happens when completely destroying and recreating the OptiX context, which would clean up all orphaned OptiX objects, this sounds more like a CUDA Driver issue. In that case trying different display drivers would be recommended.
+* There is not much to analyze more with the given information. If you're able to capture this behaviour with an OptiX API Capture trace (please search the OptiX forum for how to generate that), we could try to reproduce your case in-house.
+* 

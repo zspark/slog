@@ -1,0 +1,17 @@
+由于工作中迫不得已要用java，没好好上过java课的我只能临阵磨枪了qwq，在此记录一些基础的零碎的东西~
+
+1. String 转 float / int / double...
+```cpp
+float x = 10.0;  // 其他类型大同小异
+String a = String.velueof(x);
+```
+
+2. float 转 String
+```cpp
+String a = "10.0";
+float b = Float.parseFloat(a);
+```
+
+3. java多线程
+
+有好几种方法，我这里是用实现Runnable接口的方法~待续...

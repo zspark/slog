@@ -1,0 +1,84 @@
+[![github](https://badgen.net/badge/github/slog?icon=github)](https://github.com/zspark/blog)
+
+# TODO list
+ - [x] fix manage moduel bugs;
+ - [x] add code view template;
+ - [x] add projects view template;
+ - [x] conflict editing;
+ - [x] search;
+ - [x] correct preview while editing;
+ - [x] table css;
+ - [x] p css;
+ - [x] fix incorrect file name error;
+ - [x] history of modification and|or creation;
+ - [x] fix crash while no **.summary.json** exist;
+ - [x] fix no privilege to edit aiticles which were auto built;
+ - [x] move **edit** from main menu bar to article;
+ - [x] use xhr to post data; see:[here](https://blog.csdn.net/weixin_38283159/article/details/77913724) and [here](https://www.cnblogs.com/Renyi-Fan/p/9130325.html)
+ - [x] use xhr to connect with server;
+ - [x] allow NO history;
+ - [x] remove redudent template;
+ - [x] add vim-like editing mode at codemirror
+ - [ ] simplyfy code editing
+ - [x] improve editing experience;
+ - [x] remove case sensetive search;
+ - [ ] include posts;
+ - [ ] upload;
+ - [ ] mindmap supoort; see [here](https://markmap.js.org/)
+ - [x] list the newest article at top;
+ - [ ] UI optimization;
+
+
+
+# features
+* 全屏online无障碍写作+预览（需要登陆后）；
+* 实时动态搜索与显示结果（仅限title与name）；[here](/search)
+* 模块化：view edit manage login search history
+* vim编写支持；
+* 轻量化（无数据库）；
+* 安装方便（git拉取代码+npm下载依赖包+运行）；
+* 历史编辑回顾；[here](/history)
+* 快速新建文章；[here](/view?n=your-post-name)
+* 全屏查阅大篇幅代码；[here](/view?n=imgui_vulkan.cpp)
+* webgl支持，可在文章中插入js代码运行（暂不考虑安全性）；[here](/view?n=test_webgl)
+* 纯markdown，无自定义语法；
+
+
+
+
+# 设计理念
+我使用过一些博客系统，包括一些wiki系统，比如wordpress、emlog、jekyll、pmwiki、tiddlywiki、sudowiki等，在我多次的使用中发现总有令我不舒服的地方，当然了，这些系统的倾向不一样，绝对不能说他们“烂”，只是对于我而言罢了。
+
+我曾希望能找到一款**快速进入编辑状态**、**专注写作**、**方便查询**、**快速部署**、**尽可能无自定义语法**、**快速响应**的系统，应该是我视野有限没有找到，于是他们便是slog设计的原动力。我不希望有一些实在无用或者多余的功能存在，比如注册模块，个人博客无非自己一人编写，注册给谁用？虽说不影响使用，但不符合我的设计理念；再比如复杂的管理模块，只会增加用户了解与熟悉系统的成本，并无大用，是否能有一种“随时编辑随时显示，编辑及显示”的设计？我简单分享下我曾经使用过的系统于我而言“痛”的地方吧：
+
+
+
+* worldpress：典型的通吃型CMS系统，无个性，需要数据库支持；
+* emlog： php语言开发，需要数据库支持（好像是，太久了），应该倾向于通吃型的博客系统，没有强烈的“程序员博客”的味道；
+* jekyll：曾经介绍给同事，于是我两在他mac上整了一下午，而且还没运行起来；
+* pmwiki：自定义语法多，费脑劳神；
+* tiddlywiki：localhost访问速度能接受，当部署到服务器后，半天打不开，而且与服务器通信bug较多；
+* sudowiki：自定义语法多，费脑劳神；
+ 
+# thanks to
+ * express : [home](http://expressjs.com/) | [github](https://github.com/expressjs/express)
+ * body-parser : [home](https://github.com/expressjs/body-parser#readme) | [github](https://github.com/expressjs/body-parser)
+ * cookie-parser : [home](https://github.com/expressjs/cookie-parser#readme) | [github](https://github.com/expressjs/cookie-parser)
+ * marked : [home](marked.js.org) | [github](github.com/markedjs/marked)
+ * chalk : [home](github.com/chalk/chalk#readme) | [github](github.com/chalk/chalk)
+ * mathjax :[home](github.com/mathjax/MathJax#readme) | [github](github.com/mathjax/MathJax)
+ * prismjs :[home](https://prismjs.com/)
+ * codemirror :[home](codemirror.net) | [github](github.com/codemirror/CodeMirror)
+ * md5 :[home](github.com/pvorb/node-md5#readme) | [github](github.com/pvorb/node-md5)
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

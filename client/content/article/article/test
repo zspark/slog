@@ -1,0 +1,20 @@
+# test code view
+
+click here to see the full [code](view?n=imgui_vulkan.cpp)
+
+# 一个markdown CSS样式：
+https://bitbucket.org/kevinburke/markdowncss/src/master/
+
+## prismjs重新高亮
+Prism.highlightAll();
+
+vlc 源码地址：
+git clone https://git.videolan.org/git/vlc.git
+
+## 一个随机数的库，看样子用这挺方便
+https://github.com/effolkronium/random
+
+## 走心的博主博客
+https://blog.csdn.net/hjx_1000/article/details/54914019
+
+https://www.yoyochinese.com/chinese-learning-tools/Mandarin-Chinese-pronunciation-lesson/pinyin-chart-table?tdsourcetag=s_pctim_aiomsg

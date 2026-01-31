@@ -1,0 +1,497 @@
+
+
+### 索引
+
+* 结构体求大小问题
+* 按位运算符
+* 两个栈拼成一个队列
+* 字符串问题
+* 类和结构的区别
+* 类的构造函数和析构函数
+* 内存分配方法
+* 一个棋盘，从左上角走到右下角有几条路径。---待补充
+* 文件的读写---待补充
+* vector操作注意
+* 链表逆序---待补充
+
+##  一、结构体求大小问题
+
+```cpp
+struct A1
+{
+int a:4;
+int b:2;
+char c:1;
+};
+```
+请问在32位系统中A1的内存大小。（类似的问题，我写的这个结构体内存大小应该为8）
+
+### 相关的问题：
+
+### 1）结构中的位字段
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;与C语言一样，C++也允许指定占用特定位数的结构成员，这使得创建与某个硬件设备上的寄存器对应的数据结构非常方便。例如在存放一个开关量时，只有0和1两种状态，用一位二进位即可。字段的类型应为整型或枚举，接下来是冒号,冒号后面是一个数字，它指定了使用的位数。可以试用没有名称的字段来提供间距。每个成员都被称为位字段（bit field）。下面是一个例子：
+
+```cpp
+struct   torgle_register
+{   
+unsigned int SN : 4;  // 4 bits for SN value
+unsigned int : 4;       // 4 bits for unused
+bool goolIn : 1;        // valid input (1 bit)
+};
+```
+初始化、访问字段都和通常一样。
+
+
+### 2)结构体内存对齐：
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;元素是按照定义顺序一个一个放到内存中去的，但并不是紧密排列的。从结构体存储的首地址开始，每个元素放置到内存中时，它都会认为内存是按照自己的大小来划分的，因此元素放置的位置一定会在自己宽度的整数倍上开始。 内存对齐主要是提高处理器访问内存的速度。
+
+```cpp
+struct stu1
+{
+　int i;
+　char c;
+　int j;
+}；
+```
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;先介绍一个相关的概念——偏移量。**偏移量**指的是 **结构体变量中成员的地址** 和 **结构体变量地址** 的差。**结构体大小**等于 **最后一个成员的偏移量** 加上 **最后一个成员的大小**。显然，结构体变量中第一个成员的地址就是结构体变量的首地址。因此，第一个成员i的偏移量为0。第二个成员c的偏移量是第一个成员的偏移量加上第一个成员的大小（0+4）,其值为4；第三个成员j的偏移量是第二个成员的偏移量加上第二个成员的大小（4+1）,其值为5。
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实际上，由于存储变量时地址对齐的要求，编译器在编译程序时会遵循两条原则：
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1、结构体变量中成员的偏移量必须是成员大小的整数倍（0被认为是任何数的整数倍） 
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、结构体大小必须是所有成员大小的整数倍
+
+
+### 对齐参数：
+
+64位系统，默认对齐数为8; 
+
+32位系统，默认对齐数为4;
+
+设置对齐参数可在结构体struct之前加上#pragma pack(对齐数)，在struct之后加上#pragma pack;便可以设置对齐参数。 
+对齐参数不能任意设置，只能是内置类型已有的字节数，如：char(1)、short（2），int（4），double(8)…不能是3，5…任意数。
+
+### 相关例题
+下面的结构体大小分别是多大（假设32位机器）？
+
+```cpp
+struct A {
+char a;
+char b;
+char c;
+};
+
+struct B {
+int a;
+char b;
+short c;
+};
+
+struct C {
+char b;
+int a;
+short c;
+};
+pragma pack(2)
+
+struct D {
+char b;
+int a;
+short c;
+};
+```
+
+结构体的大小问题在求解的时候要注意对齐：
+
+*A：对齐值为：1 。大小为：3
+*B：对齐值为：4 。 大小为：4+2+2 = 8（第一个4为int，第二个4为char 和 short ，要空余1个）
+*C：对齐值为：4。大小为：4+4+4 = 12（第一个为char ，空余3个，第二个为int ，第三个为char 空余3个）
+*D：指定对齐值为：2（使用了#pragma pack(2)） 。大小为2+4+2 = 8。（第一个char，空余1个，第二个为int ，4个，第3个位char，空余1个）。
+
+##  二、按位运算符
+题目：count的值为多少
+
+```cpp
+void solution(){
+int count = 0;
+	int x = 9999;
+	while(x){
+		count++;
+		x = x&(x-1);
+	}
+}
+```
+答案为8，需要将9999转换为2进制，并算出其中1的个数再+1 。
+
+### 相关知识：
+### 移位运算符
+*左移运算符  value << shift  向左移动一位相当于乘以2，向右移动n位相当于乘以2^^n^^.
+*右移运算符  value >> shift  向右移动一位相当于除以2，向右移动n位相当于除以2^^n^^.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value是要移动的整数值，shift是要移动的位数。腾出的位用0填充，超过边界的位被删除。
+注意右移时对于有符号整数，腾出的位置可能用0填充，也可能用原来最左边的$$\KaTeX$$
+位填充，这取决于C++的实现。
+
+
+### 逻辑按位运算符
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;与常规逻辑运算符不同的是，它们用于值的每一位，而不是整个值。要先将其转换为2进制，再逐位运算。
+
+*位非（或求反）运算符（~）
+>
+> unsigned char x = 3;
+
+> ~x :  将其写为2进制：00000011 再按位取反 得到值 11111100
+>
+
+
+
+*OR(|): 
+>
+> 1|0 = 1; 
+
+> 0|0 = 0; 
+
+> 1|1=1;
+>
+*XOR(^):  
+>
+> 1^0 = 0; 
+
+> 0^0=1; 
+
+> 1^1=1;
+>
+*AND(&):  
+>
+> 1&0 = 0; 
+
+> 0&0=0; 
+
+> 1&1=1;
+>
+
+* 按位运算符的替代表示
+|标准表示|替代表示|
+| -- | -- |
+| & |bitand|
+| &= |and_eq|
+| &#124; |bitor|
+| &#124;= |or_eq|
+| ~ |compl|
+| ^ |xor|
+| ^= |xor_eq|
+
+使用方法：
+
+```cpp
+b = compl a bitand b;   //same as b = ~a & b;
+c = a xor b;            //same as c = a ^ c; 
+```
+C++primer plus 第六版p856 讲了几种常用的按位运算符技术，需要时可参阅。
+
+
+## 三、两个栈拼成一个队列
+思路：入队时，直接压如stack1，出队时，判断stack2是否为空，如果为空，将stack1的元素全部压如stack2，再将stack2栈顶元素弹出，否则直接弹出stack2栈顶元素。代码实现如下：
+
+```cpp
+#include <iostream>
+#include <stack>
+using namespace std;
+
+/*
+*两个栈实现一个队列
+*入队时，直接压入stack1中
+*出队时，判断stack2是否为空，
+*如果stack2为空，则将stack1中的元素倒入stack2中
+*否则直接弹出stack2中的元素
+*/
+//入队
+void EnQueue(stack<int> &s1,stack<int> &s2,int m)
+{
+	s1.push(m);
+}
+//出队
+void DeQueue(stack<int> &s1,stack<int> &s2,int &m)
+{
+	if(s2.empty())
+	{
+		int p = s1.size();
+		for(int i = 0; i < p; i++)
+		{
+			s2.push(s1.top());
+			s1.pop();
+		}
+	}
+	m = s2.top();
+	s2.pop();
+}
+
+int main()
+{
+	stack<int> s1,s2;
+	int m;
+	for(int i = 0; i < 5; i++)
+	{
+		cin>>m;
+		EnQueue(s1,s2,m);
+		if(i>2)
+		{
+			DeQueue(s1,s2,m);
+			cout<<"DeQueue element is "<<m<<endl;
+		}
+	}
+
+	DeQueue(s1,s2,m);
+	cout<<"DeQueue element is "<<m<<endl;
+	return 0;
+}
+```
+
+思考：两个队列拼成一个栈
+
+```cpp
+/*
+*两个队列实现一个栈
+*将queue1用作进栈出栈，queue2作为一个中转站
+*入栈时，直接压入queue1中
+*出栈时，先将queue1中的元素除最后一个元素外依次出队列，
+*并压入队列queue2中
+*将留在queue1中的最后一个元素出队列即为出栈元素
+*最后还要把queue2中的元素再次压入queue1中
+*/
+
+#include <iostream>
+#include <queue>
+using namespace std;
+
+//进栈操作
+void stackpush(queue<int> &q1,queue<int> &q2,int m)
+{
+	q1.push(m);
+}
+
+//出栈操作
+void stackpop(queue<int> &q1,queue<int> &q2,int &m)
+{
+	int p = q1.size();
+	for(int i = 0;i < p-1; i++)
+	{
+		q2.push(q1.front());
+		q1.pop();
+	}
+	m = q1.front();
+	q1.pop();
+	int l = q2.size();
+	for(int j = 0; j < l; j++)
+	{
+		q1.push(q2.front());
+		q2.pop();
+	}
+}
+
+int main()
+{
+	queue<int> q1,q2;
+	int n;
+	for(int i = 0; i < 6; i++)
+	{
+		cin>>n;
+		stackpush(q1,q2,n);
+		if(i>3)
+		{
+			stackpop(q1,q2,n);
+			cout<<"stackpop element is "<<n<<endl;
+		}
+	}
+
+	stackpop(q1,q2,n);
+	cout<<"stackpop element is "<<n<<endl;
+	return 0;
+}
+```
+
+## 四、字符串问题
+
+*strlen与sizeof的区别：
+
+>
+> sizeof运算指出整个数组的长度，单strlen()函数返回的是存储在数组中的字符串长度，且不把空字符‘\0’计算在内。
+>
+*字符串的比较：
+1.C-风格字符串的比较：strcmp()
+
+>该函数接受两个字符串地址作为参数，如指针、字符串常量或字符数组名。
+>如果两个字符串相同，该函数返回0
+>如果第一个字符串按系统排列顺序(系统编码)排在第二个字符串之前，则返回一个负数值。
+>否则返回一个正数值。
+
+*字符串输入：
+1.用字符数组输入
+
+>
+> cin使用空白（空格、制表符和换行符）来确定字符串的结束位置。故cin在获取字符数组输入时只读取一个单词，读取该单词后cin将该字符串放到数组中，并自动在结尾添加空字符。
+
+> 每次读取一行字符串输入：istream中的类（如cin）提供了一些面向行的类成员函数：getline()和get()。
+
+> 1.面向行的输入getling()
+
+> getline()函数读取整行，它使用通过回车输入的换行符来确定输入结尾，并在存储字符串时，用空字符来替换换行符。该函数有两个参数，第一个为用来存储输入行的数组的名称，第二个参数是要读取的字符数组，如输入20，则最多存储19个字符，余下的空间用于存储自动在结尾处添加的空字符。getline()成员函数在读取指定数目的字符和换行符时停止读取。例如：
+
+> ```cpp
+> cin.getline(name,20);
+> ```
+
+> 2.面向行的输入get()
+
+> get()成员函数有几种变体，其中一种变体的工作方式与getline()类似，它们接受的参数相同，解释参数的方式也相同，并且都读取到行尾，但get并不再读取并丢弃换行符，而是将其留在输入队列中。故连续调用get的时候要注意换行符：
+
+> ```cpp
+> cin.get(name,size);       //read first line
+> cin.get();                        //read new line
+> cin.get(name2,size);     //read second line
+
+> //第二种写法
+> cin.get(name,size).get();    //concatenate member functions
+> ```
+>
+
+2.string类
+具体参照另一篇 {{{C++review—string}}}
+
+
+## 五、类和结构的区别
+
+>
+> 类和结构很像，C++对结构进行了拓展，使之具有与类相同的特性。它们之间唯一的区别是：
+
+> 结构的默认访问类型是public ,而类为private。
+>
+
+## 六、类的构造函数和析构函数
+
+>
+> 初始化类的对象与常规的初始化语法不同，由于类的部分数据的访问状态是私有的，这意味着程序不能直接访问数据成员，只能通过成员函数来访问数据成员，因此需要设计合理的构造函数。
+
+> 默认构造函数是在未提供显式初始值时，用来创建对象的构造函数。如果没有提供任何构造函数，C++将自动提供默认构造函数，它是默认构造函数的隐式版本。默认构造函数没有参数，因为声明中不包含值。
+
+> ```cpp
+> student::student(){}
+> ```
+
+> 当且仅当没有定义任何构造函数时，编译器才会提供默认构造函数。为类定义了构造函数后，必须自己为它提供默认构造函数。
+>
+
+例如：
+
+```cpp
+#include <iostream>
+using namespace std;
+class student
+{
+private:
+std::string m_sName;
+int m_nGrade;
+int m_nClass
+public:
+stock()
+{
+m_sName = "no name";
+m_nGrade = 0;
+m_nClass = 0;
+}    //默认构造函数一种写法
+//stock(string name = "no name", int grade = 0, int class = 0);   //另一种默认构造函数的写法，给已有构造函数的所有参数提供默认值
+stock(string name, int grade, int nClass)
+{
+m_sName = name;
+if(grade<0)
+{
+cerr<<"Number of m_nGrade can't be nagetive; "<<name<<" 's grade set to 0.\n";
+m_nGrade = 0;
+}
+else n_nGrade = grade;
+if(nClass<0)
+{
+cerr<<"Number of m_nClass can't be nagetive; "<<name<" 's Class set to 0.\n";
+m_nClass = 0;
+}
+else m_nClass = nClass;
+}       //自定构造函数
+};
+
+```
+
+### 七、内存分配方法
+
+根据用于分配内存的方法，C++有3种管理内存的方式：自动存储(栈)、静态存储和动态存储(有时也叫做自由存储空间或堆)。
+
+*自动存储
+在函数内部定义的常规变量使用自动存储空间，被称为自动变量(automatic variable)，自动变量实际上是一个局部变量，其作用域为包含它的代码块。自动变量通常存储在栈中。这意味着在执行代码块时，其中的变量依次加入到栈中，而在离开代码块时，将按相反的顺序释放这些变量，称为后进先出(LIFO)
+
+*静态存储
+静态存储是整个程序执行期间都存在的存储方式。使变量成为静态的方式有两种：一种是在函数外面定义它；另一种是在声明变量时使用关键字static。
+
+*动态存储
+new和delete运算符提供了一种比自动变量和静态变量更灵活的方法。它们管理了一个内存池，在C++中被称为自由存储空间(free store)或堆(heap)。
+
+### 八、一个棋盘，从左上角走到右下角有几条路径。
+
+### 九、文件的读写
+
+### 十、vector操作注意
+
+面试时候上机写了一道题，大概的意思是，共有1～n个人，每个人的编号也各.为1～n，从第k(1<=k<=n)个人起开始报数，由1数到m，数到第m个的人出列，再从他的下一个人开始数，再数到m的人出列，以此类推，直到所有人都出列为止。随机输入n, k, m求他们的出列顺序。
+
+做这道题时我犯了一个严重的错误，导致调试时间过长，交卷慢了qwq
+
+>“迭代器所指向的元素被删掉之后迭代器就会失效”
+
+以下是我写的程序：
+
+```cpp
+
+#include <iostream>
+#include<vector>
+using namespace std;
+
+void print(vector<int> &S,int k,int m){
+int idx = k+m-2;
+int n = S.size();
+//  auto it = S.begin();    //最初我把it声明在了这里
+//但是进入下面的循环后，原本it所指的元素会被删除
+//再次读取it的时候程序中断。
+while(!S.empty()){
+if(idx>n-1){
+idx = idx%n;
+}
+cout<<S[idx]<<" ";
+auto it = S.begin();
+S.erase(it+idx);
+idx += m-1;
+n--;
+}
+}
+int main(){
+int n ,k ,m ;
+
+cout<<"请输入一个正整数n(总人数)：";
+cin>>n;
+cout<<"请输入一个正整数k(1<=k<=n)：";
+cin>>k;
+cout<<"请输入一个正整数m:  ";
+cin>>m;
+
+vector<int> S;
+for(int i = 1;i<n+1;i++){
+S.push_back(i);
+}
+print(S,k,m);
+
+return 0;
+}
+
+```
+
+
+### 十一、链表逆序

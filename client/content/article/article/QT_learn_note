@@ -1,0 +1,88 @@
+以下记的是一些零散的东西，新工作开始接触QT，暂时没有系统的学习。
+
+# QString
+
+### 拼接变量：
+```cpp
+int a = 100;
+string b = "test";
+QString c = "hahaha";
+QString qStr = QString(%1abc\t%2%3).arg(a).arg(c).arg(b);  // qStr = 100abc	hahahatest
+// 设置精度，10为基数，2为精度
+meshItem->setText(4, QString::number(meshInfo->AABB.x, 10, 2) + " * "+ QString::number(meshInfo->AABB.y, 10, 2) + " * " + QString::number(meshInfo->AABB.z, 10, 2));
+```
+### 移除特定字符：
+```cpp
+qsMeshInfo.remove(QChar('\n'), Qt::CaseInsensitive);
+```
+### 输出中文显示不正常的话用QStringLiteral:
+```cpp
+ QTextStream stream(&file);
+ stream << QStringLiteral("mesh\tmesh数量\t总面数\t包围盒(长*宽*高)\t包围盒体积\t点密度(总面数/包围盒体积)\t纹理总数量\t") << endl;
+```
+
+### 获取exe所在路径
+```cpp
+QString qexeFullPath = QCoreApplication::applicationDirPath();
+```
+
+### 获取当前时间
+1 使用QDateTime类（毫秒精度）
+```cpp
+QDateTime current_date_time = QDateTime::currentDateTime();
+QString current_date = current_date_time.toString("yyyy-MM-dd hh:mm::ss.zzz");
+```
+2 使用QTime类
+```cpp
+QTime current_time = QTime::currentTime();
+int hour = current_time.hour();        //当前的小时
+int minute = current_time.minute();    //当前的分
+int second = current_time.second();    //当前的秒
+int msec = current_time.msec();        //当前的毫秒
+```
+ 3 使用GetLocalTime函数（毫秒精度）
+```cpp 
+SYSTEMTIME sys;
+GetLocalTime(&sys);
+printf("%4d/%2d/%2d %2d:%2d:%2d.%3d\n",sys.wYear, sys.wMonth, sys.wDay, sys.wHour, sys.wMinute, sys.wSecond, sys.wMilliseconds);
+```
+
+# QTreeWidget
+
+ps:发现当我向QTreeWidhet中加入大量数据（超过15000行）时会卡顿。咨询万能的网友之后发现耗时的地方是QTreeView第一次刷新的时候会计算每一行的行高，这样刷新时，就要遍历所有行数据。解决方法是初始化树的时候加一句    mTreeWidgetMeshes->setUniformRowHeights(true); 这样就不会自动计算所有行的行高了。卡顿问题会好很多很多~~^^
+
+参考：https://blog.csdn.net/rabinsong/article/details/8452946
+
+不让最后一列自动调整列宽，改为第一列(这样写的弊端是拖动列宽那个条的时候是反着的，由于不是很重要暂时没有找解决办法)：
+```cpp
+    mTreeWidgetMeshes->header()->setStretchLastSection(false);
+    mTreeWidgetMeshes->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+```
+
+按列的数值进行排序：
+
+由于它自身的sortByClumn()函数，是按字符串的AIICS排序，如果按数值排序就要重载QTreeWidgetItem的operator<运算符(下面有更好的方法)，代码如下：
+```cpp
+  class CTreeWidgetItemEx : public QTreeWidgetItem {
+  public:   
+    explicit CTreeWidgetItemEx(QTreeWidgetItem * parent = 0, int type = QTreeWidgetItem::Type);   
+    ~CTreeWidgetItemEx();    
+    bool operator<(const QTreeWidgetItem & other) const;
+  };
+  CTreeWidgetItemEx::CTreeWidgetItemEx(QTreeWidgetItem * parent /*= 0*/, int type /*= QTreeWidgetItem::Type*/) : QTreeWidgetItem(parent, type)
+  { }
+  CTreeWidgetItemEx::~CTreeWidgetItemEx() { }
+  bool CTreeWidgetItemEx::operator<(const QTreeWidgetItem & other) const
+  { 
+    unsigned int a = this->text(2).toUInt();  // 这里的2是col num
+    unsigned int b = other.text(2).toUInt();    
+    return (a < b);
+  } 
+```
+
+更简单的方法不用setText直接setData,第二个参数是Qt::DisplaRole，就会按照数字排序：
+```cpp
+meshItem->setData(2, Qt::DisplayRole, meshInfo->nTriCount)
+```
+# QT多线程
+因篇幅较长 另起一篇文章：[QT多线程学习](/view?n=QT_learn_mutithreading)

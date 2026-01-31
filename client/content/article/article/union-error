@@ -1,0 +1,78 @@
+
+
+
+本文转载自网络，作者：波波，时间：发表于2012 年 11 月 9 日
+
+原文网址：https://www.freezhongzi.info/?p=147
+
+
+
+
+#  C++ trivial和non-trivial构造函数及POD类型
+
+
+今天看书看到侯捷的《STL源码剖析》里提到trivial和non-trivial及POD类型，查了些资料理解了一下。
+
+trivial意思是无意义，这个trivial和non-trivial是对类的四种函数来说的：
+
+* 构造函数(ctor)
+* 复制构造函数(copy)
+* 赋值函数(assignment)
+* 析构函数(dtor)
+
+如果至少满足下面3条里的一条：
+
+* 显式(explict)定义了这四种函数。
+* 类里有非静态非POD的数据成员。
+* 有基类。
+
+那么上面的四种函数是non-trivial函数，比如叫non-trivial ctor、non-trivial copy…，也就是说有意义的函数，里面有一下必要的操作，比如类成员的初始化，释放内存等。
+
+那个POD意思是Plain Old Data，也就是C++的内建类型或传统的C结构体类型。POD类型必然有trivial ctor/dtor/copy/assignment四种函数。
+
+```cpp
+//整个T是POD类型
+class T
+{
+//没有显式定义ctor/dtor/copy/assignemt所以都是trivial
+int a; //POD类型
+};
+
+//整个T1是非POD类型
+class T1
+{
+T1() //显式定义了构造函数，所以是non-trivial ctor
+{}
+//没有显式定义ctor/dtor/copy/assignemt所以都是trivial
+int a;//POD类型
+std::string b; //非POD类型
+};
+```
+
+那这有什么用处呢？
+
+如果这个类都是trivial ctor/dtor/copy/assignment函数，我们对这个类进行构造、析构、拷贝和赋值时可以采用最有效率的方法，不调用无所事事正真的那些ctor/dtor等，而直接采用内存操作如malloc()、memcpy()等提高性能，这也是SGI STL内部干的事情。
+
+比如STL的copy算法最基本的想法是这样的：
+
+```cpp
+// 非POD重载指针数值
+template <class T> void copy(T* source, T* destination, int n, __false_type)
+{
+// 省略异常处理
+for (; n > 0; n--,source++,destination++)
+{
+// 调用source的复制构造函数
+constructor(source, *destination);
+}
+}
+
+// POD重载指针数值
+template <class T> void copy(T* source, T* destination, int n, __false_type)
+{
+// 省略异常处理
+memmove(source, destination, n);
+}
+```
+
+当然实际的copy比这个复杂多了，有非常多的特化等，这个只是其中一方面而已。
