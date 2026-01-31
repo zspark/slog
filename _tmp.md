@@ -1,0 +1,126 @@
+
+#auth
+READ
+WRITE
+DELETE
+CREATE
+
+# conversation
+```js
+var Conversation=function(){
+    var id;//>0;
+    var account;// Account instance;
+}
+```
+
+# account
+```js
+var Account=function(){
+    var id;//>0;
+    var userDisplayName="Jerry Chaos";
+    var account="jerry-chaos@outlook.com";
+    var pwd="";// a md5 encoded string;
+    var authority;// Authority instance;
+}
+
+var AccountController=function(){
+    var m_mapAccount=new Map();
+    var LoadAccountConfigFile(){
+        var acc=new Account();
+        acc.foo=bar;
+        m_mapAccount[acc.id]=acc;
+    }
+    var GetAccount=function(var id){
+        return m_mapAccount[id];
+    };
+}
+```
+
+# authority
+```js
+var Authority=function(){
+    var Read;// a function to read;
+    var Write;
+    var Devare;
+    var Create;
+}
+```
+
+# basic logic
+```jc
+var Read=function(var priority){
+    const m_iReadPriority=priority;
+    let _Read=function(Property p, var outMsg){ 
+        if(p.priorityRead+m_iReadPriority>=0){
+            outMsg="";
+            var page=new Article();
+            page.property=p;
+            page.content=Utils.ReadUTF8FromFileByURL(p.pathFromRoot+p.fileName);
+            return page;
+        }else{
+            outMsg="you have NO priority to read this article "+p.fileName+".";// should be a utils func.
+            return null;
+        }
+    };
+    return _Read;
+};
+var Write=function(var fileRelativePathToRoot,var fileName,var content){
+};
+var Devare=function(var fileRelativeURLToRoot){
+};
+var Create=function(var fileRelativeURLToRoot){
+};
+```
+
+# article
+```js
+var Article=function(){
+    var property;// instance of Property;
+    var content;
+
+    var Compose(){
+    // use template module;
+        return true;
+    }
+}
+```
+
+```js
+var Property=function(){
+// for display
+    var creatorAccountID=0;// a id of a account ;
+    var modifierAccountID=1 <same as above>
+    var createTime=new Date();
+    var modifyTime=new Date();
+    var title="";
+    var categoryName="";
+    var templateName;
+
+// for saving 
+    var fileName="";
+    var pathFromRoot="";
+
+// hidden properties;
+    var allowHistory=true;
+    var allowSearch=true;
+    var priorityRead=0;
+    var priorityWrite=0;
+    var priorityDelete=0;
+}
+
+```
+# template
+```js
+var Page=function(){
+}
+
+var TemplateProcessor=function(){
+    var compose(var page,var out){
+        return true;// if success return true;
+    };
+}
+```
+
+
+
+# ARCHITECTURE
