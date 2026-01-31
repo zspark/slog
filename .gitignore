@@ -2,7 +2,6 @@
 /.vscode/
 /backup/
 /.idea/
-content/
 
 *.swp
 *.un~
