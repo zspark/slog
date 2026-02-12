@@ -28,7 +28,7 @@
     "commander": "~2.19.0",
     "mathjax": "3.0.1",
     "codemirror": "5.52.0",
-    "prismjs": "1.19.0",
+    "prismjs": "1.21.0",
     "md5": "2.2.1",
     "formidable": "1.2.2",
     "nodejs-websocket": "1.7.2",
